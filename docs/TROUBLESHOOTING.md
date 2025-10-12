@@ -780,7 +780,7 @@ chmod +x ~/collect-diagnostics.sh
 ```
 
 ### Where to Get Help
-1. **Check logs:** `/var/log/misp-install/`
+1. **Check logs:** `/opt/misp/logs/`
 2. **MISP Documentation:** https://www.misp-project.org/documentation/
 3. **MISP Community:** https://www.misp-project.org/community/
 4. **GitHub Issues:** https://github.com/MISP/MISP/issues

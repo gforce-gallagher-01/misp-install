@@ -50,7 +50,7 @@ The MISP Update Tool (`misp-update.py`) is a comprehensive Python script for saf
 ✅ **Rolling Updates** - Minimal downtime with service-by-service restart  
 ✅ **Rollback Support** - Backup information for manual rollback  
 ✅ **Dry Run Mode** - Preview changes without making them  
-✅ **Detailed Logging** - Full logs saved to `/var/log/misp-install/`  
+✅ **Detailed Logging** - Full logs saved to `/opt/misp/logs/`  
 ✅ **Container Recreation** - Option to completely rebuild containers  
 
 ---
@@ -828,7 +828,7 @@ sudo docker compose exec -T db mysqldump -umisp -p$(grep MYSQL_PASSWORD .env | c
 ### Q: What if the update fails?
 
 **A:** 
-1. Review logs in `/var/log/misp-install/`
+1. Review logs in `/opt/misp/logs/`
 2. Check container status: `sudo docker compose ps`
 3. Restore from backup (see Backup & Rollback section)
 4. Open GitHub issue or seek community support
@@ -927,13 +927,23 @@ cd /opt/misp && sudo docker compose logs --tail=50  # Recent logs
 
 ### Logs
 
-All operations are logged to: `/var/log/misp-install/misp-update-TIMESTAMP.log`
+All operations are logged in **JSON format** to: `/opt/misp/logs/misp-update.log`
 
 ```bash
-# View latest log
-ls -lt /var/log/misp-install/ | head -5
-tail -f /var/log/misp-install/misp-update-*.log
+# View latest logs (JSON format)
+tail -f /opt/misp/logs/misp-update.log | jq '.'
+
+# View logs without JSON formatting
+tail -f /opt/misp/logs/misp-update.log
+
+# Filter by severity
+cat /opt/misp/logs/misp-update.log | jq 'select(.severity=="ERROR")'
+
+# Show only messages
+cat /opt/misp/logs/misp-update.log | jq -r '.message'
 ```
+
+**Note:** Logs now use centralized JSON logging with automatic rotation (5 files × 20MB). See `README_LOGGING.md` for details.
 
 ### Get Help
 

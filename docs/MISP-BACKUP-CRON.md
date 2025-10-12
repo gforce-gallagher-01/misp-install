@@ -232,17 +232,22 @@ python3 ~/misp-backup-cron.py --full --notify
 
 ```bash
 # View latest backup log
-ls -lt /var/log/misp-install/misp-backup-*.log | head -1 | xargs cat
+ls -lt /opt/misp/logs/misp-backup-*.log | head -1 | xargs cat
 
 # View cron log
-cat /var/log/misp-install/backup-cron.log
+cat /opt/misp/logs/backup-cron.log
 
-# Check last 50 lines
-tail -50 /var/log/misp-install/backup-cron.log
+# Check last 50 lines (JSON format)
+tail -50 /opt/misp/logs/misp-backup-cron.log | jq '.'
 
-# Follow live
-tail -f /var/log/misp-install/backup-cron.log
+# Follow live with JSON formatting
+tail -f /opt/misp/logs/misp-backup-cron.log | jq '.'
+
+# View only error messages
+cat /opt/misp/logs/misp-backup-cron.log | jq 'select(.severity=="ERROR")'
 ```
+
+**Note:** Logs use centralized JSON format with automatic rotation. See `README_LOGGING.md` for details.
 
 ### Check Backup Status
 
@@ -366,10 +371,10 @@ python3 ~/misp-backup-cron.py
 **Check logs:**
 ```bash
 # View latest backup log
-ls -lt /var/log/misp-install/misp-backup-*.log | head -1 | xargs cat
+ls -lt /opt/misp/logs/misp-backup-*.log | head -1 | xargs cat
 
 # Check cron output
-cat /var/log/misp-install/backup-cron.log
+cat /opt/misp/logs/backup-cron.log
 ```
 
 **Common issues:**
@@ -563,7 +568,7 @@ ls -lt /opt/misp-backups/full/ | head -2
 ls -lt /opt/misp-backups/incremental/ | head -2
 
 # View last backup log
-tail -50 /var/log/misp-install/backup-cron.log
+tail -50 /opt/misp/logs/backup-cron.log
 
 # Run backup manually
 python3 ~/misp-backup-cron.py
@@ -628,8 +633,8 @@ A: Database backups include all data. External file storage needs separate backu
 ## Support
 
 ### Logs
-- Backup logs: `/var/log/misp-install/misp-backup-*.log`
-- Cron output: `/var/log/misp-install/backup-cron.log`
+- Backup logs: `/opt/misp/logs/misp-backup-*.log`
+- Cron output: `/opt/misp/logs/backup-cron.log`
 
 ### Files
 - Script: `~/misp-backup-cron.py`

@@ -178,7 +178,7 @@ misp-install.py ──────┐
                       │            ├── POST-INSTALL-CHECKLIST.md
                       │            └── docker-compose files
                       │
-                      └──> Creates: /var/log/misp-install/
+                      └──> Creates: /opt/misp/logs/
                                    └── Installation logs
 
 backup-misp.sh ───────────> Creates: /opt/misp-backups/
@@ -222,7 +222,7 @@ chmod 700 /opt/misp-backups
 
 ### "Something went wrong during installation"
 → Check: **TROUBLESHOOTING.md**  
-→ Review: `/var/log/misp-install/latest.log`  
+→ Review: `/opt/misp/logs/latest.log`  
 → Use: `python3 misp-install.py --resume`
 
 ### "I need to maintain MISP"
@@ -293,7 +293,7 @@ chmod 700 /opt/misp-backups
 → **backup-misp.sh**
 
 ### "Where are the logs?"
-→ `/var/log/misp-install/` and `sudo docker compose logs`
+→ `/opt/misp/logs/` and `sudo docker compose logs`
 
 ### "I need detailed documentation"
 → **README.md**
@@ -305,7 +305,7 @@ chmod 700 /opt/misp-backups
 ### Included Documentation
 - All files in this package
 - Auto-generated `POST-INSTALL-CHECKLIST.md`
-- Installation logs in `/var/log/misp-install/`
+- Installation logs in `/opt/misp/logs/`
 
 ### Official MISP Resources
 - **Website:** https://www.misp-project.org/

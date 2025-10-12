@@ -24,7 +24,7 @@ Before creating bug reports, please check the existing issues to avoid duplicate
 - Actual behavior
 - Screenshots (if applicable)
 - System information (OS, Python version, etc.)
-- Relevant logs from `/var/log/misp-install/`
+- Relevant logs from `/opt/misp/logs/`
 
 **Example:**
 ```markdown

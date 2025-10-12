@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - 🎉 **Complete Python rewrite** - Enterprise-grade installation system
 - ✅ **Pre-flight system checks** - Validates disk, RAM, CPU, ports, and Docker before installation
-- 📝 **Comprehensive logging** - All operations logged to `/var/log/misp-install/` with timestamps
+- 📝 **Comprehensive logging** - All operations logged to `/opt/misp/logs/` with timestamps
 - 💾 **Automatic backups** - Creates backup before cleanup with retention policy
 - 🔐 **Password validation** - Enforces strong passwords (12+ chars, complexity requirements)
 - 📋 **Config file support** - YAML and JSON configuration files for automation

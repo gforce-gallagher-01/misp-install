@@ -315,7 +315,7 @@ sudo docker compose exec misp-core ps aux | grep worker
 - **MISP Book:** https://www.circl.lu/doc/misp/
 - **Community Forum:** https://www.misp-project.org/community/
 - **GitHub Issues:** https://github.com/MISP/MISP/issues
-- **Installation Logs:** `/var/log/misp-install/`
+- **Installation Logs:** `/opt/misp/logs/`
 - **Password File:** `/opt/misp/PASSWORDS.txt`
 
 ---

@@ -134,10 +134,10 @@ python3 misp-install.py --resume
 ### View Logs
 ```bash
 # Check latest log
-ls -lt /var/log/misp-install/ | head -2
+ls -lt /opt/misp/logs/ | head -2
 
 # View specific log
-cat /var/log/misp-install/misp-install-TIMESTAMP.log
+cat /opt/misp/logs/misp-install-TIMESTAMP.log
 ```
 
 ### Restart MISP
@@ -205,7 +205,7 @@ sudo docker compose restart
 
 ## 📚 Need Help?
 
-1. **Check logs:** `/var/log/misp-install/`
+1. **Check logs:** `/opt/misp/logs/`
 2. **Read README:** `README.md` has full documentation
 3. **Review checklist:** `/opt/misp/POST-INSTALL-CHECKLIST.md`
 4. **MISP Docs:** https://www.misp-project.org/documentation/
