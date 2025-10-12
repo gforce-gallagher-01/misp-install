@@ -786,7 +786,7 @@ class MISPInstaller:
         self.logger.info("[5.2] Cloning MISP Docker repository...")
         self.logger.info("This may take 1-2 minutes...")
 
-        # Clone directly to /opt/misp
+        # Clone official MISP Docker repository to /opt/misp
         self.run_command([
             'sudo', 'git', 'clone', '--progress',
             'https://github.com/MISP/misp-docker.git',
