@@ -1,0 +1,89 @@
+# MISP Production Configuration Template
+# Optimized for enterprise production deployment
+# Use with: python3 misp-install.py --config misp-config-production.yaml
+
+# ============================================
+# BASIC CONFIGURATION
+# ============================================
+
+# Server Configuration
+server_ip: "192.168.20.95"          # CHANGE THIS: Your server's static IP
+domain: "misp.yourdomain.com"       # CHANGE THIS: Your FQDN (e.g., misp.gridsec.com)
+admin_email: "admin@yourdomain.com" # CHANGE THIS: Admin email
+admin_org: "YourOrganization"       # CHANGE THIS: Your organization name
+
+# Environment
+environment: "production"
+
+# Base URL (auto-generated if not specified)
+base_url: "https://misp.yourdomain.com"
+
+# ============================================
+# SECURITY - CHANGE ALL PASSWORDS!
+# ============================================
+
+# CRITICAL: Generate strong unique passwords for each field
+# Requirements: 12+ characters, uppercase, lowercase, number, special character
+
+# MISP Admin Password (used to login to web interface)
+admin_password: "CHANGE-THIS-AdminP@ssw0rd123!"
+
+# MySQL Database Password
+mysql_password: "CHANGE-THIS-MySQL$ecureP@ss456!"
+
+# GPG Passphrase (for encryption)
+gpg_passphrase: "CHANGE-THIS-GPG$ecretKey789!"
+
+# Encryption Key - Generate with: python3 -c "import secrets; print(secrets.token_hex(16))"
+encryption_key: "CHANGE-THIS-HEX-KEY"  # Must be 32 character hex string
+
+# ============================================
+# PERFORMANCE TUNING (PRODUCTION)
+# ============================================
+
+# Optimized for production servers with adequate resources
+# Recommended minimum: 8GB RAM, 4 CPU cores
+
+performance:
+  # PHP memory limit - adjust based on your server RAM
+  # 4GB RAM:  "1024M"
+  # 8GB RAM:  "2048M"
+  # 16GB RAM: "4096M"
+  # 32GB+ RAM: "8192M"
+  php_memory_limit: "2048M"
+  
+  # PHP execution time (seconds)
+  # 300 = 5 minutes (recommended for production)
+  php_max_execution_time: 300
+  
+  # Number of background workers
+  # 0 = auto-calculate based on CPU cores (recommended)
+  # Or set manually: typically 2x CPU cores for production
+  workers: 0
+
+# ============================================
+# NOTES
+# ============================================
+
+# After Installation:
+# 1. Backup ~/misp-docker/PASSWORDS.txt to secure location
+# 2. Configure firewall: sudo ufw allow 443/tcp
+# 3. Set up automated backups
+# 4. Configure email settings in MISP
+# 5. Enable 2FA for all admin accounts
+# 6. Review and implement items in POST-INSTALL-CHECKLIST.md
+
+# For High-Availability Setup:
+# - Use external database (MySQL/MariaDB cluster)
+# - Use external Redis cluster
+# - Load balance multiple MISP instances
+# - Use shared storage for attachments
+
+# Security Best Practices:
+# - Change admin password after first login
+# - Use strong, unique passwords
+# - Enable 2FA
+# - Regularly update MISP
+# - Monitor logs for suspicious activity
+# - Regular security audits
+# - Keep backups encrypted and off-site

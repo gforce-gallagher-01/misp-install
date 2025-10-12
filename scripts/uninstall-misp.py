@@ -1,0 +1,358 @@
+#!/usr/bin/env python3
+"""
+MISP Complete Uninstallation Script
+YourCompanyName - Safe MISP Removal
+Version: 2.0 (Python)
+
+Completely removes MISP installation while preserving backups.
+"""
+
+import os
+import sys
+import subprocess
+import shutil
+import argparse
+from pathlib import Path
+from typing import List
+
+# Check Python version
+if sys.version_info < (3, 8):
+    print("❌ Python 3.8 or higher required")
+    sys.exit(1)
+
+# ==========================================
+# Configuration
+# ==========================================
+
+class UninstallConfig:
+    """Uninstallation configuration"""
+    MISP_DIR = Path("/opt/misp")
+    BACKUP_DIR = Path.home() / "misp-backups"
+    STATE_FILE = Path.home() / ".misp-install" / "state.json"
+    LOG_DIR = Path.home() / ".misp-install" / "logs"
+
+# ==========================================
+# Color Output
+# ==========================================
+
+class Colors:
+    RED = '\033[0;31m'
+    GREEN = '\033[0;32m'
+    YELLOW = '\033[1;33m'
+    BLUE = '\033[0;34m'
+    CYAN = '\033[0;36m'
+    NC = '\033[0m'
+
+    @staticmethod
+    def colored(text: str, color: str) -> str:
+        return f"{color}{text}{Colors.NC}"
+
+    @classmethod
+    def error(cls, text: str) -> str:
+        return cls.colored(f"[ERROR] {text}", cls.RED)
+
+    @classmethod
+    def success(cls, text: str) -> str:
+        return cls.colored(f"[SUCCESS] {text}", cls.GREEN)
+
+    @classmethod
+    def warning(cls, text: str) -> str:
+        return cls.colored(f"[WARNING] {text}", cls.YELLOW)
+
+    @classmethod
+    def info(cls, text: str) -> str:
+        return cls.colored(f"[INFO] {text}", cls.BLUE)
+
+# ==========================================
+# Uninstall Manager
+# ==========================================
+
+class MISPUninstall:
+    """MISP uninstallation manager"""
+
+    def __init__(self, force: bool = False):
+        self.config = UninstallConfig()
+        self.force = force
+
+    def log(self, message: str, level: str = "info"):
+        """Print colored log message"""
+        if level == "error":
+            print(Colors.error(message))
+        elif level == "success":
+            print(Colors.success(message))
+        elif level == "warning":
+            print(Colors.warning(message))
+        else:
+            print(Colors.info(message))
+
+    def print_banner(self):
+        """Print warning banner"""
+        print()
+        print(Colors.colored("=" * 60, Colors.RED))
+        print(Colors.colored("          ⚠️  MISP UNINSTALLATION  ⚠️", Colors.RED))
+        print(Colors.colored("  This will COMPLETELY REMOVE your MISP instance", Colors.RED))
+        print(Colors.colored("=" * 60, Colors.RED))
+        print()
+        print("This script will remove:")
+        print("  • All MISP Docker containers")
+        print("  • All MISP Docker volumes (DATABASE WILL BE DELETED!)")
+        print("  • All MISP Docker images")
+        print("  • MISP configuration files")
+        print(f"  • MISP directory: {self.config.MISP_DIR}")
+        print()
+        print(Colors.warning(f"NOTE: Backups in {self.config.BACKUP_DIR} will NOT be deleted"))
+        print()
+
+    def confirm(self, message: str) -> bool:
+        """Ask for confirmation"""
+        if self.force:
+            return True
+
+        response = input(f"{message} (type 'DELETE' to confirm): ")
+        return response == "DELETE"
+
+    def remove_containers(self):
+        """Stop and remove MISP containers"""
+        self.log("Stopping MISP containers...")
+
+        if not self.config.MISP_DIR.exists():
+            self.log("MISP directory not found", "warning")
+            return
+
+        try:
+            # Stop and remove containers
+            subprocess.run(
+                ['docker', 'compose', 'down', '-v'],
+                cwd=self.config.MISP_DIR,
+                capture_output=True,
+                timeout=120
+            )
+            self.log("Containers stopped and removed", "success")
+        except Exception as e:
+            self.log(f"Could not stop containers: {e}", "warning")
+
+    def remove_images(self):
+        """Remove MISP Docker images"""
+        self.log("Removing MISP Docker images...")
+
+        try:
+            # Get MISP-related images
+            result = subprocess.run(
+                ['docker', 'images', '--format', '{{.Repository}}:{{.Tag}}'],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+
+            images = [img for img in result.stdout.strip().split('\n')
+                     if 'misp' in img.lower() or 'ghcr.io/misp' in img.lower()]
+
+            if images:
+                for image in images:
+                    try:
+                        subprocess.run(
+                            ['docker', 'rmi', '-f', image],
+                            capture_output=True,
+                            timeout=30
+                        )
+                        self.log(f"Removed image: {image}")
+                    except:
+                        pass
+
+                self.log(f"Removed {len(images)} Docker image(s)", "success")
+            else:
+                self.log("No MISP images found", "info")
+
+        except Exception as e:
+            self.log(f"Could not remove images: {e}", "warning")
+
+    def remove_misp_directory(self):
+        """Remove MISP directory"""
+        self.log("Removing MISP directory...")
+
+        if not self.config.MISP_DIR.exists():
+            self.log("MISP directory not found", "info")
+            return
+
+        try:
+            # List contents
+            contents = list(self.config.MISP_DIR.iterdir())
+            self.log(f"Contents to be deleted ({len(contents)} items):")
+            for item in contents[:10]:  # Show first 10
+                print(f"  - {item.name}")
+            if len(contents) > 10:
+                print(f"  ... and {len(contents) - 10} more")
+
+            # Remove directory
+            shutil.rmtree(self.config.MISP_DIR, ignore_errors=True)
+            self.log("MISP directory removed", "success")
+
+        except Exception as e:
+            self.log(f"Could not fully remove MISP directory: {e}", "warning")
+            self.log("Some files may require manual removal", "warning")
+
+    def remove_state_files(self):
+        """Remove installation state files"""
+        self.log("Removing installation state files...")
+
+        if self.config.STATE_FILE.exists():
+            self.config.STATE_FILE.unlink()
+            self.log("State file removed", "success")
+        else:
+            self.log("No state file found", "info")
+
+    def remove_logs(self, remove: bool = False):
+        """Optionally remove logs"""
+        if not remove:
+            self.log(f"Logs preserved in {self.config.LOG_DIR}", "info")
+            return
+
+        self.log("Removing installation logs...")
+
+        if self.config.LOG_DIR.exists():
+            shutil.rmtree(self.config.LOG_DIR, ignore_errors=True)
+            self.log("Logs removed", "success")
+        else:
+            self.log("No log directory found", "info")
+
+    def show_backup_info(self):
+        """Show information about preserved backups"""
+        print()
+        print(Colors.colored("=" * 60, Colors.CYAN))
+        print(Colors.colored("              BACKUP INFORMATION", Colors.CYAN))
+        print(Colors.colored("=" * 60, Colors.CYAN))
+        print()
+
+        if self.config.BACKUP_DIR.exists():
+            backups = list(self.config.BACKUP_DIR.glob("misp-backup-*.tar.gz"))
+
+            if backups:
+                print(f"Backups preserved in: {self.config.BACKUP_DIR}")
+                print()
+                print(f"Available backups ({len(backups)}):")
+                for backup in sorted(backups, reverse=True)[:5]:  # Show last 5
+                    size_mb = backup.stat().st_size / (1024 * 1024)
+                    print(f"  - {backup.name} ({size_mb:.1f} MB)")
+                if len(backups) > 5:
+                    print(f"  ... and {len(backups) - 5} more")
+                print()
+                print("To restore MISP from backup:")
+                print("  1. Reinstall MISP: python3 misp-install.py")
+                print("  2. Restore: python3 misp-restore.py --restore latest")
+            else:
+                print(Colors.warning("No backups found"))
+        else:
+            print(Colors.warning("No backup directory found"))
+
+        print()
+
+    def show_summary(self):
+        """Show uninstallation summary"""
+        print()
+        print(Colors.colored("=" * 60, Colors.CYAN))
+        print(Colors.colored("         UNINSTALLATION COMPLETE", Colors.CYAN))
+        print(Colors.colored("=" * 60, Colors.CYAN))
+        print()
+        print("The following items have been removed:")
+        print("  ✓ MISP containers and volumes")
+        print("  ✓ MISP Docker images")
+        print("  ✓ MISP directory")
+        print("  ✓ Installation state files")
+        print()
+        print("Preserved items:")
+        print(f"  • Backups: {self.config.BACKUP_DIR}")
+        if self.config.LOG_DIR.exists():
+            print(f"  • Logs: {self.config.LOG_DIR}")
+        print()
+        print("To reinstall MISP:")
+        print("  python3 misp-install.py")
+        print()
+        print(Colors.success("Thank you for using MISP!"))
+        print()
+
+    def run(self, remove_logs: bool = False) -> bool:
+        """Run uninstallation process"""
+        self.print_banner()
+
+        # First confirmation
+        if not self.confirm("Are you absolutely sure you want to uninstall MISP?"):
+            print(Colors.success("Aborted. No changes made."))
+            return False
+
+        # Final warning
+        print()
+        print(Colors.error("FINAL WARNING: This will DELETE your MISP database and all configuration!"))
+
+        if not self.confirm("Proceed with uninstallation?"):
+            print(Colors.success("Aborted. No changes made."))
+            return False
+
+        print()
+
+        try:
+            # Execute removal steps
+            self.remove_containers()
+            self.remove_images()
+            self.remove_misp_directory()
+            self.remove_state_files()
+            self.remove_logs(remove_logs)
+
+            # Show backup information
+            self.show_backup_info()
+
+            # Show summary
+            self.show_summary()
+
+            return True
+
+        except KeyboardInterrupt:
+            print()
+            self.log("Uninstallation interrupted by user", "warning")
+            return False
+        except Exception as e:
+            self.log(f"Uninstallation failed: {e}", "error")
+            import traceback
+            traceback.print_exc()
+            return False
+
+# ==========================================
+# Main
+# ==========================================
+
+def main():
+    """Main entry point"""
+    parser = argparse.ArgumentParser(
+        description='MISP Complete Uninstallation Script',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Interactive uninstall
+  python3 uninstall-misp.py
+
+  # Force uninstall without confirmations
+  python3 uninstall-misp.py --force
+
+  # Uninstall and remove logs
+  python3 uninstall-misp.py --remove-logs
+        """
+    )
+
+    parser.add_argument('--force', action='store_true',
+                       help='Skip confirmation prompts')
+    parser.add_argument('--remove-logs', action='store_true',
+                       help='Also remove installation logs')
+
+    args = parser.parse_args()
+
+    # Check if running as root
+    if os.geteuid() == 0:
+        print(Colors.error("Don't run this script as root!"))
+        print("Run as regular user: python3 uninstall-misp.py")
+        sys.exit(1)
+
+    uninstall = MISPUninstall(force=args.force)
+    success = uninstall.run(remove_logs=args.remove_logs)
+    sys.exit(0 if success else 1)
+
+if __name__ == "__main__":
+    main()

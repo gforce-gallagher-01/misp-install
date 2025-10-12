@@ -1,0 +1,250 @@
+# MISP Installer - Git Ignore Rules
+
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================
+# MISP Installation Files
+# ============================================
+
+# State files
+.misp-install-state.json
+
+# Logs
+*.log
+logs/
+misp-logs/
+
+# Backups
+*.tar.gz
+*.sql
+*.sql.gz
+misp-backups/
+
+# MISP directories
+misp-docker/
+!misp-docker/.gitkeep
+
+# ============================================
+# Configuration Files (with credentials)
+# ============================================
+
+# User config files (contain passwords)
+misp-config.yaml
+misp-config.json
+my-*.yaml
+my-*.json
+prod-*.yaml
+prod-*.json
+*-config.yaml
+*-config.json
+
+# But keep example files
+!misp-config.yaml.example
+!misp-config.json.example
+!config/misp-config-*.yaml
+!config/misp-config-*.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Password files
+PASSWORDS.txt
+passwords.txt
+credentials.txt
+
+# ============================================
+# IDE & Editors
+# ============================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+*~
+tags
+
+# Emacs
+*~
+\#*\#
+.\#*
+.dir-locals.el
+
+# ============================================
+# Operating System
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# Testing & Coverage
+# ============================================
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# ============================================
+# Documentation Builds
+# ============================================
+docs/_build/
+docs/.doctrees/
+site/
+
+# ============================================
+# Local Development
+# ============================================
+local/
+tmp/
+temp/
+scratch/
+.local/
+
+# ============================================
+# SSL Certificates (Don't commit private keys!)
+# ============================================
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# But keep example/placeholder files
+!examples/**/*.pem.example
+!config/**/*.pem.example
+
+# ============================================
+# Docker (if adding Dockerfile)
+# ============================================
+docker-compose.override.yml
+.dockerignore
+
+# ============================================
+# Package Manager
+# ============================================
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ============================================
+# Jupyter Notebooks
+# ============================================
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# ============================================
+# mypy
+# ============================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================
+# Pyre type checker
+# ============================================
+.pyre/
+
+# ============================================
+# pytype static type analyzer
+# ============================================
+.pytype/
+
+# ============================================
+# Project Specific
+# ============================================
+
+# User-specific health check outputs
+health-check-output-*.txt
+diagnostics-*.txt
+
+# User-specific backup configs
+backup-config-*.json
+backup-config-*.yaml
+
+# Test output
+test-results/
+test-output/
+
+# Generated documentation
+api-docs/
+
+# User notes
+NOTES.md
+TODO.md
+.notes/
