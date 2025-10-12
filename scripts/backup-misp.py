@@ -36,6 +36,18 @@ class BackupConfig:
     RETENTION_DAYS = 30
 
 # ==========================================
+# Color Output (for terminal display only)
+# ==========================================
+
+class Colors:
+    GREEN = '\033[0;32m'
+    NC = '\033[0m'
+
+    @staticmethod
+    def colored(text: str, color: str) -> str:
+        return f"{color}{text}{Colors.NC}"
+
+# ==========================================
 # Backup Manager
 # ==========================================
 
@@ -48,33 +60,47 @@ class MISPBackup:
         self.backup_name = f"misp-backup-{self.timestamp}"
         self.backup_dir = self.config.BACKUP_BASE_DIR / self.backup_name
         self.archive_path = self.config.BACKUP_BASE_DIR / f"{self.backup_name}.tar.gz"
+        self.start_time = time.time()
 
-    def log(self, message: str, level: str = "info"):
-        """Print colored log message"""
-        if level == "error":
-            print(Colors.error(message))
-        elif level == "success":
-            print(Colors.success(message))
-        elif level == "warning":
-            print(Colors.warning(message))
-        else:
-            print(Colors.info(message))
+        # Initialize centralized logger
+        self.logger = get_logger('backup-misp', 'misp:backup')
+
+        self.logger.info(
+            "Backup initiated",
+            event_type="backup",
+            action="start",
+            backup_name=self.backup_name
+        )
 
     def check_misp_dir(self) -> bool:
         """Check if MISP directory exists"""
         if not self.config.MISP_DIR.exists():
-            self.log(f"MISP directory not found: {self.config.MISP_DIR}", "error")
+            self.logger.error(
+                f"MISP directory not found: {self.config.MISP_DIR}",
+                event_type="backup",
+                action="check_dir",
+                file_path=str(self.config.MISP_DIR)
+            )
             return False
         return True
 
     def create_backup_dir(self):
         """Create backup directory"""
-        self.log(f"Creating backup directory: {self.backup_dir}")
+        self.logger.info(
+            f"Creating backup directory",
+            event_type="backup",
+            action="create_dir",
+            file_path=str(self.backup_dir)
+        )
         self.backup_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
 
     def backup_configuration(self):
         """Backup configuration files"""
-        self.log("Backing up configuration files...")
+        self.logger.info(
+            "Backing up configuration files",
+            event_type="backup",
+            phase="backup_config"
+        )
 
         files = ['.env', 'PASSWORDS.txt', 'docker-compose.yml', 'docker-compose.override.yml']
 
@@ -82,13 +108,25 @@ class MISPBackup:
             src = self.config.MISP_DIR / file
             if src.exists():
                 shutil.copy2(src, self.backup_dir / file)
-                self.log(f"Backed up {file}", "success")
+                self.logger.success(
+                    f"Backed up {file}",
+                    event_type="backup",
+                    action="backup_file",
+                    component="config",
+                    file_path=file
+                )
             else:
-                self.log(f"{file} not found", "warning")
+                self.logger.warning(
+                    f"{file} not found",
+                    event_type="backup",
+                    action="backup_file",
+                    component="config",
+                    file_path=file
+                )
 
     def backup_ssl_certificates(self):
         """Backup SSL certificates"""
-        self.log("Backing up SSL certificates...")
+        self.logger.info("Backing up SSL certificates", event_type="backup", phase="backup_ssl")
 
         ssl_dir = self.config.MISP_DIR / "ssl"
         if ssl_dir.exists():
@@ -107,11 +145,11 @@ class MISPBackup:
                     capture_output=True,
                     timeout=10
                 )
-                self.log("Backed up SSL certificates", "success")
+                self.logger.success("Backed up SSL certificates", event_type="backup", action="backup_ssl", component="ssl")
             except Exception as e:
-                self.log(f"Failed to backup SSL: {e}", "warning")
+                self.logger.warning(f"Failed to backup SSL: {e}", event_type="backup", action="backup_ssl", component="ssl", error_message=str(e))
         else:
-            self.log("SSL directory not found", "warning")
+            self.logger.warning("SSL directory not found", event_type="backup", action="backup_ssl", component="ssl")
 
     def get_mysql_password(self) -> Optional[str]:
         """Get MySQL password from .env file"""
@@ -141,18 +179,18 @@ class MISPBackup:
 
     def backup_database(self) -> bool:
         """Backup MySQL database"""
-        self.log("Backing up MySQL database...")
+        self.logger.info("Backing up MySQL database", event_type="backup", phase="backup_database")
 
         if not self.is_container_running('db'):
-            self.log("Database container is not running, skipping database backup", "warning")
+            self.logger.warning("Database container is not running, skipping database backup", event_type="backup", action="check_container", container="db")
             return False
 
         mysql_password = self.get_mysql_password()
         if not mysql_password:
-            self.log("MySQL password not found in .env", "warning")
+            self.logger.warning("MySQL password not found in .env", event_type="backup", action="get_password", component="database")
             return False
 
-        self.log("Dumping database (this may take a few minutes)...")
+        self.logger.info("Dumping database (this may take a few minutes)", event_type="backup", action="dump_database", component="database")
 
         db_file = self.backup_dir / "misp_database.sql"
 
@@ -170,19 +208,19 @@ class MISPBackup:
 
             if result.returncode == 0:
                 size_mb = db_file.stat().st_size / (1024 * 1024)
-                self.log(f"Database backed up successfully ({size_mb:.1f} MB)", "success")
+                self.logger.success(f"Database backed up successfully ({size_mb:.1f} MB)", event_type="backup", action="backup_database", component="database", bytes=int(size_mb * 1024 * 1024))
                 return True
             else:
-                self.log("Database backup failed", "error")
+                self.logger.error("Database backup failed", event_type="backup", action="backup_database", component="database")
                 return False
 
         except Exception as e:
-            self.log(f"Database backup failed: {e}", "error")
+            self.logger.error(f"Database backup failed: {e}", event_type="backup", action="backup_database", component="database", error_message=str(e))
             return False
 
     def backup_attachments(self):
         """Backup MISP attachments"""
-        self.log("Backing up MISP attachments...")
+        self.logger.info("Backing up MISP attachments", event_type="backup", phase="backup_attachments")
 
         # Check if misp-core container is accessible
         try:
@@ -195,10 +233,10 @@ class MISPBackup:
             )
 
             if result.returncode != 0:
-                self.log("Attachments directory not accessible", "warning")
+                self.logger.warning("Attachments directory not accessible", event_type="backup", action="check_attachments", component="attachments")
                 return
 
-            self.log("Copying attachments from container...")
+            self.logger.info("Copying attachments from container", event_type="backup", action="copy_attachments", component="attachments")
 
             # Create attachments directory
             attach_dir = self.backup_dir / "attachments"
@@ -216,16 +254,16 @@ class MISPBackup:
                 # Calculate size
                 total_size = sum(f.stat().st_size for f in attach_dir.rglob('*') if f.is_file())
                 size_mb = total_size / (1024 * 1024)
-                self.log(f"Attachments backed up successfully ({size_mb:.1f} MB)", "success")
+                self.logger.success(f"Attachments backed up successfully ({size_mb:.1f} MB)", event_type="backup", action="backup_attachments", component="attachments", bytes=int(size_mb * 1024 * 1024))
             else:
-                self.log("Could not backup attachments (container might not be running)", "warning")
+                self.logger.warning("Could not backup attachments (container might not be running)", event_type="backup", action="backup_attachments", component="attachments")
 
         except Exception as e:
-            self.log(f"Attachments backup failed: {e}", "warning")
+            self.logger.warning(f"Attachments backup failed: {e}", event_type="backup", action="backup_attachments", component="attachments", error_message=str(e))
 
     def create_backup_metadata(self):
         """Create backup metadata file"""
-        self.log("Creating backup metadata...")
+        self.logger.info("Creating backup metadata", event_type="backup", phase="create_metadata")
 
         # Get container status
         try:
@@ -281,11 +319,11 @@ Backup Size: {size_mb:.1f} MB
         metadata_file = self.backup_dir / "backup_info.txt"
         metadata_file.write_text(metadata)
 
-        self.log("Backup metadata created", "success")
+        self.logger.success("Backup metadata created", event_type="backup", action="create_metadata")
 
     def compress_backup(self) -> bool:
         """Compress backup directory"""
-        self.log("Compressing backup...")
+        self.logger.info("Compressing backup", event_type="backup", phase="compress")
 
         try:
             with tarfile.open(self.archive_path, "w:gz") as tar:
@@ -295,7 +333,7 @@ Backup Size: {size_mb:.1f} MB
             shutil.rmtree(self.backup_dir)
 
             archive_size_mb = self.archive_path.stat().st_size / (1024 * 1024)
-            self.log(f"Backup compressed: {self.archive_path.name} ({archive_size_mb:.1f} MB)", "success")
+            self.logger.success(f"Backup compressed: {self.archive_path.name} ({archive_size_mb:.1f} MB)", event_type="backup", action="compress", backup_name=self.archive_path.name, bytes=int(archive_size_mb * 1024 * 1024))
 
             print()
             print("=" * 50)
@@ -308,27 +346,27 @@ Backup Size: {size_mb:.1f} MB
             return True
 
         except Exception as e:
-            self.log(f"Failed to compress backup: {e}", "error")
+            self.logger.error(f"Failed to compress backup: {e}", event_type="backup", action="compress", error_message=str(e))
             return False
 
     def verify_backup(self) -> bool:
         """Verify backup archive integrity"""
-        self.log("Verifying backup integrity...")
+        self.logger.info("Verifying backup integrity", event_type="backup", phase="verify")
 
         try:
             with tarfile.open(self.archive_path, "r:gz") as tar:
                 tar.getmembers()  # Try to read archive
 
-            self.log("Backup archive is valid", "success")
+            self.logger.success("Backup archive is valid", event_type="backup", action="verify")
             return True
 
         except Exception as e:
-            self.log(f"Backup archive is corrupted: {e}", "error")
+            self.logger.error(f"Backup archive is corrupted: {e}", event_type="backup", action="verify", error_message=str(e))
             return False
 
     def cleanup_old_backups(self):
         """Remove backups older than retention period"""
-        self.log(f"Cleaning up backups older than {self.config.RETENTION_DAYS} days...")
+        self.logger.info(f"Cleaning up backups older than {self.config.RETENTION_DAYS} days", event_type="backup", phase="cleanup")
 
         cutoff_date = datetime.now() - timedelta(days=self.config.RETENTION_DAYS)
         deleted_count = 0
@@ -340,12 +378,12 @@ Backup Size: {size_mb:.1f} MB
                     backup_file.unlink()
                     deleted_count += 1
             except Exception as e:
-                self.log(f"Could not delete {backup_file.name}: {e}", "warning")
+                self.logger.warning(f"Could not delete {backup_file.name}: {e}", event_type="backup", action="delete_old", file_path=backup_file.name, error_message=str(e))
 
         if deleted_count > 0:
-            self.log(f"Deleted {deleted_count} old backup(s)", "success")
+            self.logger.success(f"Deleted {deleted_count} old backup(s)", event_type="backup", action="cleanup", count=deleted_count)
         else:
-            self.log("No old backups to delete")
+            self.logger.info("No old backups to delete", event_type="backup", action="cleanup", count=0)
 
     def run(self) -> bool:
         """Run complete backup process"""
@@ -380,15 +418,16 @@ Backup Size: {size_mb:.1f} MB
             print("  # Then use misp-restore.py to restore")
             print()
 
-            self.log("Backup process completed!", "success")
+            duration = time.time() - self.start_time
+            self.logger.success("Backup process completed!", event_type="backup", action="complete", duration=duration, backup_name=self.backup_name)
             return True
 
         except KeyboardInterrupt:
             print()
-            self.log("Backup interrupted by user", "warning")
+            self.logger.warning("Backup interrupted by user", event_type="backup", action="interrupt")
             return False
         except Exception as e:
-            self.log(f"Backup failed: {e}", "error")
+            self.logger.error(f"Backup failed: {e}", event_type="backup", action="complete", error_message=str(e))
             import traceback
             traceback.print_exc()
             return False

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 MISP Complete Uninstallation Script
-YourCompanyName - Safe MISP Removal
-Version: 2.0 (Python)
+tKQB Enterprises - Safe MISP Removal
+Version: 3.0 (Python with Centralized Logging)
 
 Completely removes MISP installation while preserving backups.
 """
@@ -12,6 +12,7 @@ import sys
 import subprocess
 import shutil
 import argparse
+import time
 from pathlib import Path
 from typing import List
 
@@ -19,6 +20,9 @@ from typing import List
 if sys.version_info < (3, 8):
     print("❌ Python 3.8 or higher required")
     sys.exit(1)
+
+# Import centralized logger
+from misp_logger import get_logger
 
 # ==========================================
 # Configuration
@@ -73,17 +77,32 @@ class MISPUninstall:
     def __init__(self, force: bool = False):
         self.config = UninstallConfig()
         self.force = force
+        self.start_time = time.time()
+
+        # Initialize centralized logger
+        self.logger = get_logger('uninstall-misp', 'misp:uninstall')
+
+        self.logger.info(
+            "Uninstallation initiated",
+            event_type="uninstall",
+            action="start"
+        )
 
     def log(self, message: str, level: str = "info"):
-        """Print colored log message"""
+        """Print colored log message and log to centralized logger"""
+        # Print colored output for user
         if level == "error":
             print(Colors.error(message))
+            self.logger.error(message, event_type="uninstall")
         elif level == "success":
             print(Colors.success(message))
+            self.logger.success(message, event_type="uninstall")
         elif level == "warning":
             print(Colors.warning(message))
+            self.logger.warning(message, event_type="uninstall")
         else:
             print(Colors.info(message))
+            self.logger.info(message, event_type="uninstall")
 
     def print_banner(self):
         """Print warning banner"""
@@ -303,14 +322,34 @@ class MISPUninstall:
             # Show summary
             self.show_summary()
 
+            # Log completion
+            duration = time.time() - self.start_time
+            self.logger.success(
+                "Uninstallation completed successfully",
+                event_type="uninstall",
+                action="complete",
+                duration=duration
+            )
+
             return True
 
         except KeyboardInterrupt:
             print()
             self.log("Uninstallation interrupted by user", "warning")
+            self.logger.warning(
+                "Uninstallation interrupted by user",
+                event_type="uninstall",
+                action="interrupt"
+            )
             return False
         except Exception as e:
             self.log(f"Uninstallation failed: {e}", "error")
+            self.logger.error(
+                f"Uninstallation failed: {e}",
+                event_type="uninstall",
+                action="complete",
+                error_message=str(e)
+            )
             import traceback
             traceback.print_exc()
             return False

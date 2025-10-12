@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 MISP Ready-to-Run Configuration Script
-YourCompanyName - Post-Installation Automation
-Version: 1.0
+tKQB Enterprises - Post-Installation Automation
+Version: 2.0 (with Centralized Logging)
 
 Automates MISP configuration for "ready to run" deployment:
 - Updates taxonomies, galaxies, warninglists
@@ -19,6 +19,9 @@ import time
 import json
 from pathlib import Path
 from typing import List, Dict
+
+# Import centralized logger
+from misp_logger import get_logger
 
 # Check Python version
 if sys.version_info < (3, 8):
@@ -62,12 +65,12 @@ class ConfigureConfig:
 # ==========================================
 
 class Colors:
-    RED = '\\033[0;31m'
-    GREEN = '\\033[0;32m'
-    YELLOW = '\\033[1;33m'
-    BLUE = '\\033[0;34m'
-    CYAN = '\\033[0;36m'
-    NC = '\\033[0m'
+    RED = '\033[0;31m'
+    GREEN = '\033[0;32m'
+    YELLOW = '\033[1;33m'
+    BLUE = '\033[0;34m'
+    CYAN = '\033[0;36m'
+    NC = '\033[0m'
 
     @staticmethod
     def colored(text: str, color: str) -> str:
@@ -103,6 +106,16 @@ class MISPReadyConfig:
     def __init__(self, dry_run: bool = False):
         self.config = ConfigureConfig()
         self.dry_run = dry_run
+        self.start_time = time.time()
+        
+        # Initialize centralized logger
+        self.logger = get_logger('configure-misp-ready', 'misp:configure')
+        
+        self.logger.info(
+            "MISP configuration initiated",
+            event_type="configure",
+            action="start"
+        )
 
     def log(self, message: str, level: str = "info"):
         """Print colored log message"""
@@ -122,13 +135,13 @@ class MISPReadyConfig:
         print()
         print(Colors.colored("=" * 60, Colors.CYAN))
         print(Colors.colored("     MISP Ready-to-Run Configuration", Colors.CYAN))
-        print(Colors.colored("        YourCompanyName Post-Installation Automation", Colors.CYAN))
+        print(Colors.colored("        tKQB Enterprises Post-Installation Automation", Colors.CYAN))
         print(Colors.colored("=" * 60, Colors.CYAN))
         print()
 
     def check_misp_running(self) -> bool:
         """Check if MISP containers are running"""
-        self.log("Checking MISP containers...", "step")
+        self.logger.info("Checking MISP containers", event_type="configure", action="check_containers")
 
         try:
             result = subprocess.run(
@@ -145,20 +158,20 @@ class MISPReadyConfig:
             all_running = all(svc in running_services for svc in required_services)
 
             if all_running:
-                self.log("All required services are running", "success")
+                self.logger.success("All required services are running", event_type="configure", action="check_containers", component="docker")
                 return True
             else:
                 missing = [svc for svc in required_services if svc not in running_services]
-                self.log(f"Missing services: {', '.join(missing)}", "warning")
+                self.logger.warning(f"Missing services: {', '.join(missing)}", event_type="configure", action="check_containers", component="docker")
                 return False
 
         except Exception as e:
-            self.log(f"Could not check container status: {e}", "error")
+            self.logger.error(f"Could not check container status: {e}", event_type="configure", action="check_containers", error_message=str(e))
             return False
 
     def wait_for_misp(self, max_wait: int = 60):
         """Wait for MISP to be ready"""
-        self.log(f"Waiting for MISP to be ready (max {max_wait}s)...", "step")
+        self.logger.info(f"Waiting for MISP to be ready (max {max_wait}s)", event_type="configure", action="wait_ready")
 
         for i in range(max_wait):
             try:
@@ -171,7 +184,7 @@ class MISPReadyConfig:
                 )
 
                 if result.returncode == 0:
-                    self.log("MISP is ready!", "success")
+                    self.logger.success("MISP is ready!", event_type="configure", action="wait_ready")
                     return True
             except:
                 pass
@@ -180,7 +193,7 @@ class MISPReadyConfig:
                 print(f"  Still waiting... ({i}s)")
             time.sleep(1)
 
-        self.log("MISP did not become ready in time", "warning")
+        self.logger.warning("MISP did not become ready in time", event_type="configure", action="wait_ready")
         return False
 
     def run_cake_command(self, command: List[str]) -> bool:
@@ -204,54 +217,54 @@ class MISPReadyConfig:
             if result.returncode == 0:
                 return True
             else:
-                self.log(f"Command failed: {result.stderr[:200]}", "warning")
+                self.logger.warning(f"Command failed: {result.stderr[:200]}", event_type="configure", action="run_command", error_message=result.stderr[:200])
                 return False
 
         except Exception as e:
-            self.log(f"Could not run command: {e}", "warning")
+            self.logger.warning(f"Could not run command: {e}", event_type="configure", action="run_command", error_message=str(e))
             return False
 
     def update_taxonomies(self):
         """Update MISP taxonomies"""
-        self.log("Updating taxonomies...", "step")
+        self.logger.info("Updating taxonomies", event_type="configure", phase="update_taxonomies")
         if self.run_cake_command(['Admin', 'updateTaxonomies']):
-            self.log("Taxonomies updated", "success")
+            self.logger.success("Taxonomies updated", event_type="configure", action="update_taxonomies")
         else:
-            self.log("Could not update taxonomies", "warning")
+            self.logger.warning("Could not update taxonomies", event_type="configure", action="update_taxonomies")
 
     def update_galaxies(self):
         """Update MISP galaxies (MITRE ATT&CK, threat actors, etc.)"""
-        self.log("Updating galaxies (MITRE ATT&CK, threat actors)...", "step")
-        self.log("This may take several minutes...", "info")
+        self.logger.info("Updating galaxies (MITRE ATT&CK, threat actors)", event_type="configure", phase="update_galaxies")
+        self.logger.info("This may take several minutes", event_type="configure", action="update_galaxies")
 
         if self.run_cake_command(['Admin', 'updateGalaxies', '--force']):
-            self.log("Galaxies updated", "success")
+            self.logger.success("Galaxies updated", event_type="configure", action="update_galaxies")
         else:
-            self.log("Could not update galaxies", "warning")
+            self.logger.warning("Could not update galaxies", event_type="configure", action="update_galaxies")
 
     def update_warninglists(self):
         """Update MISP warninglists (false positive filters)"""
-        self.log("Updating warninglists...", "step")
+        self.logger.info("Updating warninglists", event_type="configure", phase="update_warninglists")
         if self.run_cake_command(['Admin', 'updateWarningLists']):
-            self.log("Warninglists updated", "success")
+            self.logger.success("Warninglists updated", event_type="configure", action="update_warninglists")
         else:
-            self.log("Could not update warninglists", "warning")
+            self.logger.warning("Could not update warninglists", event_type="configure", action="update_warninglists")
 
     def update_noticelist(self):
         """Update MISP notice lists"""
-        self.log("Updating notice lists...", "step")
+        self.logger.info("Updating notice lists", event_type="configure", phase="update_noticelist")
         if self.run_cake_command(['Admin', 'updateNoticeLists']):
-            self.log("Notice lists updated", "success")
+            self.logger.success("Notice lists updated", event_type="configure", action="update_noticelist")
         else:
-            self.log("Could not update notice lists", "warning")
+            self.logger.warning("Could not update notice lists", event_type="configure", action="update_noticelist")
 
     def update_object_templates(self):
         """Update MISP object templates"""
-        self.log("Updating object templates...", "step")
+        self.logger.info("Updating object templates", event_type="configure", phase="update_object_templates")
         if self.run_cake_command(['Admin', 'updateObjectTemplates']):
-            self.log("Object templates updated", "success")
+            self.logger.success("Object templates updated", event_type="configure", action="update_object_templates")
         else:
-            self.log("Could not update object templates", "warning")
+            self.logger.warning("Could not update object templates", event_type="configure", action="update_object_templates")
 
     def set_setting(self, setting: str, value):
         """Set a MISP setting"""
@@ -263,17 +276,17 @@ class MISPReadyConfig:
 
     def configure_core_settings(self):
         """Configure core MISP settings"""
-        self.log("Configuring core settings...", "step")
+        self.logger.info("Configuring core settings", event_type="configure", phase="configure_settings")
 
         success_count = 0
         for setting, value in self.config.CORE_SETTINGS.items():
             if self.set_setting(setting, value):
                 success_count += 1
-                self.log(f"  ✓ Set {setting}", "info")
+                self.logger.debug(f"Set {setting}", event_type="configure", action="set_setting", component=setting)
             else:
-                self.log(f"  ✗ Could not set {setting}", "warning")
+                self.logger.warning(f"Could not set {setting}", event_type="configure", action="set_setting", component=setting)
 
-        self.log(f"Configured {success_count}/{len(self.config.CORE_SETTINGS)} settings", "success")
+        self.logger.success(f"Configured {success_count}/{len(self.config.CORE_SETTINGS)} settings", event_type="configure", action="configure_settings", count=success_count)
 
     def get_api_key(self) -> str:
         """Get admin API key from MISP"""
@@ -309,21 +322,21 @@ class MISPReadyConfig:
 
     def enable_recommended_feeds(self):
         """Enable recommended OSINT feeds"""
-        self.log("Enabling recommended OSINT feeds...", "step")
-        self.log("Note: Feeds will be enabled but not cached initially", "info")
-        self.log("Run feed caching manually or via cron job", "info")
+        self.logger.info("Enabling recommended OSINT feeds", event_type="configure", phase="enable_feeds")
+        self.logger.info("Note: Feeds will be enabled but not cached initially", event_type="configure", action="enable_feeds")
+        self.logger.info("Run feed caching manually or via cron job", event_type="configure", action="enable_feeds")
 
         # This would require PyMISP or API calls
         # For now, just inform the user
-        self.log("Recommended feeds to enable manually:", "info")
+        self.logger.info("Recommended feeds to enable manually:", event_type="configure", action="enable_feeds")
         for feed in self.config.RECOMMENDED_FEEDS:
             print(f"  - {feed}")
 
-        self.log("Enable feeds via: Sync Actions > List Feeds", "info")
+        self.logger.info("Enable feeds via: Sync Actions > List Feeds", event_type="configure", action="enable_feeds")
 
     def create_initial_backup(self):
         """Create initial backup after configuration"""
-        self.log("Creating initial backup...", "step")
+        self.logger.info("Creating initial backup", event_type="configure", phase="create_backup")
 
         backup_script = Path(__file__).parent / "backup-misp.py"
         if backup_script.exists():
@@ -332,11 +345,11 @@ class MISPReadyConfig:
                     ['python3', str(backup_script)],
                     timeout=300
                 )
-                self.log("Initial backup created", "success")
+                self.logger.success("Initial backup created", event_type="configure", action="create_backup")
             except Exception as e:
-                self.log(f"Could not create backup: {e}", "warning")
+                self.logger.warning(f"Could not create backup: {e}", event_type="configure", action="create_backup", error_message=str(e))
         else:
-            self.log("Backup script not found", "warning")
+            self.logger.warning("Backup script not found", event_type="configure", action="create_backup")
 
     def show_next_steps(self):
         """Show next steps for the user"""
@@ -383,13 +396,13 @@ class MISPReadyConfig:
 
         # Check if MISP is installed
         if not self.config.MISP_DIR.exists():
-            self.log(f"MISP directory not found: {self.config.MISP_DIR}", "error")
-            self.log("Please install MISP first: python3 misp-install.py", "error")
+            self.logger.error(f"MISP directory not found: {self.config.MISP_DIR}", event_type="configure", action="check_dir", file_path=str(self.config.MISP_DIR))
+            self.logger.error("Please install MISP first: python3 misp-install.py", event_type="configure", action="check_dir")
             return False
 
         # Check if containers are running
         if not self.check_misp_running():
-            self.log("Starting MISP containers...", "step")
+            self.logger.info("Starting MISP containers", event_type="configure", action="start_containers")
             try:
                 subprocess.run(
                     ['docker', 'compose', 'up', '-d'],
@@ -398,12 +411,12 @@ class MISPReadyConfig:
                 )
                 time.sleep(10)
             except Exception as e:
-                self.log(f"Could not start containers: {e}", "error")
+                self.logger.error(f"Could not start containers: {e}", event_type="configure", action="start_containers", error_message=str(e))
                 return False
 
         # Wait for MISP to be ready
         if not self.wait_for_misp():
-            self.log("MISP may not be fully ready, but continuing...", "warning")
+            self.logger.warning("MISP may not be fully ready, but continuing", event_type="configure", action="wait_ready")
 
         try:
             # Update all MISP data
@@ -439,10 +452,10 @@ class MISPReadyConfig:
 
         except KeyboardInterrupt:
             print()
-            self.log("Configuration interrupted by user", "warning")
+            self.logger.warning("Configuration interrupted by user", event_type="configure", action="interrupt")
             return False
         except Exception as e:
-            self.log(f"Configuration failed: {e}", "error")
+            self.logger.error(f"Configuration failed: {e}", event_type="configure", action="complete", error_message=str(e))
             import traceback
             traceback.print_exc()
             return False

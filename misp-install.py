@@ -2,11 +2,11 @@
 """
 MISP Complete Installation & Management Tool
 GridSec - Enterprise Edition
-Version: 5.1
+Version: 5.2 (with Centralized JSON Logging)
 
 Features:
 - Pre-flight system checks
-- Full logging
+- Centralized JSON logging with CIM fields
 - Backup before cleanup
 - Config file support (YAML/JSON)
 - Docker group activation
@@ -45,6 +45,16 @@ import pwd
 if sys.version_info < (3, 8):
     print("❌ Python 3.8 or higher required")
     sys.exit(1)
+
+# Import centralized logger (from scripts directory)
+script_dir = Path(__file__).parent
+sys.path.insert(0, str(script_dir / "scripts"))
+try:
+    from misp_logger import get_logger as get_misp_logger
+    HAS_CENTRALIZED_LOGGER = True
+except ImportError:
+    HAS_CENTRALIZED_LOGGER = False
+    print("⚠️  Centralized logger not available, using fallback logging")
 
 # Try to import yaml, if not available use basic dict
 try:
@@ -178,7 +188,26 @@ class Colors:
 # ==========================================
 
 def setup_logging() -> logging.Logger:
-    """Setup comprehensive logging"""
+    """Setup comprehensive logging with centralized JSON logger"""
+    if HAS_CENTRALIZED_LOGGER:
+        # Use centralized JSON logger for file logging
+        # This creates JSON logs in /opt/misp/logs/misp-install.log
+        try:
+            misp_logger = get_misp_logger('misp-install', 'misp:install')
+
+            # Get the underlying Python logger for compatibility
+            logger = misp_logger.logger
+
+            # The centralized logger already has file + console handlers
+            # Just inform user where logs are stored
+            logger.info(Colors.info(f"📝 JSON Logs: /opt/misp/logs/misp-install.log"))
+
+            return logger
+        except Exception as e:
+            print(f"⚠️  Could not initialize centralized logger: {e}")
+            print("   Falling back to standard logging")
+
+    # Fallback to standard Python logging if centralized logger unavailable
     log_dir = Path("/var/log/misp-install")
     try:
         log_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
@@ -186,14 +215,14 @@ def setup_logging() -> logging.Logger:
         # Fallback to user's home directory if /var/log is not writable
         log_dir = Path.home() / ".misp-install" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = log_dir / f"misp-install-{timestamp}.log"
-    
+
     # Create logger
     logger = logging.getLogger('MISP-Installer')
     logger.setLevel(logging.DEBUG)
-    
+
     # File handler (detailed)
     fh = logging.FileHandler(log_file)
     fh.setLevel(logging.DEBUG)
@@ -201,18 +230,18 @@ def setup_logging() -> logging.Logger:
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     fh.setFormatter(fh_formatter)
-    
+
     # Console handler (user-friendly)
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
     ch_formatter = logging.Formatter('%(message)s')
     ch.setFormatter(ch_formatter)
-    
+
     logger.addHandler(fh)
     logger.addHandler(ch)
-    
+
     logger.info(Colors.info(f"📝 Logging to: {log_file}"))
-    
+
     return logger
 
 # ==========================================

@@ -2,7 +2,7 @@
 """
 MISP Restore Tool
 tKQB Enterprises Edition
-Version: 1.1
+Version: 2.0 (with Centralized Logging)
 
 Features:
 - List available backups
@@ -30,6 +30,9 @@ import argparse
 if sys.version_info < (3, 8):
     print("❌ Python 3.8 or higher required")
     sys.exit(1)
+
+# Import centralized logger
+from misp_logger import get_logger
 
 # ==========================================
 # Color Output
@@ -68,42 +71,12 @@ class Colors:
 # ==========================================
 
 def setup_logging() -> logging.Logger:
-    """Setup comprehensive logging"""
-    log_dir = Path("/var/log/misp-install")
-    try:
-        log_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
-    except PermissionError:
-        # Fallback to user's home directory if /var/log is not writable
-        log_dir = Path.home() / ".misp-install" / "logs"
-        log_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = log_dir / f"misp-restore-{timestamp}.log"
-    
-    logger = logging.getLogger('MISP-Restore')
-    logger.setLevel(logging.DEBUG)
-    
-    # File handler
-    fh = logging.FileHandler(log_file)
-    fh.setLevel(logging.DEBUG)
-    
-    # Console handler
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    
-    # Formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    
-    # Simple console formatter
-    console_formatter = logging.Formatter('%(message)s')
-    ch.setFormatter(console_formatter)
-    
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    
-    print(f"📝 Logging to: {log_file}\n")
-    
+    """Setup centralized logging"""
+    # Use centralized JSON logger
+    misp_logger = get_logger('misp-restore', 'misp:restore')
+    # Get the underlying Python logger for compatibility
+    logger = misp_logger.logger
+    logger.info(f"📝 JSON Logs: /opt/misp/logs/misp-restore.log")
     return logger
 
 logger = setup_logging()
@@ -662,7 +635,7 @@ def print_banner():
     banner = """
 ╔══════════════════════════════════════════════════╗
 ║                                                  ║
-║          MISP Restore Tool v1.1                 ║
+║          MISP Restore Tool v2.0                 ║
 ║            tKQB Enterprises Edition            ║
 ║                                                  ║
 ╚══════════════════════════════════════════════════╝
