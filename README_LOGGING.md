@@ -20,7 +20,7 @@ JSON format with consistent field names:
 {
   "time": "2025-10-12T18:33:10.453675Z",
   "host": "misp-dev",
-  "user": "gallagher",
+  "user": "user",
   "source": "backup-misp",
   "sourcetype": "misp:backup",
   "severity": "INFO",

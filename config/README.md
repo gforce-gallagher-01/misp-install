@@ -130,7 +130,7 @@ Only specify passwords, all else uses defaults:
 {
   "server_ip": "10.0.1.50",
   "domain": "misp.company.com",
-  "admin_email": "security@company.com",
+  "admin_email": "security@youremail.com",
   "admin_org": "Company Security Team",
   "admin_password": "Prod#Secure123!Pass",
   "mysql_password": "ProdDB#123!Secure",

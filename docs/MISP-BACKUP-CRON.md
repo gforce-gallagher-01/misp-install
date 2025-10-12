@@ -38,7 +38,7 @@ python3 ~/misp-backup-cron.py --dry-run
 crontab -e
 
 # Add this line (runs at 2 AM daily)
-0 2 * * * /usr/bin/python3 /home/gallagher/misp-backup-cron.py >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+0 2 * * * /usr/bin/python3 /home/user/misp-backup-cron.py >> /home/user/misp-logs/backup-cron.log 2>&1
 ```
 
 ### 3. Verify Setup
@@ -203,25 +203,25 @@ python3 ~/misp-backup-cron.py --full --notify
 ### Default: Daily at 2 AM
 
 ```bash
-0 2 * * * /usr/bin/python3 /home/gallagher/misp-backup-cron.py >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+0 2 * * * /usr/bin/python3 /home/user/misp-backup-cron.py >> /home/user/misp-logs/backup-cron.log 2>&1
 ```
 
 ### Daily at 3:30 AM
 
 ```bash
-30 3 * * * /usr/bin/python3 /home/gallagher/misp-backup-cron.py >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+30 3 * * * /usr/bin/python3 /home/user/misp-backup-cron.py >> /home/user/misp-logs/backup-cron.log 2>&1
 ```
 
 ### Twice Daily (2 AM and 2 PM)
 
 ```bash
-0 2,14 * * * /usr/bin/python3 /home/gallagher/misp-backup-cron.py >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+0 2,14 * * * /usr/bin/python3 /home/user/misp-backup-cron.py >> /home/user/misp-logs/backup-cron.log 2>&1
 ```
 
 ### Every 6 Hours
 
 ```bash
-0 */6 * * * /usr/bin/python3 /home/gallagher/misp-backup-cron.py >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+0 */6 * * * /usr/bin/python3 /home/user/misp-backup-cron.py >> /home/user/misp-logs/backup-cron.log 2>&1
 ```
 
 ---
@@ -472,10 +472,10 @@ Keep different schedules for different days:
 
 ```bash
 # Full backup Sunday at 2 AM
-0 2 * * 0 /usr/bin/python3 /home/gallagher/misp-backup-cron.py --full >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+0 2 * * 0 /usr/bin/python3 /home/user/misp-backup-cron.py --full >> /home/user/misp-logs/backup-cron.log 2>&1
 
 # Incremental Mon-Sat at 2 AM
-0 2 * * 1-6 /usr/bin/python3 /home/gallagher/misp-backup-cron.py >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+0 2 * * 1-6 /usr/bin/python3 /home/user/misp-backup-cron.py >> /home/user/misp-logs/backup-cron.log 2>&1
 ```
 
 ### Additional Items to Backup
@@ -504,7 +504,7 @@ Automatically copy backups to remote server:
 
 ```bash
 # Add to crontab after backup completes
-0 3 * * * rsync -avz --delete /opt/misp-backups/full/ backup-server:/backups/misp/full/ >> /home/gallagher/misp-logs/backup-sync.log 2>&1
+0 3 * * * rsync -avz --delete /opt/misp-backups/full/ backup-server:/backups/misp/full/ >> /home/user/misp-logs/backup-sync.log 2>&1
 ```
 
 ---

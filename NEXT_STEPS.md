@@ -35,7 +35,7 @@ All scripts are complete and ready for production deployment!
 
 #### A. Commit to Repository
 ```bash
-cd /home/gallagher/misp-repo/misp-install
+cd /home/user/misp-repo/misp-install
 git status
 git add scripts/ *.md
 git commit -m "Complete centralized JSON logging migration (v6.0)
@@ -73,7 +73,7 @@ Update existing docs to reflect the new logging system:
 
 #### A. Update Main README
 ```bash
-cd /home/gallagher/misp-repo/misp-install
+cd /home/user/misp-repo/misp-install
 # Add section about centralized logging to README.md
 ```
 
@@ -192,7 +192,7 @@ For multiple MISP instances:
 ### Priority 1: Production Deployment (30 min)
 ```bash
 # 1. Review changes
-cd /home/gallagher/misp-repo/misp-install
+cd /home/user/misp-repo/misp-install
 git status
 cat UPDATE_SUMMARY.md
 
@@ -210,7 +210,7 @@ tail /opt/misp/logs/backup-misp.log | jq '.'
 ### Priority 2: Quick Documentation Update (15 min)
 ```bash
 # Update main README
-cd /home/gallagher/misp-repo/misp-install
+cd /home/user/misp-repo/misp-install
 # Add to README.md:
 # - Link to README_LOGGING.md
 # - Note about centralized logs
@@ -279,6 +279,6 @@ Before closing this project:
 
 **Status:** ✅ ALL 8/8 scripts complete and production-ready!
 **Next:** Deploy to production (see Option 1 above)
-**Support:** All documentation in `/home/gallagher/misp-repo/misp-install/`
+**Support:** All documentation in `/home/user/misp-repo/misp-install/`
 
 *Created by tKQB Enterprises MISP Installation Suite*

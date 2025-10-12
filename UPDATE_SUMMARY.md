@@ -37,7 +37,7 @@
 {
   "time": "2025-10-12T18:33:10.453675Z",
   "host": "misp-dev",
-  "user": "gallagher",
+  "user": "user",
   "source": "backup-misp",
   "sourcetype": "misp:backup",
   "severity": "INFO",
@@ -89,7 +89,7 @@
 | Location | /var/log/misp-install/ | /opt/misp/logs/ |
 | Format | Plain text | JSON |
 | Rotation | None | 5 files × 20MB |
-| Permissions | 755 | 755 (gallagher:gallagher) |
+| Permissions | 755 | 755 (user:user) |
 
 ## ✅ Testing & Validation
 
@@ -109,7 +109,7 @@
 /opt/misp/logs/configure-misp-ready.log
 
 # Permissions correct
-drwxr-xr-x gallagher:gallagher /opt/misp/logs/
+drwxr-xr-x user:user /opt/misp/logs/
 
 # Rotation working
 backup-misp.log

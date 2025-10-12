@@ -100,7 +100,7 @@ class PerformanceTuning:
 class MISPConfig:
     server_ip: str = "192.168.20.193"
     domain: str = "misp-dev.lan"
-    admin_email: str = "cgallagher@gridsec.com"
+    admin_email: str = "cuser@gridsec.com"
     admin_org: str = "GridSec"
     admin_password: str = ""
     mysql_password: str = ""
@@ -1499,7 +1499,7 @@ def get_user_input_interactive(logger: logging.Logger) -> MISPConfig:
 
     server_ip = input("Enter server IP address [192.168.20.193]: ") or "192.168.20.193"
     domain = input("Enter FQDN for MISP [misp-dev.lan]: ") or "misp-dev.lan"
-    admin_email = input("Enter admin email [cgallagher@gridsec.com]: ") or "cgallagher@gridsec.com"
+    admin_email = input("Enter admin email [cuser@gridsec.com]: ") or "cuser@gridsec.com"
     admin_org = input("Enter organization name [GridSec]: ") or "GridSec"
     
     # Environment selection

@@ -215,7 +215,7 @@ python3 misp-backup-cron.py --notify
 crontab -e
 
 # Add this line (runs at 2 AM daily)
-0 2 * * * /usr/bin/python3 /home/gallagher/misp-backup-cron.py >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+0 2 * * * /usr/bin/python3 /home/user/misp-backup-cron.py >> /home/user/misp-logs/backup-cron.log 2>&1
 ```
 
 **Backup Locations:**
@@ -364,7 +364,7 @@ python3 misp-install.py
 
 # 5. Set up automated backups
 crontab -e
-# Add: 0 2 * * * /usr/bin/python3 /home/gallagher/misp-backup-cron.py >> /home/gallagher/misp-logs/backup-cron.log 2>&1
+# Add: 0 2 * * * /usr/bin/python3 /home/user/misp-backup-cron.py >> /home/user/misp-logs/backup-cron.log 2>&1
 
 # 6. Run first manual backup
 python3 misp-backup-cron.py --full
