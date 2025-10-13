@@ -1350,6 +1350,7 @@ PERFORMANCE:
             try:
                 current_user = get_current_username()
                 logs_dir = '/opt/misp/logs'
+                misp_dir = '/opt/misp'
 
                 # Set ACLs for all users that need write access (existing files)
                 self.run_command(['sudo', 'setfacl', '-R', '-m', 'u:www-data:rwx', logs_dir], check=False)
@@ -1361,7 +1362,27 @@ PERFORMANCE:
                 self.run_command(['sudo', 'setfacl', '-R', '-d', '-m', f'u:{current_user}:rwx', logs_dir], check=False)
                 self.run_command(['sudo', 'setfacl', '-R', '-d', '-m', f'u:{MISP_USER}:rwx', logs_dir], check=False)
 
+                # CRITICAL: Fix ACL mask to ensure rwx permissions are effective
+                # Without this, effective permissions remain r-x even though user ACLs are set to rwx
+                self.run_command(['sudo', 'setfacl', '-m', 'mask::rwx', logs_dir], check=False)
+
+                # Grant read access to config files for backup/restore scripts
+                # This allows backup scripts to run as regular user without requiring sudo for file reads
+                config_files = [
+                    f'{misp_dir}/.env',
+                    f'{misp_dir}/PASSWORDS.txt',
+                    f'{misp_dir}/docker-compose.yml',
+                    f'{misp_dir}/docker-compose.override.yml'
+                ]
+
+                for config_file in config_files:
+                    # Check if file exists before setting ACL
+                    if Path(config_file).exists():
+                        self.run_command(['sudo', 'setfacl', '-m', f'u:{current_user}:r', config_file], check=False)
+
                 self.logger.info(Colors.success(f"✓ ACLs configured for shared log access (www-data, {current_user}, {MISP_USER})"))
+                self.logger.info(Colors.success(f"✓ ACL mask fixed for proper rwx permissions"))
+                self.logger.info(Colors.success(f"✓ Config files readable by {current_user} for backup scripts"))
             except Exception as e:
                 self.logger.warning(f"⚠ Could not configure ACLs: {e}")
 
