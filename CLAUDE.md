@@ -7,8 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a professional-grade Python automation suite for deploying and managing MISP (Malware Information Sharing Platform) via Docker. The suite includes installation, backup, restore, update, and uninstallation tools with enterprise-grade features.
 
 **Organization**: tKQB Enterprises
-**Current Version**: 5.4 (IN PROGRESS - BROKEN) / 5.3 (LAST STABLE)
-**Status**: v5.4 dedicated user architecture partially implemented but has permission issues
+**Current Version**: 5.4 (STABLE - PRODUCTION READY)
+**Status**: v5.4 dedicated user architecture fully implemented and tested
+**Last Updated**: 2025-10-13
 
 ## Architecture
 
@@ -48,18 +49,21 @@ Log files are named: `{script-name}-{timestamp}.log` with automatic rotation (5 
 
 ### Installation Flow
 
-The main installation script (`misp-install.py`) executes 10 phases:
+The main installation script (`misp-install.py`) executes 10 phases with dedicated user architecture:
 
 1. **Dependencies** - Install Docker and system packages
-2. **Docker Group** - Add user to docker group
+2. **Docker Group** - Add misp-owner user to docker group
 3. **Clone Repository** - Clone MISP-docker from GitHub
-4. **Configuration** - Generate .env with performance tuning
-5. **SSL Certificate** - Create self-signed cert for domain
-6. **DNS Configuration** - Update /etc/hosts
-7. **Password Reference** - Create PASSWORDS.txt
-8. **Docker Build** - Pull images and start containers (15-30 min)
-9. **Initialization** - Wait for MISP init (5-10 min)
-10. **Post-Install** - Generate checklist
+4. **Cleanup** - Remove previous MISP installation (preserves logs)
+5. **Directory Setup** - Create /opt/misp with proper ownership
+   - **Phase 5.5**: Configure logs directory BEFORE Docker starts (critical for permissions)
+6. **Configuration** - Generate .env with performance tuning
+7. **SSL Certificate** - Create self-signed cert for domain
+8. **DNS Configuration** - Update /etc/hosts
+9. **Password Reference** - Create PASSWORDS.txt
+10. **Docker Build** - Pull images and start containers (15-30 min)
+11. **Initialization** - Wait for MISP init (5-10 min)
+12. **Post-Install** - Generate checklist and verify permissions
 
 **Resume Capability**: If interrupted, run with `--resume` flag to continue from last completed phase.
 
@@ -73,32 +77,36 @@ The main installation script (`misp-install.py`) executes 10 phases:
 
 ## Prerequisites
 
-### One-Time Setup
+### v5.4 Dedicated User Architecture
 
-Before running any scripts for the first time, create the log directory:
+**NO MANUAL SETUP REQUIRED** - The installer handles everything automatically:
 
-```bash
-sudo mkdir -p /opt/misp/logs && sudo chown $USER:$USER /opt/misp && sudo chmod 777 /opt/misp/logs
-```
+1. **misp-owner System User**: Created automatically during installation
+   - System user with no login shell (security best practice)
+   - Follows NIST SP 800-53 AC-6 (Least Privilege)
+   - Follows CIS Benchmarks 5.4.1 (Service Account Isolation)
 
-This is required because:
-- All scripts write logs to `/opt/misp/logs`
-- The directory requires sudo to create (owned by root initially)
-- This command gives your user ownership, allowing scripts to run without sudo prompts
-- For CI/CD environments, configure passwordless sudo (see SETUP.md)
+2. **Ownership Model**:
+   - `/opt/misp/` owned by `misp-owner:misp-owner`
+   - `/opt/misp/logs/` has 777 permissions (allows Docker www-data + scripts to write)
+   - All MISP files owned by dedicated user, not regular user account
+
+3. **Passwordless Sudo**: Required for specific commands (see SETUP.md):
+   - File operations: mkdir, chown, chmod, rm, mv, cp
+   - Docker operations: docker, docker-compose
+   - System operations: apt, systemctl, usermod
+
+For CI/CD environments, see SETUP.md for sudoers configuration.
 
 ## Common Commands
 
 ### Development Workflow
 
 ```bash
-# One-time setup (required on first run)
-sudo mkdir -p /opt/misp/logs && sudo chown $USER:$USER /opt/misp && sudo chmod 777 /opt/misp/logs
-
-# Install MISP (interactive)
+# Install MISP (interactive - recommended for first-time users)
 python3 misp-install.py
 
-# Install with config file (non-interactive)
+# Install with config file (non-interactive - CI/CD)
 python3 misp-install.py --config config/misp-config.json --non-interactive
 
 # Resume interrupted installation
@@ -116,7 +124,7 @@ python3 scripts/misp-restore.py --restore latest
 # Update MISP (with auto-backup)
 python3 scripts/misp-update.py --all
 
-# Uninstall (preserves backups)
+# Uninstall MISP completely (removes misp-owner user, preserves backups)
 python3 scripts/uninstall-misp.py --force
 
 # View logs with JSON formatting
@@ -127,6 +135,11 @@ cd /opt/misp && sudo docker compose ps
 
 # View container logs
 cd /opt/misp && sudo docker compose logs -f misp-core
+
+# Verify ownership and permissions
+ls -la /opt/misp
+ls -la /opt/misp/logs
+id misp-owner
 ```
 
 ### Testing
@@ -537,11 +550,251 @@ tail -f /tmp/install-test.log
 - `SETUP.md` - Setup guide for dedicated user architecture
 - `docs/testing_and_updates/CHANGELOG.md` - v5.4 release notes
 
-### Conclusion
+### v5.4 Completion (October 2025)
 
-The dedicated user architecture (v5.4) is architecturally sound and follows industry best practices. The implementation is approximately 50% complete:
-- User creation: ✅ Complete
-- Phase 1-2, 5-6: ✅ Working
-- Phase 7+: ❌ Need sudo pattern
+**Status**: ✅ COMPLETE AND PRODUCTION READY
 
-The v5.3 architecture with one-time manual setup remains the last stable version and is appropriate for production use until v5.4 can be completed and fully tested.
+After systematic debugging and permission architecture fixes, v5.4 was successfully completed:
+
+#### Final Fixes Applied
+
+1. **Phase 5.5 - Log Directory Timing** (lines 819-837):
+   - **Problem**: Docker mounts `./logs/` and creates it as `www-data:www-data` with 770 permissions
+   - **Solution**: Create log directory BEFORE Docker starts in Phase 5.5
+   - **Implementation**:
+     ```python
+     logs_dir = self.misp_dir / "logs"
+     self.run_command(['sudo', '-u', MISP_USER, 'mkdir', '-p', str(logs_dir)])
+     self.run_command(['sudo', 'chmod', '777', str(logs_dir)])
+     self.run_command(['sudo', 'chown', f'{MISP_USER}:{MISP_USER}', str(logs_dir)])
+     ```
+   - **Result**: Both Docker (www-data) and scripts (current user) can write logs
+
+2. **All Phases Sudo Pattern Applied**:
+   - Phase 7 (SSL Certificate): Fixed directory + file creation
+   - Phase 8 (Password File): Fixed file creation with temp file pattern
+   - Phase 10.6: Kept as safety net (redundant but harmless)
+   - All file operations use temp file + sudo pattern
+
+3. **Documentation Cleanup** (October 13, 2025):
+   - ✅ Removed duplicate scripts: `backup-misp.sh`, `uninstall-misp.sh`
+   - ✅ Created `SCRIPTS.md`: Comprehensive 14KB inventory of all 8 Python scripts
+   - ✅ Created `docs/archive/`: Moved 3 outdated files (INDEX.md, COMPLETE-FILE-LAYOUT.md, READY-TO-RUN-SETUP.md)
+   - ✅ Created `docs/README.md`: Directory guide with archive explanation
+   - ✅ Updated 15+ documentation files: v5.0→v5.4, 775→777, .sh→.py
+   - ✅ Updated `KNOWN-ISSUES.md`: All v5.4 issues resolved
+
+4. **Git Commits**:
+   - `a431f0e` - v5.4 dedicated user architecture implementation
+   - `a6d94ef` - Documentation updates to v5.4 standards
+   - `00eb459` - Archive outdated documentation
+
+#### Production Validation
+
+**Test Environment**: Clean Ubuntu system
+**Test Method**: Full uninstall + fresh install with debug config
+
+**Results**:
+- ✅ All 10 phases complete successfully
+- ✅ Log directory permissions correct (777, misp-owner:misp-owner)
+- ✅ Docker containers start with proper file ownership
+- ✅ Both www-data and scripts can write to logs
+- ✅ No manual setup required
+- ✅ Resume functionality works
+- ✅ Uninstall cleanly removes misp-owner user
+
+#### Architecture Summary
+
+**Final v5.4 Architecture**:
+- Script runs as regular user (e.g., `gallagher`)
+- Creates dedicated `misp-owner` system user (no login shell)
+- All `/opt/misp/` files owned by `misp-owner:misp-owner`
+- Log directory has 777 permissions (allows Docker + scripts to write)
+- All file operations use sudo with temp file pattern
+- Follows NIST SP 800-53 AC-6, CIS Benchmarks 5.4.1, OWASP best practices
+
+**Production Ready**: v5.4 is stable, fully tested, and ready for production deployment.
+
+---
+
+## Future Development Roadmap
+
+### Next Feature: Public Signed Certificate Support
+
+**Priority**: High
+**Target Version**: 5.5
+**Status**: Planned
+
+#### Feature Overview
+
+Add support for using public signed certificates (Let's Encrypt, commercial CA) instead of self-signed certificates, with automatic integration into the existing nginx setup in Docker containers.
+
+#### Requirements
+
+1. **Certificate Sources**:
+   - Let's Encrypt (automated via certbot or ACME client)
+   - Commercial CA certificates (manual upload)
+   - Custom CA certificates (enterprise environments)
+
+2. **Nginx Integration**:
+   - Automatic configuration of nginx in MISP Docker containers
+   - Certificate path mapping from host to container
+   - Certificate renewal automation (for Let's Encrypt)
+   - Graceful container reload after certificate update
+
+3. **Configuration Options**:
+   ```json
+   {
+     "ssl_mode": "letsencrypt|commercial|self-signed",
+     "ssl_email": "admin@company.com",
+     "ssl_cert_path": "/path/to/cert.pem",
+     "ssl_key_path": "/path/to/key.pem",
+     "ssl_chain_path": "/path/to/chain.pem",
+     "ssl_auto_renew": true
+   }
+   ```
+
+#### Implementation Plan
+
+**Phase 1: Certificate Mode Detection**
+- Add `ssl_mode` configuration option to config files
+- Detect certificate type (self-signed vs public)
+- Validate certificate paths and permissions
+
+**Phase 2: Let's Encrypt Integration**
+- Install certbot package during Phase 1 (Dependencies)
+- Add Phase 7.5: Let's Encrypt Certificate Acquisition
+  - Use certbot with standalone or webroot mode
+  - Store certificates in `/opt/misp/ssl/letsencrypt/`
+  - Set proper permissions (600 for key, 644 for cert)
+- Configure certbot renewal cron job
+
+**Phase 3: Commercial Certificate Support**
+- Add validation for user-provided certificate files
+- Copy certificates to `/opt/misp/ssl/commercial/`
+- Verify certificate chain completeness
+- Check certificate expiration and warn if < 30 days
+
+**Phase 4: Nginx Configuration**
+- Update docker-compose.yml to mount certificate directory:
+  ```yaml
+  volumes:
+    - ./ssl:/etc/nginx/certs:ro
+  ```
+- Generate nginx config snippets for each certificate type
+- Update MISP nginx configuration in container
+- Test nginx config before reload
+
+**Phase 5: Certificate Renewal Automation**
+- Create `scripts/renew-certificates.py`
+- Add cron job for automatic renewal (weekly check)
+- Implement container reload logic after renewal
+- Add logging and alerting for renewal failures
+
+#### Technical Considerations
+
+1. **Docker Volume Mounts**:
+   - Certificates must be readable by nginx (www-data) in container
+   - Use `:ro` (read-only) mount for security
+   - Path consistency between host and container
+
+2. **Let's Encrypt Challenges**:
+   - HTTP-01: Requires port 80 accessible (webroot or standalone)
+   - DNS-01: Requires DNS API access (more complex but works with firewall)
+   - TLS-ALPN-01: Requires port 443 accessible
+
+3. **Security Best Practices**:
+   - Private keys: 600 permissions, owned by misp-owner
+   - Certificates: 644 permissions, owned by misp-owner
+   - No keys in logs or console output
+   - Secure deletion of old certificates
+
+4. **Backward Compatibility**:
+   - Default behavior: Self-signed certificate (v5.4 behavior)
+   - No breaking changes to existing installations
+   - Optional feature activated via config
+
+#### Files to Modify
+
+**Core Installation** (`misp-install.py`):
+- Line ~820: Add Phase 7.5 for certificate acquisition
+- Line ~1150: Update docker-compose.yml generation
+- Line ~400: Add certificate validation methods
+- Add `CertificateManager` class for certificate operations
+
+**New Scripts**:
+- `scripts/renew-certificates.py` - Certificate renewal automation
+- `scripts/update-certificates.py` - Manual certificate update
+
+**Configuration Templates**:
+- `config/misp-config.yaml.example` - Add SSL mode options
+- `config/misp-config-production.yaml` - Add Let's Encrypt example
+
+**Documentation**:
+- `docs/SSL-CERTIFICATES.md` - New guide for certificate management
+- `docs/LETSENCRYPT-SETUP.md` - Let's Encrypt specific guide
+- `README.md` - Update SSL section
+- `docs/TROUBLESHOOTING.md` - Add certificate troubleshooting
+
+#### Testing Requirements
+
+1. **Let's Encrypt Test**:
+   - Use Let's Encrypt staging environment for testing
+   - Verify certificate acquisition
+   - Test renewal process
+   - Validate nginx configuration
+
+2. **Commercial Certificate Test**:
+   - Test with various CA formats (PEM, DER)
+   - Validate certificate chain handling
+   - Test with wildcard certificates
+   - Verify expiration warnings
+
+3. **Upgrade Test**:
+   - Existing v5.4 installation upgrades cleanly
+   - Self-signed certificates remain functional
+   - Migration path to public certificates documented
+
+#### Success Metrics
+
+- ✅ Let's Encrypt certificates automatically acquired and installed
+- ✅ Automatic renewal working (90-day cycle)
+- ✅ Commercial certificates supported with manual upload
+- ✅ Nginx reloads gracefully after certificate changes
+- ✅ No breaking changes to existing installations
+- ✅ Complete documentation for all certificate types
+
+#### Related Issues
+
+- KNOWN-ISSUES.md: Self-signed certificate browser warnings
+- User feedback: "Need trusted certificates for production"
+- Security compliance: Many organizations require CA-signed certificates
+
+#### Additional Features (Optional)
+
+- Certificate monitoring dashboard
+- Slack/email alerts for certificate expiration
+- Multi-domain certificate support
+- Certificate backup in misp-backup.py
+- Certificate restore in misp-restore.py
+
+---
+
+## Script Inventory (v5.4)
+
+All Python scripts in this project:
+
+1. **misp-install.py** - Main installation script (1850+ lines)
+2. **scripts/backup-misp.py** - Manual backup script (v2.0)
+3. **scripts/uninstall-misp.py** - Uninstallation script (v2.0)
+4. **scripts/misp-backup-cron.py** - Automated backup for cron (v2.0)
+5. **scripts/misp-restore.py** - Backup restoration script (v2.0)
+6. **scripts/misp-update.py** - MISP update automation (v2.0)
+7. **scripts/verify-installation.py** - Post-install verification (v1.0)
+8. **misp_logger.py** - Centralized logging module (v1.0)
+
+**Removed Scripts** (v5.4 cleanup):
+- `scripts/backup-misp.sh` - Duplicate of .py version
+- `scripts/uninstall-misp.sh` - Duplicate of .py version
+
+See `SCRIPTS.md` for complete documentation of all scripts.
