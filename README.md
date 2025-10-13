@@ -30,7 +30,7 @@ A professional-grade Python installation script for MISP (Malware Information Sh
 
 ### Software Requirements
 - Python 3.8+
-- sudo access
+- sudo access (required for creating `/opt/misp` directory tree and Docker operations)
 - Internet connection
 
 ### Optional Python Packages
@@ -39,14 +39,25 @@ A professional-grade Python installation script for MISP (Malware Information Sh
 pip3 install pyyaml
 ```
 
+## ⚙️ One-Time Setup (Required)
+
+Before running the installation for the first time, create the log directory:
+
+```bash
+sudo mkdir -p /opt/misp/logs && sudo chown $USER:$USER /opt/misp && sudo chmod 775 /opt/misp/logs
+```
+
+**Why this is needed:** The installation scripts write logs to `/opt/misp/logs`. This directory requires sudo to create initially. Running the above command once allows the scripts to run without repeatedly prompting for sudo password.
+
+**For automated/CI environments:** See `SETUP.md` for configuring passwordless sudo.
+
 ## 🎯 Quick Start
 
 ### Interactive Installation (Recommended)
 
 ```bash
-# Download the script
-wget https://example.com/misp-install.py
-chmod +x misp-install.py
+# One-time setup (if not already done)
+sudo mkdir -p /opt/misp/logs && sudo chown $USER:$USER /opt/misp && sudo chmod 775 /opt/misp/logs
 
 # Run interactive installation
 python3 misp-install.py

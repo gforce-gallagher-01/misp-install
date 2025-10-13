@@ -12,6 +12,14 @@ All MISP management scripts now use **centralized JSON logging** with CIM-compat
 
 All logs are now centralized in this single directory with automatic rotation.
 
+**⚠️ Important:** This directory must be created before running any scripts. Run this command once:
+
+```bash
+sudo mkdir -p /opt/misp/logs && sudo chown $USER:$USER /opt/misp && sudo chmod 775 /opt/misp/logs
+```
+
+If the directory doesn't exist or isn't writable, scripts will gracefully fall back to console-only logging.
+
 ## Log Format
 
 JSON format with consistent field names:

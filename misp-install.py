@@ -2,7 +2,7 @@
 """
 MISP Complete Installation & Management Tool
 tKQB Enterprises
-Version: 5.2 (with Centralized JSON Logging)
+Version: 5.3 (Improved Error Handling and Logging)
 
 Features:
 - Pre-flight system checks
@@ -1238,6 +1238,16 @@ PERFORMANCE:
                     if log_result.returncode == 0:
                         self.logger.info(log_result.stdout)
             
+            # Step 6: Fix log directory permissions (Docker may have created it with www-data ownership)
+            self.logger.info("\n[10.6] Fixing log directory permissions...")
+            username = pwd.getpwuid(os.getuid()).pw_name
+            try:
+                self.run_command(['sudo', 'chown', '-R', f'{username}:{username}', '/opt/misp/logs'], check=False)
+                self.run_command(['sudo', 'chmod', '775', '/opt/misp/logs'], check=False)
+                self.logger.info(Colors.success("✓ Log directory permissions fixed"))
+            except Exception as e:
+                self.logger.warning(f"⚠ Could not fix log directory permissions: {e}")
+
             self.logger.info(Colors.success("\n✓ Phase 10 completed"))
             self.save_state(10, "Docker Build Complete")
             
@@ -1584,21 +1594,26 @@ def main():
     args = parser.parse_args()
 
     # CRITICAL: Create /opt/misp/logs directory BEFORE initializing logger
-    # This must exist for JSON logging - NO FALLBACK
+    # This must exist for JSON logging
     log_dir = Path("/opt/misp/logs")
     if not log_dir.exists():
         try:
-            subprocess.run(['sudo', 'mkdir', '-p', '/opt/misp/logs'], check=True, capture_output=True)
-            username = os.getenv('USER') or pwd.getpwuid(os.getuid()).pw_name
-            # Add user to www-data group for log access (MISP containers use www-data)
-            subprocess.run(['sudo', 'usermod', '-aG', 'www-data', username], check=False, capture_output=True)
-            # Set ownership to www-data with group write permissions
-            subprocess.run(['sudo', 'chown', f'{username}:www-data', '/opt/misp/logs'], check=True, capture_output=True)
-            subprocess.run(['sudo', 'chmod', '775', '/opt/misp/logs'], check=True, capture_output=True)
+            # Try to create with sudo (will prompt for password if needed)
+            result = subprocess.run(['sudo', 'mkdir', '-p', '/opt/misp/logs'],
+                                  check=False, capture_output=True, text=True)
+            if result.returncode != 0:
+                print(f"⚠️  Could not create /opt/misp/logs with sudo: {result.stderr}")
+                print(f"⚠️  Will use console-only logging")
+            else:
+                username = os.getenv('USER') or pwd.getpwuid(os.getuid()).pw_name
+                # Set ownership to current user
+                subprocess.run(['sudo', 'chown', '-R', f'{username}:{username}', '/opt/misp/logs'],
+                             check=False, capture_output=True)
+                subprocess.run(['sudo', 'chmod', '775', '/opt/misp/logs'],
+                             check=False, capture_output=True)
         except Exception as e:
-            print(f"❌ FATAL: Cannot create /opt/misp/logs directory: {e}")
-            print(f"   Logging REQUIRES /opt/misp/logs - NO FALLBACK")
-            sys.exit(1)
+            print(f"⚠️  Could not create /opt/misp/logs directory: {e}")
+            print(f"⚠️  Will use console-only logging")
 
     # Setup logging (requires /opt/misp/logs to exist)
     logger = setup_logging()

@@ -230,13 +230,32 @@ class MISPLogger:
             self._setup_console_handler()
 
     def _setup_file_handler(self):
-        """Setup rotating file handler with JSON formatting - NO FALLBACK"""
+        """Setup rotating file handler with JSON formatting - with graceful fallback"""
 
-        # MUST use /opt/misp/logs - NO fallback, fail if not accessible
         log_dir = LogConfig.LOG_DIR
 
-        # Create log directory - will raise exception if fails
-        log_dir.mkdir(parents=True, exist_ok=True)
+        # Try to create log directory
+        try:
+            # First try normal mkdir
+            log_dir.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            # If permission denied, try with sudo
+            try:
+                import subprocess
+                subprocess.run(['sudo', 'mkdir', '-p', str(log_dir)],
+                             check=True, capture_output=True)
+                # Try to set ownership to current user
+                import pwd
+                username = pwd.getpwuid(os.getuid()).pw_name
+                subprocess.run(['sudo', 'chown', '-R', f'{username}:{username}', str(log_dir)],
+                             check=False, capture_output=True)
+                subprocess.run(['sudo', 'chmod', '775', str(log_dir)],
+                             check=False, capture_output=True)
+            except Exception as e:
+                # If sudo also fails, print warning and skip file logging
+                print(f"⚠️  Could not create log directory {log_dir}: {e}")
+                print(f"⚠️  File logging disabled - console only")
+                return
 
         # Set appropriate permissions
         try:
@@ -249,19 +268,23 @@ class MISPLogger:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_file = log_dir / f"{self.script_name}-{timestamp}.log"
 
-        # Create file handler - will raise exception if fails
-        file_handler = logging.handlers.RotatingFileHandler(
-            log_file,
-            maxBytes=LogConfig.MAX_BYTES,
-            backupCount=LogConfig.BACKUP_COUNT,
-            encoding='utf-8'
-        )
+        try:
+            # Create file handler
+            file_handler = logging.handlers.RotatingFileHandler(
+                log_file,
+                maxBytes=LogConfig.MAX_BYTES,
+                backupCount=LogConfig.BACKUP_COUNT,
+                encoding='utf-8'
+            )
 
-        # Set JSON formatter - ALWAYS JSON, NEVER plain text
-        file_handler.setFormatter(CIMJSONFormatter())
-        file_handler.setLevel(logging.DEBUG)
+            # Set JSON formatter - ALWAYS JSON, NEVER plain text
+            file_handler.setFormatter(CIMJSONFormatter())
+            file_handler.setLevel(logging.DEBUG)
 
-        self.logger.addHandler(file_handler)
+            self.logger.addHandler(file_handler)
+        except Exception as e:
+            print(f"⚠️  Could not create log file {log_file}: {e}")
+            print(f"⚠️  File logging disabled - console only")
 
     def _setup_console_handler(self):
         """Setup console handler with colored output"""
