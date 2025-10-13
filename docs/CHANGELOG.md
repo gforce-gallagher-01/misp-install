@@ -111,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New optional parameters
 - Backward compatible
 
-### Patch Version (5.0.X)
+### Patch Version 5.4.X)
 - Bug fixes
 - Documentation updates
 - Security patches
@@ -137,8 +137,8 @@ bash backup-misp.py  # If you have v4.x script
 # 2. Install Python 3.8+ if needed
 sudo apt install python3.8 python3-pip
 
-# 3. Download v5.0
-wget https://github.com/gforce-gallagher-01/misp-install/releases/download/v5.0.0/misp-install.py
+# 3. Download v5.4
+wget https://github.com/gforce-gallagher-01/misp-install/releases/download/v5.4.0/misp-install.py
 
 # 4. Optional: Install PyYAML for YAML config support
 pip3 install pyyaml
@@ -193,7 +193,7 @@ python3 misp-install.py
 
 ## Contributors
 
-### v5.0.0
+### v5.4.0
 - Your Name (@yourusername) - Complete Python rewrite
 - Contributors welcome!
 

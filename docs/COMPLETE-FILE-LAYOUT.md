@@ -228,7 +228,7 @@ chmod +x misp-install.py
 git add .
 
 # Initial commit
-git commit -m "Initial commit: MISP Installer v5.0.0
+git commit -m "Initial commit: MISP Installer v5.4.0
 
 - Complete Python installer with 14 enterprise features
 - Comprehensive documentation (10,000+ words)
@@ -241,8 +241,8 @@ git remote add origin https://github.com/gforce-gallagher-01/misp-install.git
 git push -u origin main
 
 # Create first tag
-git tag -a v5.0.0 -m "Release v5.0.0: Enterprise Python installer"
-git push origin v5.0.0
+git tag -a v5.4.0 -m "Release v5.4.0: Enterprise Python installer"
+git push origin v5.4.0
 ```
 
 ## 📊 File Statistics
@@ -289,7 +289,7 @@ git push origin v5.0.0
 4. **Test the installer** on a clean VM
 5. **Create missing README.md** files in subdirectories
 6. **Set up GitHub Actions** for CI/CD
-7. **Create first release** (v5.0.0)
+7. **Create first release** (v5.4.0)
 8. **Announce** to MISP community
 
 ## 📞 Questions?

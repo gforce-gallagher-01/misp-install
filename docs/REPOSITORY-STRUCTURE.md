@@ -296,7 +296,7 @@ v1.0.0 - Initial release
 v1.1.0 - Added backup script
 v1.2.0 - Added monitoring
 v2.0.0 - Major refactor (breaking changes)
-v5.0.0 - Enterprise Python version (current)
+v5.4.0 - Enterprise Python version (current)
 ```
 
 ## 📋 Additional Files to Consider
@@ -331,7 +331,7 @@ from setuptools import setup
 
 setup(
     name='misp-installer',
-    version='5.0.0',
+    version 5.4.0',
     # ... rest of setup
 )
 ```

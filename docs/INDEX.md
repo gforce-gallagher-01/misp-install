@@ -1,6 +1,6 @@
 # MISP Installation Package - Complete Index
 
-**Version:** 5.0  
+**Version 5.4  
 **Last Updated:** October 2025  
 **Organization:** YourCompanyName
 
@@ -367,7 +367,7 @@ You know your installation is successful when:
 
 ## 📝 Version Information
 
-**Installation Script:** v5.0  
+**Installation Script:** v5.4  
 **Python Required:** 3.8+  
 **MISP Version:** Latest from official Docker images  
 **Last Updated:** October 2025  
