@@ -237,7 +237,7 @@ git commit -m "Initial commit: MISP Installer v5.0.0
 - Complete troubleshooting and maintenance guides"
 
 # Add remote and push
-git remote add origin https://github.com/yourusername/misp-installer.git
+git remote add origin https://github.com/gforce-gallagher-01/misp-install.git
 git push -u origin main
 
 # Create first tag

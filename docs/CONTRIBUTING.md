@@ -123,11 +123,11 @@ test/add-backup-script-tests
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR-USERNAME/misp-installer.git
-cd misp-installer
+git clone https://github.com/YOUR-USERNAME/misp-install.git
+cd misp-install
 
 # Add upstream remote
-git remote add upstream https://github.com/ORIGINAL-OWNER/misp-installer.git
+git remote add upstream https://github.com/gforce-gallagher-01/misp-install.git
 
 # Create virtual environment
 python3 -m venv venv

@@ -138,7 +138,7 @@ bash backup-misp.sh  # If you have v4.x script
 sudo apt install python3.8 python3-pip
 
 # 3. Download v5.0
-wget https://github.com/yourusername/misp-installer/releases/download/v5.0.0/misp-install.py
+wget https://github.com/gforce-gallagher-01/misp-install/releases/download/v5.0.0/misp-install.py
 
 # 4. Optional: Install PyYAML for YAML config support
 pip3 install pyyaml
@@ -204,9 +204,9 @@ python3 misp-install.py
 
 ## Links
 
-- **Repository:** https://github.com/yourusername/misp-installer
-- **Issues:** https://github.com/yourusername/misp-installer/issues
-- **Discussions:** https://github.com/yourusername/misp-installer/discussions
+- **Repository:** https://github.com/gforce-gallagher-01/misp-install
+- **Issues:** https://github.com/gforce-gallagher-01/misp-install/issues
+- **Discussions:** https://github.com/gforce-gallagher-01/misp-install/discussions
 - **MISP Project:** https://www.misp-project.org/
 
 ---

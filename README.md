@@ -1,5 +1,5 @@
 # MISP Complete Installation Tool v5.0
-**GridSec Enterprise Edition**
+**tKQB Enterprises**
 
 A professional-grade Python installation script for MISP (Malware Information Sharing Platform) with enterprise features.
 

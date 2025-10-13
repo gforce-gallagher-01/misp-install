@@ -198,8 +198,8 @@ GitHub-specific automation:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/misp-installer.git
-cd misp-installer
+git clone https://github.com/gforce-gallagher-01/misp-install.git
+cd misp-install
 
 # Interactive installation
 python3 misp-install.py
@@ -214,8 +214,8 @@ python3 misp-install.py --config my-config.yaml
 
 ```bash
 # Clone and setup
-git clone https://github.com/yourusername/misp-installer.git
-cd misp-installer
+git clone https://github.com/gforce-gallagher-01/misp-install.git
+cd misp-install
 
 # Install dev dependencies
 pip3 install -r requirements.txt
@@ -343,6 +343,6 @@ Add these to your README.md:
 ```markdown
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Build Status](https://github.com/yourusername/misp-installer/workflows/tests/badge.svg)](https://github.com/yourusername/misp-installer/actions)
+[![Build Status](https://github.com/gforce-gallagher-01/misp-install/workflows/tests/badge.svg)](https://github.com/gforce-gallagher-01/misp-install/actions)
 [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](docs/)
 ```

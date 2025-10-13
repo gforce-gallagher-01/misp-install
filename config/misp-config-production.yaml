@@ -8,7 +8,7 @@
 
 # Server Configuration
 server_ip: "192.168.20.95"          # CHANGE THIS: Your server's static IP
-domain: "misp.yourdomain.com"       # CHANGE THIS: Your FQDN (e.g., misp.gridsec.com)
+domain: "misp.yourdomain.com"       # CHANGE THIS: Your FQDN (e.g., misp.yourcompany.com)
 admin_email: "admin@yourdomain.com" # CHANGE THIS: Admin email
 admin_org: "YourOrganization"       # CHANGE THIS: Your organization name
 

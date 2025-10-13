@@ -1,7 +1,7 @@
 #!/bin/bash
 ##############################################
 # MISP Backup Script
-# GridSec - Complete Backup Solution
+# tKQB Enterprises - Complete Backup Solution
 # Version: 1.0
 ##############################################
 

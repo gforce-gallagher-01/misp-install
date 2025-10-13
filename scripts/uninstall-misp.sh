@@ -1,7 +1,7 @@
 #!/bin/bash
 ##############################################
 # MISP Complete Uninstallation Script
-# GridSec - Safe MISP Removal
+# tKQB Enterprises - Safe MISP Removal
 # Version: 1.0
 ##############################################
 

@@ -22,7 +22,7 @@ Use this checklist to ensure a successful MISP installation.
 - [ ] System packages updated: `sudo apt update && sudo apt upgrade`
 
 ### Planning
-- [ ] Decided on FQDN (e.g., misp.gridsec.com)
+- [ ] Decided on FQDN (e.g., misp.yourcompany.com)
 - [ ] Static IP address documented
 - [ ] Admin email address decided
 - [ ] Organization name decided
