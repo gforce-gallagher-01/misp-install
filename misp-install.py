@@ -46,15 +46,10 @@ if sys.version_info < (3, 8):
     print("❌ Python 3.8 or higher required")
     sys.exit(1)
 
-# Import centralized logger (from scripts directory)
+# Import centralized logger (from scripts directory) - REQUIRED
 script_dir = Path(__file__).parent
 sys.path.insert(0, str(script_dir / "scripts"))
-try:
-    from misp_logger import get_logger as get_misp_logger
-    HAS_CENTRALIZED_LOGGER = True
-except ImportError:
-    HAS_CENTRALIZED_LOGGER = False
-    print("⚠️  Centralized logger not available, using fallback logging")
+from misp_logger import get_logger as get_misp_logger
 
 # Try to import yaml, if not available use basic dict
 try:
@@ -188,59 +183,32 @@ class Colors:
 # ==========================================
 
 def setup_logging() -> logging.Logger:
-    """Setup comprehensive logging with centralized JSON logger"""
-    if HAS_CENTRALIZED_LOGGER:
-        # Use centralized JSON logger for file logging
-        # This creates JSON logs in /opt/misp/logs/misp-install.log
-        try:
-            misp_logger = get_misp_logger('misp-install', 'misp:install')
+    """Setup comprehensive logging with centralized JSON logger - JSON ONLY
 
-            # Get the underlying Python logger for compatibility
-            logger = misp_logger.logger
+    NOTE: /opt/misp/logs must already exist before calling this function.
+    The directory is created in main() before any phases run.
+    """
 
-            # The centralized logger already has file + console handlers
-            # Just inform user where logs are stored
-            logger.info(Colors.info(f"📝 JSON Logs: /opt/misp/logs/misp-install.log"))
+    # CRITICAL: /opt/misp/logs MUST exist - NO FALLBACK
+    # This directory is created in Phase 1 (before any logging starts)
+    log_dir = Path("/opt/misp/logs")
 
-            return logger
-        except Exception as e:
-            print(f"⚠️  Could not initialize centralized logger: {e}")
-            print("   Falling back to standard logging")
+    if not log_dir.exists():
+        print(f"❌ FATAL: /opt/misp/logs directory does not exist")
+        print(f"   Logging REQUIRES /opt/misp/logs - NO FALLBACK")
+        print(f"   This is a bug - the directory should be created before logging starts")
+        sys.exit(1)
 
-    # Fallback to standard Python logging if centralized logger unavailable
-    log_dir = Path("/var/log/misp-install")
-    try:
-        log_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
-    except PermissionError:
-        # Fallback to user's home directory if /var/log is not writable
-        log_dir = Path.home() / ".misp-install" / "logs"
-        log_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
+    # Use centralized JSON logger for file logging
+    # This creates JSON logs in /opt/misp/logs/misp-install-{timestamp}.log
+    misp_logger = get_misp_logger('misp-install', 'misp:install')
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = log_dir / f"misp-install-{timestamp}.log"
+    # Get the underlying Python logger for compatibility
+    logger = misp_logger.logger
 
-    # Create logger
-    logger = logging.getLogger('MISP-Installer')
-    logger.setLevel(logging.DEBUG)
-
-    # File handler (detailed)
-    fh = logging.FileHandler(log_file)
-    fh.setLevel(logging.DEBUG)
-    fh_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    fh.setFormatter(fh_formatter)
-
-    # Console handler (user-friendly)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    ch_formatter = logging.Formatter('%(message)s')
-    ch.setFormatter(ch_formatter)
-
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-
-    logger.info(Colors.info(f"📝 Logging to: {log_file}"))
+    # The centralized logger already has file + console handlers
+    # Just inform user where logs are stored
+    logger.info(Colors.info(f"📝 JSON Logs: /opt/misp/logs/misp-install-{{timestamp}}.log"))
 
     return logger
 
@@ -546,7 +514,7 @@ class MISPInstaller:
         self.state_file = Path.home() / ".misp-install" / "state.json"
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
         self.current_phase = 0
-        self.total_phases = 12
+        self.total_phases = 10
         
     def save_state(self, phase: int, phase_name: str):
         """Save installation state for resume capability"""
@@ -741,7 +709,11 @@ class MISPInstaller:
         
         self.logger.info("[4.3] Removing MISP directory...")
         if self.misp_dir.exists():
-            self.run_command(['sudo', 'rm', '-rf', str(self.misp_dir)])
+            # CRITICAL: Preserve /opt/misp/logs directory (logger is actively writing)
+            # Remove everything EXCEPT logs directory
+            for item in self.misp_dir.iterdir():
+                if item.name != 'logs':
+                    self.run_command(['sudo', 'rm', '-rf', str(item)])
         
         self.logger.info("[4.4] Removing all Docker volumes...")
         try:
@@ -776,27 +748,52 @@ class MISPInstaller:
         """Phase 5: Clone MISP repository"""
         self.section_header("PHASE 5: CLONING MISP REPOSITORY")
 
-        self.logger.info("[5.1] Creating /opt directory structure...")
+        self.logger.info("[5.1] Checking if /opt/misp exists...")
 
-        # Ensure /opt exists and create misp parent if needed
-        opt_dir = Path("/opt")
-        if not opt_dir.exists():
-            self.run_command(['sudo', 'mkdir', '-p', '/opt'])
+        # Check if /opt/misp exists and has MISP content (not just logs)
+        if self.misp_dir.exists():
+            # Count items in /opt/misp (excluding logs directory)
+            existing_items = [item for item in self.misp_dir.iterdir() if item.name != 'logs']
+
+            if existing_items:
+                # MISP already installed - user must run uninstall first
+                self.logger.error(Colors.error("\n❌ Existing MISP installation detected!"))
+                self.logger.error(f"   Found {len(existing_items)} items in /opt/misp")
+                self.logger.error("\n   You must uninstall first:")
+                self.logger.error("   python3 scripts/uninstall-misp.py --force\n")
+                raise RuntimeError("Existing MISP installation found. Run uninstall-misp.py first.")
+
+        # Ensure /opt/misp directory exists (might only have logs directory at this point)
+        self.misp_dir.mkdir(exist_ok=True)
 
         self.logger.info("[5.2] Cloning MISP Docker repository...")
         self.logger.info("This may take 1-2 minutes...")
 
-        # Clone official MISP Docker repository to /opt/misp
+        # Clone to temporary directory
+        temp_clone = Path("/tmp/misp-docker-clone")
+        if temp_clone.exists():
+            self.run_command(['sudo', 'rm', '-rf', str(temp_clone)])
+
         self.run_command([
             'sudo', 'git', 'clone', '--progress',
             'https://github.com/MISP/misp-docker.git',
-            '/opt/misp'
+            str(temp_clone)
         ], timeout=300)
+
+        # Move contents from temp to /opt/misp (preserving logs directory if it exists)
+        self.logger.info("[5.3] Moving repository contents...")
+        for item in temp_clone.iterdir():
+            # Skip .git directory and don't overwrite logs
+            if item.name not in ['.git', 'logs']:
+                self.run_command(['sudo', 'mv', str(item), str(self.misp_dir)])
+
+        # Clean up temp directory
+        self.run_command(['sudo', 'rm', '-rf', str(temp_clone)])
 
         # Set ownership to current user
         username = pwd.getpwuid(os.getuid()).pw_name
-        self.logger.info(f"[5.3] Setting ownership to {username}...")
-        self.run_command(['sudo', 'chown', '-R', f'{username}:{username}', '/opt/misp'])
+        self.logger.info(f"[5.4] Setting ownership to {username}...")
+        self.run_command(['sudo', 'chown', '-R', f'{username}:{username}', str(self.misp_dir)])
 
         os.chdir(self.misp_dir)
 
@@ -886,8 +883,8 @@ NGINX_CLIENT_MAX_BODY_SIZE=50M
 # Workers (Auto-calculated: {perf.workers} workers for {os.cpu_count()} CPU cores)
 WORKERS={perf.workers}
 
-# Debug
-DEBUG=0
+# Debug (enabled for development environment)
+DEBUG={1 if self.config.environment == 'development' else 0}
 """
         
         with open(self.misp_dir / ".env", 'w') as f:
@@ -1399,16 +1396,14 @@ sudo cat /opt/misp/PASSWORDS.txt
         phases = [
             (1, "Install Dependencies", self.phase_1_install_dependencies),
             (2, "Docker Group", self.phase_2_docker_group),
-            (3, "Backup", self.phase_3_backup),
-            (4, "Cleanup", self.phase_4_cleanup),
-            (5, "Clone Repository", self.phase_5_clone_repository),
-            (6, "Configuration", self.phase_6_configuration),
-            (7, "SSL Certificate", self.phase_7_ssl_certificate),
-            (8, "DNS Configuration", self.phase_8_dns_configuration),
-            (9, "Password Reference", self.phase_9_password_reference),
-            (10, "Docker Build", self.phase_10_docker_build),
-            (11, "Initialization", self.phase_11_initialization),
-            (12, "Post-Install", self.phase_12_post_install),
+            (3, "Clone Repository", self.phase_5_clone_repository),
+            (4, "Configuration", self.phase_6_configuration),
+            (5, "SSL Certificate", self.phase_7_ssl_certificate),
+            (6, "DNS Configuration", self.phase_8_dns_configuration),
+            (7, "Password Reference", self.phase_9_password_reference),
+            (8, "Docker Build", self.phase_10_docker_build),
+            (9, "Initialization", self.phase_11_initialization),
+            (10, "Post-Install", self.phase_12_post_install),
         ]
         
         # Show installation plan
@@ -1587,8 +1582,25 @@ def main():
     parser.add_argument('--skip-checks', action='store_true', help='Skip pre-flight checks')
     
     args = parser.parse_args()
-    
-    # Setup logging
+
+    # CRITICAL: Create /opt/misp/logs directory BEFORE initializing logger
+    # This must exist for JSON logging - NO FALLBACK
+    log_dir = Path("/opt/misp/logs")
+    if not log_dir.exists():
+        try:
+            subprocess.run(['sudo', 'mkdir', '-p', '/opt/misp/logs'], check=True, capture_output=True)
+            username = os.getenv('USER') or pwd.getpwuid(os.getuid()).pw_name
+            # Add user to www-data group for log access (MISP containers use www-data)
+            subprocess.run(['sudo', 'usermod', '-aG', 'www-data', username], check=False, capture_output=True)
+            # Set ownership to www-data with group write permissions
+            subprocess.run(['sudo', 'chown', f'{username}:www-data', '/opt/misp/logs'], check=True, capture_output=True)
+            subprocess.run(['sudo', 'chmod', '775', '/opt/misp/logs'], check=True, capture_output=True)
+        except Exception as e:
+            print(f"❌ FATAL: Cannot create /opt/misp/logs directory: {e}")
+            print(f"   Logging REQUIRES /opt/misp/logs - NO FALLBACK")
+            sys.exit(1)
+
+    # Setup logging (requires /opt/misp/logs to exist)
     logger = setup_logging()
     
     logger.info(Colors.info("""

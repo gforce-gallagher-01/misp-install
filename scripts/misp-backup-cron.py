@@ -124,7 +124,7 @@ def setup_logging() -> logging.Logger:
     """Setup centralized logging"""
     misp_logger = get_logger('misp-backup-cron', 'misp:backup_cron')
     logger = misp_logger.logger
-    logger.info(f"📝 JSON Logs: /opt/misp/logs/misp-backup-cron.log")
+    logger.info(f"📝 JSON Logs: /opt/misp/logs/misp-backup-cron-{{timestamp}}.log")
     return logger
 
 logger = setup_logging()

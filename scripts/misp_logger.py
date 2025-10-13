@@ -230,19 +230,26 @@ class MISPLogger:
             self._setup_console_handler()
 
     def _setup_file_handler(self):
-        """Setup rotating file handler with JSON formatting"""
+        """Setup rotating file handler with JSON formatting - NO FALLBACK"""
 
-        # Create log directory
-        LogConfig.LOG_DIR.mkdir(parents=True, exist_ok=True)
+        # MUST use /opt/misp/logs - NO fallback, fail if not accessible
+        log_dir = LogConfig.LOG_DIR
+
+        # Create log directory - will raise exception if fails
+        log_dir.mkdir(parents=True, exist_ok=True)
 
         # Set appropriate permissions
         try:
-            os.chmod(LogConfig.LOG_DIR, 0o755)
-        except:
-            pass
+            os.chmod(log_dir, 0o755)
+        except Exception as e:
+            # Log permission change failure but continue
+            print(f"⚠️  Could not set permissions on {log_dir}: {e}")
 
-        # Create rotating file handler
-        log_file = LogConfig.LOG_DIR / f"{self.script_name}.log"
+        # Create rotating file handler with timestamp in filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_file = log_dir / f"{self.script_name}-{timestamp}.log"
+
+        # Create file handler - will raise exception if fails
         file_handler = logging.handlers.RotatingFileHandler(
             log_file,
             maxBytes=LogConfig.MAX_BYTES,
@@ -250,7 +257,7 @@ class MISPLogger:
             encoding='utf-8'
         )
 
-        # Set JSON formatter
+        # Set JSON formatter - ALWAYS JSON, NEVER plain text
         file_handler.setFormatter(CIMJSONFormatter())
         file_handler.setLevel(logging.DEBUG)
 

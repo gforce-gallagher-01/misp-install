@@ -76,7 +76,7 @@ def setup_logging() -> logging.Logger:
     """Setup centralized logging"""
     misp_logger = get_logger('misp-update', 'misp:update')
     logger = misp_logger.logger
-    logger.info(f"📝 JSON Logs: /opt/misp/logs/misp-update.log")
+    logger.info(f"📝 JSON Logs: /opt/misp/logs/misp-update-{{timestamp}}.log")
     return logger
 
 logger = setup_logging()

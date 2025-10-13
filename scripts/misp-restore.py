@@ -76,7 +76,7 @@ def setup_logging() -> logging.Logger:
     misp_logger = get_logger('misp-restore', 'misp:restore')
     # Get the underlying Python logger for compatibility
     logger = misp_logger.logger
-    logger.info(f"📝 JSON Logs: /opt/misp/logs/misp-restore.log")
+    logger.info(f"📝 JSON Logs: /opt/misp/logs/misp-restore-{{timestamp}}.log")
     return logger
 
 logger = setup_logging()
