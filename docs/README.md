@@ -34,15 +34,16 @@ These documents are actively maintained and reflect the v5.4 implementation:
 
 ---
 
-## Archive/Reference Documents
+## Archive Directory
 
-These documents were created for packaging/distribution and may reference features not yet implemented or outdated commands:
+Outdated documentation has been moved to `archive/` subdirectory:
 
-- **INDEX.md** - Package distribution index (references v5.0, some non-existent scripts)
-- **COMPLETE-FILE-LAYOUT.md** - File structure for package distribution
-- **READY-TO-RUN-SETUP.md** - Pre-configured setup guide
+- **archive/INDEX.md** - Package distribution index (references non-existent scripts)
+- **archive/COMPLETE-FILE-LAYOUT.md** - File structure for package distribution
+- **archive/READY-TO-RUN-SETUP.md** - Pre-configured setup guide
+- **archive/README.md** - Explanation of archived documents
 
-**Note**: These files contain useful conceptual information but should be cross-referenced with current implementation before use.
+**Note**: These files are kept for historical reference but do not reflect current v5.4 implementation.
 
 ---
 
