@@ -257,12 +257,16 @@ class MISPLogger:
                 print(f"⚠️  File logging disabled - console only")
                 return
 
-        # Set appropriate permissions
+        # Set appropriate permissions (if needed - ACLs may already handle this)
         try:
             os.chmod(log_dir, 0o755)
+        except PermissionError:
+            # Permission denied is expected when ACLs are configured and directory is owned by www-data
+            # ACLs provide the necessary permissions, so this is not an error
+            pass
         except Exception as e:
-            # Log permission change failure but continue
-            print(f"⚠️  Could not set permissions on {log_dir}: {e}")
+            # Log only unexpected errors
+            print(f"⚠️  Unexpected error setting permissions on {log_dir}: {e}")
 
         # Create rotating file handler with timestamp in filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
