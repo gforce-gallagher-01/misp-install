@@ -150,23 +150,91 @@ self.run_command(['sudo', 'chown', '-R', f'{MISP_USER}:{MISP_USER}', str(self.mi
 - Clear audit trail
 - Prevents privilege escalation
 
-### 6. Log Directory Permissions (`Phase 10.6`)
+### 6. Log Directory Permissions - ACL Implementation (`Phase 10.6`)
 
-**File**: `misp-install.py` lines 1262-1270
+**File**: `misp-install.py` lines 1346-1387
 
 **Implementation**:
+The installation uses **Linux Access Control Lists (ACLs)** to solve the multi-user log directory access challenge. This approach allows Docker containers (running as `www-data`), the `misp-owner` user, and the installation user to all write to the log directory simultaneously without world-writable permissions.
+
 ```python
-# Step 6: Fix log directory permissions
-# SECURITY: Ensure misp-owner owns all log directories
-self.run_command(['sudo', 'chown', '-R', f'{MISP_USER}:{MISP_USER}', '/opt/misp/logs'])
-self.run_command(['sudo', 'chmod 777 /opt/misp/logs'])
+# Step 6: Configure ACLs for shared log directory access
+# ARCHITECTURE: Docker owns directory as www-data, but ACLs allow scripts to write
+# This solves the permission conflict where Docker resets ownership to www-data:www-data
+self.logger.info("\n[10.6] Configuring ACLs for log directory...")
+try:
+    current_user = get_current_username()
+    logs_dir = '/opt/misp/logs'
+    misp_dir = '/opt/misp'
+
+    # Set ACLs for all users that need write access (existing files)
+    self.run_command(['sudo', 'setfacl', '-R', '-m', 'u:www-data:rwx', logs_dir], check=False)
+    self.run_command(['sudo', 'setfacl', '-R', '-m', f'u:{current_user}:rwx', logs_dir], check=False)
+    self.run_command(['sudo', 'setfacl', '-R', '-m', f'u:{MISP_USER}:rwx', logs_dir], check=False)
+
+    # Set default ACLs for newly created files
+    self.run_command(['sudo', 'setfacl', '-R', '-d', '-m', 'u:www-data:rwx', logs_dir], check=False)
+    self.run_command(['sudo', 'setfacl', '-R', '-d', '-m', f'u:{current_user}:rwx', logs_dir], check=False)
+    self.run_command(['sudo', 'setfacl', '-R', '-d', '-m', f'u:{MISP_USER}:rwx', logs_dir], check=False)
+
+    # CRITICAL: Fix ACL mask to ensure rwx permissions are effective
+    # Without this, effective permissions remain r-x even though user ACLs are set to rwx
+    self.run_command(['sudo', 'setfacl', '-m', 'mask::rwx', logs_dir], check=False)
+
+    # Grant read access to config files for backup/restore scripts
+    # This allows backup scripts to run as regular user without requiring sudo for file reads
+    config_files = [
+        f'{misp_dir}/.env',
+        f'{misp_dir}/PASSWORDS.txt',
+        f'{misp_dir}/docker-compose.yml',
+        f'{misp_dir}/docker-compose.override.yml'
+    ]
+
+    for config_file in config_files:
+        # Check if file exists before setting ACL
+        if Path(config_file).exists():
+            self.run_command(['sudo', 'setfacl', '-m', f'u:{current_user}:r', config_file], check=False)
+
+    self.logger.info(Colors.success(f"✓ ACLs configured for shared log access (www-data, {current_user}, {MISP_USER})"))
+    self.logger.info(Colors.success(f"✓ ACL mask fixed for proper rwx permissions"))
+    self.logger.info(Colors.success(f"✓ Config files readable by {current_user} for backup scripts"))
+except Exception as e:
+    self.logger.warning(f"⚠ Could not configure ACLs: {e}")
 ```
 
 **Security Benefits**:
-- misp-owner can write logs
-- Docker containers can write logs
-- No world-writable permissions
-- Prevents log tampering
+- **Multi-user access without 777**: ACLs provide granular permissions for specific users
+- **Respects Docker behavior**: Docker containers can own directory as `www-data` while other users can still write
+- **More secure than world-writable**: Only specified users have access, not all system users
+- **Persistent permissions**: Default ACLs ensure newly created files inherit proper permissions
+- **Backup script support**: Config files readable by regular user for automated backups
+- **No upstream changes needed**: Works with standard MISP Docker images without modifications
+
+**Why ACLs vs Traditional Permissions**:
+- **Problem**: Docker MISP entrypoint forcefully sets `/opt/misp/logs` ownership to `www-data:www-data` with `770` permissions
+- **Traditional chmod 777**: Gets reset by Docker, not persistent, too permissive
+- **Group membership**: Security concern (broad access), doesn't solve all access needs
+- **ACL Solution**: Grants specific permissions to specific users, persists across Docker restarts, respects Docker's ownership model
+
+**Verification**:
+```bash
+# Check ACL configuration
+sudo getfacl /opt/misp/logs/
+
+# Expected output:
+# user::rwx
+# user:www-data:rwx
+# user:misp-owner:rwx
+# user:gallagher:rwx    # Current user
+# group::rwx
+# mask::rwx             # CRITICAL: Must be rwx, not r-x
+# other::---
+# default:user::rwx
+# default:user:www-data:rwx
+# default:user:misp-owner:rwx
+# default:user:gallagher:rwx
+# default:mask::rwx
+```
 
 ---
 
@@ -223,14 +291,17 @@ self.run_command(['sudo', 'chmod 777 /opt/misp/logs'])
 
 ### File Ownership Matrix
 
-| Path | Owner | Group | Permissions | Rationale |
-|------|-------|-------|-------------|-----------|
-| `/opt/misp` | misp-owner | misp-owner | 755 | Service root directory |
-| `/opt/misp/logs` | misp-owner | misp-owner | 777 | Logs (Docker + scripts) |
-| `/opt/misp/.env` | misp-owner | misp-owner | 600 | Secrets file |
-| `/opt/misp/PASSWORDS.txt` | misp-owner | misp-owner | 600 | Credential reference |
-| `/opt/misp/ssl/*` | misp-owner | misp-owner | 644/600 | SSL certificates |
-| `/home/misp-owner` | misp-owner | misp-owner | 750 | User home directory |
+| Path | Owner | Group | Permissions | ACL | Rationale |
+|------|-------|-------|-------------|-----|-----------|
+| `/opt/misp` | misp-owner | misp-owner | 755 | No | Service root directory |
+| `/opt/misp/logs` | www-data | www-data | 770+ | Yes (rwx for www-data, misp-owner, current user) | Multi-user log access via ACLs |
+| `/opt/misp/.env` | misp-owner | misp-owner | 600+ | Yes (read for current user) | Secrets file with backup access |
+| `/opt/misp/PASSWORDS.txt` | misp-owner | misp-owner | 600+ | Yes (read for current user) | Credential reference with backup access |
+| `/opt/misp/docker-compose.yml` | misp-owner | misp-owner | 644+ | Yes (read for current user) | Compose config with backup access |
+| `/opt/misp/ssl/*` | misp-owner | misp-owner | 644/600 | No | SSL certificates |
+| `/home/misp-owner` | misp-owner | misp-owner | 750 | No | User home directory |
+
+**Note**: The `+` symbol indicates ACLs are active on these files/directories.
 
 ### Group Membership
 

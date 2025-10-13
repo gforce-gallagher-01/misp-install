@@ -16,6 +16,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - TBD
 
+## [5.4.0] - 2025-10-13
+
+### Added
+- 🔒 **ACL-based Permission System** - Implemented Linux Access Control Lists for multi-user log directory access
+  - Replaces world-writable (777) permissions with granular user-specific ACLs
+  - Supports Docker containers (www-data), misp-owner, and installation user writing to logs simultaneously
+  - Critical ACL mask fix ensures rwx permissions are effective
+  - Config files (.env, PASSWORDS.txt, docker-compose files) now have read ACLs for backup scripts
+  - Backup/restore scripts can now run as regular user without sudo for file reads
+- 📦 **ACL Package** - Added `acl` package to system dependencies (Phase 1)
+- 📝 **Enhanced Documentation** - Complete ACL implementation documented in:
+  - SECURITY_ARCHITECTURE.md - ACL security model and architecture
+  - TROUBLESHOOTING.md - ACL permission troubleshooting guide
+  - MAINTENANCE.md - ACL management and verification procedures
+  - ACL-FIX-SUMMARY.md - Complete technical implementation details
+
+### Changed
+- **Phase 10.6**: Completely rewritten to use ACL-based permissions instead of chmod 777
+  - Multi-step ACL configuration for existing files
+  - Default ACL configuration for newly created files
+  - ACL mask correction to enable write permissions
+  - Config file ACLs for backup script access
+- **Backup Scripts**: Now work as regular user without root privileges (thanks to config file ACLs)
+- **Permission Model**: Updated file ownership matrix to reflect ACL permissions
+
+### Fixed
+- **Log Permission Conflicts**: Solved Docker's forceful ownership reset of `/opt/misp/logs` to www-data:www-data
+  - Previous chmod 777 approach was reset by Docker on container restart
+  - ACL solution persists across Docker restarts while respecting upstream behavior
+- **Backup Permission Errors**: Fixed `PermissionError` when backup scripts tried to read config files owned by misp-owner
+- **Effective Permissions**: Fixed ACL mask issue where effective permissions were r-x instead of rwx
+
+### Security
+- **More Secure Than 777**: ACLs grant access only to specific users, not all system users
+- **Principle of Least Privilege**: Each user/process has only the permissions it needs
+- **Respects Docker Ownership**: No modifications to upstream MISP Docker images required
+- **Audit Trail**: ACLs provide clear visibility into which users have access to which files
+
 ## [5.0.0] - 2025-10-11
 
 ### Added

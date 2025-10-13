@@ -31,6 +31,70 @@ groups | grep docker
 
 ## 🚨 Installation Issues
 
+### Issue: "Permission denied writing to log directory"
+**Error:** `PermissionError: [Errno 13] Permission denied: '/opt/misp/logs/misp-install.log'`
+
+**Cause:** ACL permissions not properly configured or ACL mask incorrectly set
+
+**Diagnosis:**
+```bash
+# Check current permissions
+sudo ls -la /opt/misp/logs/
+
+# Check ACL configuration
+sudo getfacl /opt/misp/logs/
+
+# Look for ACL mask - should be rwx, not r-x
+# mask::rwx  <-- CORRECT
+# mask::r-x  <-- INCORRECT (prevents write access)
+```
+
+**Solution:**
+```bash
+# Fix ACL mask
+sudo setfacl -m mask::rwx /opt/misp/logs/
+
+# Grant write access to current user
+sudo setfacl -m u:$USER:rwx /opt/misp/logs/
+
+# Set default ACLs for new files
+sudo setfacl -d -m u:$USER:rwx /opt/misp/logs/
+
+# Verify
+sudo getfacl /opt/misp/logs/
+
+# Test write access
+echo "test" > /opt/misp/logs/test.log
+rm /opt/misp/logs/test.log
+```
+
+**Prevention:**
+The installation script automatically configures ACLs in Phase 10.6. If you encounter this error, ACL configuration may have failed. Check the installation logs for ACL-related warnings.
+
+---
+
+###  Issue: "Backup script can't read config files"
+**Error:** `PermissionError: [Errno 13] Permission denied: '/opt/misp/.env'`
+
+**Cause:** Config files owned by misp-owner with restrictive permissions (600), current user lacks read access
+
+**Solution:**
+```bash
+# Grant read access to current user for backup operations
+sudo setfacl -m u:$USER:r /opt/misp/.env
+sudo setfacl -m u:$USER:r /opt/misp/PASSWORDS.txt
+sudo setfacl -m u:$USER:r /opt/misp/docker-compose.yml
+sudo setfacl -m u:$USER:r /opt/misp/docker-compose.override.yml
+
+# Verify
+sudo getfacl /opt/misp/.env
+
+# Test
+cat /opt/misp/.env
+```
+
+---
+
 ### Issue: "Python version too old"
 **Error:** `❌ Python 3.8 or higher required`
 

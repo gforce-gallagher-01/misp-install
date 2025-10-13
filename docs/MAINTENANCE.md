@@ -29,11 +29,23 @@ sudo docker compose exec misp-core ps aux | grep worker | head -5
 
 echo -e "\n5. Database Size:"
 sudo docker compose exec -T db mysql -umisp -p"$(grep MYSQL_PASSWORD .env | cut -d= -f2)" \
-  -e "SELECT table_schema AS 'Database', 
-      ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)' 
-      FROM information_schema.tables 
-      WHERE table_schema = 'misp' 
+  -e "SELECT table_schema AS 'Database',
+      ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
+      FROM information_schema.tables
+      WHERE table_schema = 'misp'
       GROUP BY table_schema;"
+
+echo -e "\n6. ACL Permissions Check:"
+echo "Log directory ACLs:"
+sudo getfacl /opt/misp/logs/ 2>/dev/null | grep -E "user::|mask::|user:www-data|user:misp-owner" || echo "⚠ ACLs not configured"
+
+echo -e "\nConfig file ACLs:"
+for file in .env PASSWORDS.txt docker-compose.yml; do
+  if [ -f "$file" ]; then
+    echo -n "$file: "
+    sudo getfacl "$file" 2>/dev/null | grep -q "user:.*:r" && echo "✓ readable" || echo "⚠ no ACL"
+  fi
+done
 
 echo -e "\n=== Health Check Complete ==="
 ```
@@ -388,6 +400,77 @@ Consider setting up:
 - **Log aggregation:** ELK stack, Graylog
 - **Metrics:** Prometheus + Grafana
 - **Alerting:** PagerDuty, Slack webhooks
+
+## 🔒 ACL Permission Management
+
+### Understanding ACLs in MISP Installation
+
+The MISP installation uses **Linux Access Control Lists (ACLs)** to manage multi-user access to log directories and config files. This is more secure than traditional world-writable permissions (777).
+
+### Verify ACL Configuration
+
+```bash
+cd /opt/misp
+
+# Check log directory ACLs
+sudo getfacl logs/
+
+# Should show:
+# - user:www-data:rwx (Docker containers)
+# - user:misp-owner:rwx (MISP owner)
+# - user:yourusername:rwx (Your user)
+# - mask::rwx (CRITICAL - must be rwx, not r-x)
+
+# Check config file ACLs
+sudo getfacl .env PASSWORDS.txt docker-compose.yml
+
+# Should show your username with read (r) access
+```
+
+### Fix ACL Issues
+
+If logs or backups fail due to permission errors:
+
+```bash
+cd /opt/misp
+
+# Fix log directory ACLs
+sudo setfacl -R -m u:www-data:rwx logs/
+sudo setfacl -R -m u:misp-owner:rwx logs/
+sudo setfacl -R -m u:$USER:rwx logs/
+
+# Fix default ACLs (for new files)
+sudo setfacl -R -d -m u:www-data:rwx logs/
+sudo setfacl -R -d -m u:misp-owner:rwx logs/
+sudo setfacl -R -d -m u:$USER:rwx logs/
+
+# CRITICAL: Fix ACL mask
+sudo setfacl -m mask::rwx logs/
+
+# Fix config file ACLs
+sudo setfacl -m u:$USER:r .env
+sudo setfacl -m u:$USER:r PASSWORDS.txt
+sudo setfacl -m u:$USER:r docker-compose.yml
+sudo setfacl -m u:$USER:r docker-compose.override.yml
+
+# Verify
+sudo getfacl logs/ | grep mask
+# Should show: mask::rwx (NOT r-x)
+```
+
+### Remove ACLs (if needed)
+
+```bash
+# Remove all ACLs from log directory
+sudo setfacl -R -b /opt/misp/logs/
+
+# Remove ACLs from specific file
+sudo setfacl -b /opt/misp/.env
+```
+
+**Note**: Removing ACLs will break backup scripts and may cause log write failures. Only remove if you're implementing an alternative permission strategy.
+
+---
 
 ## 🎯 Best Practices
 
