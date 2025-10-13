@@ -363,16 +363,23 @@ This script is provided as-is for MISP deployment purposes.
 
 ## ✅ Version History
 
-### v5.0 (Current)
+### v5.3 (Current) - 2025-10-13
+- Logger robustness with graceful fallback
+- Fixed log directory permission issues
+- Enhanced error handling and messaging
+- Comprehensive documentation updates
+- See [CHANGELOG](docs/testing_and_updates/CHANGELOG.md) for details
+
+### v5.2
+- Centralized JSON logging with CIM fields
+- Log rotation and SIEM compatibility
+
+### v5.0
 - Enterprise-grade Python implementation
 - Pre-flight system checks
 - Resume capability
 - Multi-environment support
 - Performance auto-tuning
-- Config file support (YAML/JSON)
-- Comprehensive logging
-- Automatic backups
-- Error recovery
 
 ### v4.0
 - Bash script with basic features
