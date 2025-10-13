@@ -26,8 +26,8 @@ misp-installer/                           # Repository root
 │
 ├── scripts/                              # Operational scripts directory
 │   ├── README.md                         # 📝 Create: Explains scripts
-│   ├── backup-misp.sh                    # ✅ Created - Automated backup script
-│   ├── uninstall-misp.sh                 # ✅ Created - Uninstallation script
+│   ├── backup-misp.py                    # ✅ Created - Automated backup script
+│   ├── uninstall-misp.py                 # ✅ Created - Uninstallation script
 │   ├── health-check.sh                   # 📝 Create: From MAINTENANCE.md examples
 │   ├── monitor-misp.sh                   # 📝 Create: From MAINTENANCE.md examples
 │   ├── collect-diagnostics.sh            # 📝 Create: From TROUBLESHOOTING.md
@@ -113,8 +113,8 @@ These files are **complete** and ready to copy into your repository:
 10. ✅ **misp-config-production.yaml** → Move to `config/`
 
 ### Scripts Directory (2 files)
-11. ✅ **backup-misp.sh** → Move to `scripts/`
-12. ✅ **uninstall-misp.sh** → Move to `scripts/`
+11. ✅ **backup-misp.py** → Move to `scripts/`
+12. ✅ **uninstall-misp.py** → Move to `scripts/`
 
 ### Docs Directory (6 files)
 13. ✅ **INDEX.md** → Move to `docs/`
@@ -204,8 +204,8 @@ mv misp-config.json config/misp-config.json.example
 mv misp-config-production.yaml config/
 
 # Scripts (move to scripts/)
-mv backup-misp.sh scripts/
-mv uninstall-misp.sh scripts/
+mv backup-misp.py scripts/
+mv uninstall-misp.py scripts/
 chmod +x scripts/*.sh
 
 # Docs (move to docs/)

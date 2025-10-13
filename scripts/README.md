@@ -16,8 +16,8 @@ Complete toolkit for installing, managing, backing up, and maintaining MISP (Mal
 | `misp-update.py` | Update MISP components | Monthly maintenance |
 | `misp-restore.py` | Restore from backup | After failures/disasters |
 | `misp-backup-cron.py` | Automated nightly backups | Cron job |
-| `backup-misp.sh` | Manual backup script | On-demand backups |
-| `uninstall-misp.sh` | Complete MISP removal | Cleanup/reinstall |
+| `backup-misp.py` | Manual backup script | On-demand backups |
+| `uninstall-misp.py` | Complete MISP removal | Cleanup/reinstall |
 
 ---
 
@@ -242,7 +242,7 @@ du -sh /opt/misp-backups/
 
 ## 📦 Manual Backup Script
 
-### `backup-misp.sh`
+### `backup-misp.py`
 
 **Purpose:** Quick manual backup for ad-hoc needs
 
@@ -256,13 +256,13 @@ du -sh /opt/misp-backups/
 
 ```bash
 # Make executable (first time)
-chmod +x backup-misp.sh
+chmod +x backup-misp.py
 
 # Run backup
-./backup-misp.sh
+./backup-misp.py
 
 # Run with sudo if needed
-sudo ./backup-misp.sh
+sudo ./backup-misp.py
 ```
 
 **When to Use:**
@@ -277,7 +277,7 @@ sudo ./backup-misp.sh
 
 ## 🗑️ Uninstall Script
 
-### `uninstall-misp.sh`
+### `uninstall-misp.py`
 
 **Purpose:** Completely remove MISP and all components
 
@@ -298,13 +298,13 @@ sudo ./backup-misp.sh
 
 ```bash
 # Make executable
-chmod +x uninstall-misp.sh
+chmod +x uninstall-misp.py
 
 # Run uninstall (will prompt for confirmation)
-./uninstall-misp.sh
+./uninstall-misp.py
 
 # Force uninstall (skip confirmation)
-./uninstall-misp.sh --force
+./uninstall-misp.py --force
 ```
 
 **Before Running:**
@@ -417,7 +417,7 @@ python3 misp-backup-cron.py --full
 python3 misp-restore.py --show latest
 
 # 3. Uninstall MISP
-./uninstall-misp.sh
+./uninstall-misp.py
 
 # 4. Reinstall fresh
 python3 misp-install.py

@@ -2,7 +2,7 @@
 """
 MISP Complete Installation & Management Tool
 tKQB Enterprises
-Version: 5.3 (Improved Error Handling and Logging)
+Version: 5.4 (Dedicated User Architecture)
 
 Features:
 - Pre-flight system checks
@@ -468,13 +468,28 @@ class BackupManager:
 # ==========================================
 
 class DockerGroupManager:
+    """Manages Docker group membership for MISP installation user
+
+    SECURITY: Adds the dedicated misp-owner user to docker group,
+    following best practice of using a dedicated service account.
+    """
+
     def __init__(self, logger: logging.Logger):
         self.logger = logger
-    
-    def add_user_to_docker_group(self) -> bool:
-        """Add current user to docker group"""
-        username = pwd.getpwuid(os.getuid()).pw_name
-        
+
+    def add_user_to_docker_group(self, username: str = None) -> bool:
+        """Add specified user to docker group (defaults to current user)
+
+        Args:
+            username: Username to add to docker group. If None, uses current user.
+                     For MISP installation, should be MISP_USER constant.
+
+        Returns:
+            True if user is in docker group (already or newly added), False on failure
+        """
+        if username is None:
+            username = pwd.getpwuid(os.getuid()).pw_name
+
         try:
             # Check if already in docker group
             result = subprocess.run(
@@ -482,23 +497,24 @@ class DockerGroupManager:
                 capture_output=True,
                 text=True
             )
-            
+
             if 'docker' in result.stdout:
-                self.logger.info(Colors.success("Already in docker group"))
+                self.logger.info(Colors.success(f"{username} already in docker group"))
                 return True
-            
+
             # Add user to docker group
-            self.logger.info("Adding user to docker group...")
+            self.logger.info(f"Adding {username} to docker group...")
             subprocess.run(
                 ['sudo', 'usermod', '-aG', 'docker', username],
                 check=True
             )
-            
+
             self.logger.info(Colors.success(f"Added {username} to docker group"))
+            self.logger.info(f"Note: {username} may need to log out/in for group to take full effect")
             return True
-            
+
         except Exception as e:
-            self.logger.error(Colors.error(f"Failed to add user to docker group: {e}"))
+            self.logger.error(Colors.error(f"Failed to add {username} to docker group: {e}"))
             return False
 
 # ==========================================
@@ -667,12 +683,17 @@ class MISPInstaller:
         self.save_state(1, "Dependencies Installed")
     
     def phase_2_docker_group(self):
-        """Phase 2: Configure Docker group access"""
+        """Phase 2: Configure Docker group access for misp-owner
+
+        SECURITY: Adds misp-owner to docker group, allowing container management
+        without requiring root privileges for the installation user.
+        """
         self.section_header("PHASE 2: DOCKER GROUP CONFIGURATION")
-        
+
         docker_mgr = DockerGroupManager(self.logger)
-        docker_mgr.add_user_to_docker_group()
-        
+        # SECURITY: Add dedicated misp-owner user to docker group
+        docker_mgr.add_user_to_docker_group(MISP_USER)
+
         self.save_state(2, "Docker Group Configured")
     
     def phase_3_backup(self):
@@ -790,10 +811,30 @@ class MISPInstaller:
         # Clean up temp directory
         self.run_command(['sudo', 'rm', '-rf', str(temp_clone)])
 
-        # Set ownership to current user
-        username = pwd.getpwuid(os.getuid()).pw_name
-        self.logger.info(f"[5.4] Setting ownership to {username}...")
-        self.run_command(['sudo', 'chown', '-R', f'{username}:{username}', str(self.misp_dir)])
+        # Set ownership to misp-owner (dedicated system user)
+        # SECURITY: All MISP files owned by misp-owner, following least privilege principle
+        self.logger.info(f"[5.4] Setting ownership to {MISP_USER}...")
+        self.run_command(['sudo', 'chown', '-R', f'{MISP_USER}:{MISP_USER}', str(self.misp_dir)])
+
+        # CRITICAL: Ensure logs directory exists with proper permissions BEFORE Docker starts
+        # Docker will mount ./logs and if we don't set this up correctly, Docker will create it as www-data
+        self.logger.info(f"[5.5] Configuring logs directory permissions...")
+        logs_dir = self.misp_dir / "logs"
+
+        # Create logs directory if it doesn't exist
+        self.run_command(['sudo', '-u', MISP_USER, 'mkdir', '-p', str(logs_dir)])
+
+        # SECURITY: Set 777 permissions so both Docker (www-data) and management scripts can write
+        # This is necessary because:
+        # 1. Docker containers run as www-data and write MISP application logs
+        # 2. Our installation/management scripts run as current user and write JSON logs
+        # 3. ACLs would be cleaner but require additional setup
+        self.run_command(['sudo', 'chmod', '777', str(logs_dir)])
+
+        # Ensure ownership is misp-owner (for consistency)
+        self.run_command(['sudo', 'chown', f'{MISP_USER}:{MISP_USER}', str(logs_dir)])
+
+        self.logger.info(Colors.success(f"✓ Logs directory ready (owner: {MISP_USER}, mode: 777)"))
 
         os.chdir(self.misp_dir)
 
@@ -887,10 +928,26 @@ WORKERS={perf.workers}
 DEBUG={1 if self.config.environment == 'development' else 0}
 """
         
-        with open(self.misp_dir / ".env", 'w') as f:
+        # Write as misp-owner using sudo
+        # SECURITY: File must be owned by misp-owner, but we're running as regular user
+        env_file = self.misp_dir / ".env"
+        temp_file = f"/tmp/.env.{os.getpid()}"
+
+        # Write to temp file first
+        with open(temp_file, 'w') as f:
             f.write(env_content)
-        
-        os.chmod(self.misp_dir / ".env", 0o600)
+
+        # Move to final location (as root, then chown to misp-owner)
+        # SECURITY NOTE: Can't use -u misp-owner because temp file is owned by current user
+        self.run_command(['sudo', 'cp', temp_file, str(env_file)])
+        self.run_command(['sudo', 'chmod', '600', str(env_file)])
+        self.run_command(['sudo', 'chown', f'{MISP_USER}:{MISP_USER}', str(env_file)])
+
+        # Clean up temp file
+        try:
+            os.unlink(temp_file)
+        except:
+            pass
         
         self.logger.info(Colors.success("Configuration created"))
         self.logger.info(f"  Performance tuning: {perf.php_memory_limit} RAM, {perf.workers} workers")
@@ -900,27 +957,49 @@ DEBUG={1 if self.config.environment == 'development' else 0}
     def phase_7_ssl_certificate(self):
         """Phase 7: Generate SSL certificate"""
         self.section_header("PHASE 7: SSL CERTIFICATE")
-        
+
         self.logger.info("[7.1] Creating SSL directory...")
         ssl_dir = self.misp_dir / "ssl"
-        ssl_dir.mkdir(exist_ok=True)
-        
+
+        # SECURITY: Create directory as misp-owner using sudo
+        self.run_command(['sudo', '-u', MISP_USER, 'mkdir', '-p', str(ssl_dir)])
+        self.run_command(['sudo', 'chmod', '755', str(ssl_dir)])
+
         self.logger.info(f"[7.2] Generating self-signed certificate for {self.config.domain}...")
-        
+
+        # Generate certificate in /tmp first (accessible by current user)
+        temp_key = f"/tmp/misp-key-{os.getpid()}.pem"
+        temp_cert = f"/tmp/misp-cert-{os.getpid()}.pem"
+
         self.run_command([
             'openssl', 'req', '-x509', '-nodes', '-days', '365',
             '-newkey', 'rsa:4096',
-            '-keyout', str(ssl_dir / 'key.pem'),
-            '-out', str(ssl_dir / 'cert.pem'),
+            '-keyout', temp_key,
+            '-out', temp_cert,
             '-subj', f"/C=US/ST=New York/L=New York/O={self.config.admin_org}/OU=IT/CN={self.config.domain}",
             '-addext', f"subjectAltName=DNS:{self.config.domain},DNS:*.{self.config.domain},IP:{self.config.server_ip}"
         ])
-        
-        os.chmod(ssl_dir / 'cert.pem', 0o644)
-        os.chmod(ssl_dir / 'key.pem', 0o600)
-        
+
+        # Move certificates to ssl directory (as root, then chown to misp-owner)
+        # SECURITY NOTE: Can't use -u misp-owner because temp files are owned by current user with 600 perms
+        self.run_command(['sudo', 'cp', temp_key, str(ssl_dir / 'key.pem')])
+        self.run_command(['sudo', 'cp', temp_cert, str(ssl_dir / 'cert.pem')])
+
+        # Set proper permissions
+        self.run_command(['sudo', 'chmod', '644', str(ssl_dir / 'cert.pem')])
+        self.run_command(['sudo', 'chmod', '600', str(ssl_dir / 'key.pem')])
+        self.run_command(['sudo', 'chown', f'{MISP_USER}:{MISP_USER}', str(ssl_dir / 'key.pem')])
+        self.run_command(['sudo', 'chown', f'{MISP_USER}:{MISP_USER}', str(ssl_dir / 'cert.pem')])
+
+        # Clean up temp files
+        try:
+            os.unlink(temp_key)
+            os.unlink(temp_cert)
+        except:
+            pass
+
         self.logger.info("[7.3] Creating docker-compose.override.yml...")
-        
+
         override_content = """services:
   misp-core:
     volumes:
@@ -942,10 +1021,24 @@ DEBUG={1 if self.config.environment == 'development' else 0}
       retries: 15
       start_period: 180s
 """
-        
-        with open(self.misp_dir / "docker-compose.override.yml", 'w') as f:
+
+        # Write docker-compose.override.yml using temp file pattern
+        temp_override = f"/tmp/docker-compose.override-{os.getpid()}.yml"
+        with open(temp_override, 'w') as f:
             f.write(override_content)
-        
+
+        # Move to final location (as root, then chown to misp-owner)
+        # SECURITY NOTE: Can't use -u misp-owner because temp file is owned by current user
+        self.run_command(['sudo', 'cp', temp_override, str(self.misp_dir / "docker-compose.override.yml")])
+        self.run_command(['sudo', 'chmod', '644', str(self.misp_dir / "docker-compose.override.yml")])
+        self.run_command(['sudo', 'chown', f'{MISP_USER}:{MISP_USER}', str(self.misp_dir / "docker-compose.override.yml")])
+
+        # Clean up temp file
+        try:
+            os.unlink(temp_override)
+        except:
+            pass
+
         self.logger.info(Colors.success("SSL certificate generated"))
         self.save_state(7, "SSL Certificate Created")
     
@@ -982,9 +1075,9 @@ DEBUG={1 if self.config.environment == 'development' else 0}
     def phase_9_password_reference(self):
         """Phase 9: Create password reference file"""
         self.section_header("PHASE 9: PASSWORD REFERENCE")
-        
+
         self.logger.info("[9.1] Creating secure password reference file...")
-        
+
         # Get certificate expiry
         try:
             result = self.run_command([
@@ -994,7 +1087,7 @@ DEBUG={1 if self.config.environment == 'development' else 0}
             cert_expiry = result.stdout.strip().split('=')[1]
         except Exception:
             cert_expiry = "Unknown"
-        
+
         password_content = f"""================================================
 MISP PASSWORD REFERENCE - {self.config.admin_org}
 ================================================
@@ -1036,12 +1129,24 @@ PERFORMANCE:
 ⚠️  KEEP THIS FILE SECURE AND BACKED UP!
 ================================================
 """
-        
-        with open(self.misp_dir / "PASSWORDS.txt", 'w') as f:
+
+        # SECURITY: Write using temp file pattern (owned by misp-owner)
+        temp_passwords = f"/tmp/passwords-{os.getpid()}.txt"
+        with open(temp_passwords, 'w') as f:
             f.write(password_content)
-        
-        os.chmod(self.misp_dir / "PASSWORDS.txt", 0o600)
-        
+
+        # Move to final location (as root, then chown to misp-owner)
+        # SECURITY NOTE: Can't use -u misp-owner because temp file is owned by current user
+        self.run_command(['sudo', 'cp', temp_passwords, str(self.misp_dir / "PASSWORDS.txt")])
+        self.run_command(['sudo', 'chmod', '600', str(self.misp_dir / "PASSWORDS.txt")])
+        self.run_command(['sudo', 'chown', f'{MISP_USER}:{MISP_USER}', str(self.misp_dir / "PASSWORDS.txt")])
+
+        # Clean up temp file
+        try:
+            os.unlink(temp_passwords)
+        except:
+            pass
+
         self.logger.info(Colors.success(f"Password reference saved to: {self.misp_dir}/PASSWORDS.txt"))
         self.save_state(9, "Password Reference Created")
     
@@ -1239,12 +1344,13 @@ PERFORMANCE:
                         self.logger.info(log_result.stdout)
             
             # Step 6: Fix log directory permissions (Docker may have created it with www-data ownership)
+            # SECURITY: Ensure misp-owner owns all log directories, but keep world-writable for install script
             self.logger.info("\n[10.6] Fixing log directory permissions...")
-            username = pwd.getpwuid(os.getuid()).pw_name
             try:
-                self.run_command(['sudo', 'chown', '-R', f'{username}:{username}', '/opt/misp/logs'], check=False)
-                self.run_command(['sudo', 'chmod', '775', '/opt/misp/logs'], check=False)
-                self.logger.info(Colors.success("✓ Log directory permissions fixed"))
+                self.run_command(['sudo', 'chown', '-R', f'{MISP_USER}:{MISP_USER}', '/opt/misp/logs'], check=False)
+                # SECURITY NOTE: 777 needed because regular user (running install) and misp-owner both need write access
+                self.run_command(['sudo', 'chmod', '777', '/opt/misp/logs'], check=False)
+                self.logger.info(Colors.success(f"✓ Log directory permissions fixed (owner: {MISP_USER}, mode: 777)"))
             except Exception as e:
                 self.logger.warning(f"⚠ Could not fix log directory permissions: {e}")
 
@@ -1395,9 +1501,23 @@ sudo cat /opt/misp/PASSWORDS.txt
 - Logs: /var/log/misp-install/
 """
         
-        with open(self.misp_dir / "POST-INSTALL-CHECKLIST.md", 'w') as f:
+        # SECURITY: Write using temp file pattern (owned by misp-owner)
+        temp_checklist = f"/tmp/post-install-checklist-{os.getpid()}.md"
+        with open(temp_checklist, 'w') as f:
             f.write(checklist_content)
-        
+
+        # Move to final location (as root, then chown to misp-owner)
+        # SECURITY NOTE: Can't use -u misp-owner because temp file is owned by current user
+        self.run_command(['sudo', 'cp', temp_checklist, str(self.misp_dir / "POST-INSTALL-CHECKLIST.md")])
+        self.run_command(['sudo', 'chmod', '644', str(self.misp_dir / "POST-INSTALL-CHECKLIST.md")])
+        self.run_command(['sudo', 'chown', f'{MISP_USER}:{MISP_USER}', str(self.misp_dir / "POST-INSTALL-CHECKLIST.md")])
+
+        # Clean up temp file
+        try:
+            os.unlink(temp_checklist)
+        except:
+            pass
+
         self.logger.info(Colors.success("Post-install checklist created"))
         self.save_state(12, "Post-Install Complete")
     
@@ -1578,38 +1698,171 @@ def get_user_input_interactive(logger: logging.Logger) -> MISPConfig:
     return config
 
 # ==========================================
+# Dedicated User Management
+# ==========================================
+
+MISP_USER = "misp-owner"
+MISP_HOME = "/home/misp-owner"
+
+def ensure_misp_user_exists() -> bool:
+    """Create misp-owner user if it doesn't exist. Returns True if user exists or was created."""
+    try:
+        # Check if user already exists
+        pwd.getpwnam(MISP_USER)
+        return True
+    except KeyError:
+        # User doesn't exist, create it
+        print(f"Creating dedicated user: {MISP_USER}")
+        print("This requires sudo privileges (one-time operation)...")
+
+        try:
+            # Create system user with home directory
+            result = subprocess.run([
+                'sudo', 'useradd',
+                '--system',  # System user
+                '--create-home',  # Create home directory
+                '--home-dir', MISP_HOME,
+                '--shell', '/bin/bash',
+                '--comment', 'MISP Installation Owner',
+                MISP_USER
+            ], check=True, capture_output=True, text=True)
+
+            print(f"✓ Created system user: {MISP_USER}")
+            return True
+
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to create user {MISP_USER}: {e.stderr}")
+            return False
+        except Exception as e:
+            print(f"❌ Unexpected error creating user: {e}")
+            return False
+
+def get_current_username() -> str:
+    """Get current username"""
+    return pwd.getpwuid(os.getuid()).pw_name
+
+def reexecute_as_misp_user(script_path: str, args: list):
+    """Re-execute this script as misp-owner user
+
+    SECURITY FIX: Copies script to /tmp which is accessible by all users,
+    then re-executes from there. This handles cases where the original script
+    is in a user's home directory with restrictive permissions (e.g., 750).
+    """
+    current_user = get_current_username()
+
+    if current_user == MISP_USER:
+        # Already running as misp-owner
+        return False
+
+    print(f"\n{'='*60}")
+    print(f"SECURITY: Switching execution to dedicated user '{MISP_USER}'")
+    print(f"{'='*60}\n")
+    print(f"Current user: {current_user}")
+    print(f"Target user:  {MISP_USER}")
+    print(f"\nThis ensures all MISP operations run with minimal privileges.")
+    print("You may be prompted for sudo password...\n")
+
+    # Copy script to /tmp for misp-owner to access
+    # (User home directories often have 750 permissions)
+    import tempfile
+    import shutil
+    import atexit
+
+    temp_script = f"/tmp/misp-install-{os.getpid()}.py"
+    try:
+        shutil.copy2(script_path, temp_script)
+        os.chmod(temp_script, 0o755)  # Make readable by all
+        print(f"📋 Script copied to {temp_script} for execution\n")
+
+        # Register cleanup function
+        def cleanup_temp_script():
+            try:
+                if os.path.exists(temp_script):
+                    os.unlink(temp_script)
+            except:
+                pass
+
+        atexit.register(cleanup_temp_script)
+
+    except Exception as e:
+        print(f"❌ Failed to copy script to /tmp: {e}")
+        sys.exit(1)
+
+    # Build command to re-execute as misp-owner from /tmp
+    cmd = ['sudo', '-u', MISP_USER, sys.executable, temp_script] + args
+
+    try:
+        # Execute and replace current process
+        # Note: atexit won't run because os.execvp replaces the process
+        # The temp script will clean itself up when it runs
+        os.execvp('sudo', cmd)
+    except Exception as e:
+        print(f"❌ Failed to switch to {MISP_USER}: {e}")
+        # Clean up temp file (atexit will also try, but just in case)
+        try:
+            os.unlink(temp_script)
+        except:
+            pass
+        sys.exit(1)
+
+# ==========================================
 # Main Function
 # ==========================================
 
 def main():
     """Main entry point"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='MISP Installation Tool')
     parser.add_argument('--config', type=str, help='Path to config file (YAML or JSON)')
     parser.add_argument('--non-interactive', action='store_true', help='Run in non-interactive mode')
     parser.add_argument('--resume', action='store_true', help='Resume from last checkpoint')
     parser.add_argument('--skip-checks', action='store_true', help='Skip pre-flight checks')
-    
+
     args = parser.parse_args()
+
+    # SECURITY BEST PRACTICE: Ensure we're NOT running as root
+    if os.geteuid() == 0:
+        print("❌ ERROR: Do not run this script as root!")
+        print("\nFor security, this script should be run as a regular user.")
+        print("The script will automatically create and use a dedicated 'misp-owner' user.")
+        print("\nUsage:")
+        print(f"  python3 {sys.argv[0]}")
+        sys.exit(1)
+
+    # SECURITY BEST PRACTICE: Ensure dedicated misp-owner user exists
+    # The script runs as the regular user, but creates files as misp-owner
+    current_user = get_current_username()
+    print(f"\n✓ Running as: {current_user}")
+
+    # Ensure misp-owner user exists (will be used for file ownership)
+    print(f"\n📋 Ensuring dedicated user '{MISP_USER}' exists...")
+    print("   This follows security best practices (principle of least privilege).")
+
+    if not ensure_misp_user_exists():
+        print(f"\n❌ Cannot proceed without dedicated user. Exiting.")
+        sys.exit(1)
+
+    print(f"✓ User '{MISP_USER}' ready")
+    print(f"✓ All MISP files will be owned by {MISP_USER}\n")
 
     # CRITICAL: Create /opt/misp/logs directory BEFORE initializing logger
     # This must exist for JSON logging
     log_dir = Path("/opt/misp/logs")
     if not log_dir.exists():
         try:
-            # Try to create with sudo (will prompt for password if needed)
+            # Create with sudo as misp-owner
             result = subprocess.run(['sudo', 'mkdir', '-p', '/opt/misp/logs'],
                                   check=False, capture_output=True, text=True)
             if result.returncode != 0:
                 print(f"⚠️  Could not create /opt/misp/logs with sudo: {result.stderr}")
                 print(f"⚠️  Will use console-only logging")
             else:
-                username = os.getenv('USER') or pwd.getpwuid(os.getuid()).pw_name
-                # Set ownership to current user
-                subprocess.run(['sudo', 'chown', '-R', f'{username}:{username}', '/opt/misp/logs'],
+                # Set ownership to misp-owner with world-writable permissions
+                # SECURITY NOTE: 777 needed because regular user (running install) and misp-owner both need write access
+                subprocess.run(['sudo', 'chown', '-R', f'{MISP_USER}:{MISP_USER}', '/opt/misp/logs'],
                              check=False, capture_output=True)
-                subprocess.run(['sudo', 'chmod', '775', '/opt/misp/logs'],
+                subprocess.run(['sudo', 'chmod', '777', '/opt/misp/logs'],
                              check=False, capture_output=True)
         except Exception as e:
             print(f"⚠️  Could not create /opt/misp/logs directory: {e}")
@@ -1621,20 +1874,14 @@ def main():
     logger.info(Colors.info("""
 ╔══════════════════════════════════════════════════╗
 ║                                                  ║
-║      MISP Complete Installation Tool v5.1       ║
+║      MISP Complete Installation Tool v5.4       ║
 ║              tKQB Enterprises                    ║
+║         Dedicated User: misp-owner               ║
 ║                                                  ║
 ╚══════════════════════════════════════════════════╝
 """))
-    
+
     try:
-        # Check if running as root
-        if os.geteuid() == 0:
-            logger.error(Colors.error("❌ Don't run this script as root!"))
-            logger.info("Please run as regular user:")
-            logger.info(f"  python3 {sys.argv[0]}")
-            sys.exit(1)
-        
         # Pre-flight checks
         if not args.skip_checks:
             checker = SystemChecker(logger)
@@ -1694,18 +1941,10 @@ def main():
         
         # Create installer
         installer = MISPInstaller(config, logger, interactive=interactive)
-        
-        # Docker group check (only if not resuming past phase 2)
-        if start_phase <= 2:
-            result = subprocess.run(['groups'], capture_output=True, text=True)
-            if 'docker' not in result.stdout:
-                docker_mgr = DockerGroupManager(logger)
-                docker_mgr.add_user_to_docker_group()
-                
-                if interactive:
-                    logger.info("\n" + Colors.warning("⚠️  Docker group added. Please logout and login, then run this script again."))
-                    sys.exit(0)
-        
+
+        # NOTE: Docker group membership for misp-owner is handled in Phase 2
+        # No need for separate docker group check here - Phase 2 adds misp-owner to docker group
+
         # Run installation
         success = installer.run_installation(start_phase=start_phase)
         

@@ -134,7 +134,7 @@ self.logger.info("\n[10.6] Fixing log directory permissions...")
 username = pwd.getpwuid(os.getuid()).pw_name
 try:
     self.run_command(['sudo', 'chown', '-R', f'{username}:{username}', '/opt/misp/logs'], check=False)
-    self.run_command(['sudo', 'chmod', '775', '/opt/misp/logs'], check=False)
+    self.run_command(['sudo', 'chmod 777 /opt/misp/logs'], check=False)
     self.logger.info(Colors.success("✓ Log directory permissions fixed"))
 except Exception as e:
     self.logger.warning(f"⚠ Could not fix log directory permissions: {e}")

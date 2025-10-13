@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🔍 **Port conflict detection** - Checks for port conflicts before installation
 - 📊 **Docker group activation** - Automatic docker group configuration
 - 📚 **Comprehensive documentation** - 10,000+ words of professional documentation
-- 🛠️ **Operational scripts** - backup-misp.sh, uninstall-misp.sh, health-check scripts
+- 🛠️ **Operational scripts** - backup-misp.py, uninstall-misp.py, health-check scripts
 - 📝 **Post-install checklist** - Auto-generated checklist for post-installation tasks
 - 🧪 **Test suite generation** - Creates standalone test script for health checks
 
@@ -132,7 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ```bash
 # 1. Backup your current installation
-bash backup-misp.sh  # If you have v4.x script
+bash backup-misp.py  # If you have v4.x script
 
 # 2. Install Python 3.8+ if needed
 sudo apt install python3.8 python3-pip

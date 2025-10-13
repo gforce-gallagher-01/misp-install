@@ -1,4 +1,4 @@
-# MISP Complete Installation Tool v5.0
+# MISP Complete Installation Tool v5.4
 **tKQB Enterprises**
 
 A professional-grade Python installation script for MISP (Malware Information Sharing Platform) with enterprise features.
@@ -39,29 +39,41 @@ A professional-grade Python installation script for MISP (Malware Information Sh
 pip3 install pyyaml
 ```
 
-## ⚙️ One-Time Setup (Required)
+## 🔐 Security Architecture
 
-Before running the installation for the first time, create the log directory:
+**IMPORTANT:** This installation follows security best practices by using a **dedicated system user** (`misp-owner`) rather than your personal user account.
 
-```bash
-sudo mkdir -p /opt/misp/logs && sudo chown $USER:$USER /opt/misp && sudo chmod 775 /opt/misp/logs
-```
+**What this means:**
+- ✅ The script automatically creates a dedicated `misp-owner` user
+- ✅ All MISP files and operations run under `misp-owner` (not root, not your user)
+- ✅ Follows the **Principle of Least Privilege** (NIST SP 800-53 AC-6)
+- ✅ Provides clear security boundaries and audit trails
+- ✅ Compliant with CIS Benchmarks and OWASP best practices
 
-**Why this is needed:** The installation scripts write logs to `/opt/misp/logs`. This directory requires sudo to create initially. Running the above command once allows the scripts to run without repeatedly prompting for sudo password.
+**How it works:**
+1. Run the script as your regular user (NOT as root)
+2. Script automatically creates `misp-owner` system user (requires sudo once)
+3. Script automatically re-executes itself as `misp-owner`
+4. All installation operations run as `misp-owner`
 
-**For automated/CI environments:** See `SETUP.md` for configuring passwordless sudo.
+**No manual setup required!** The script handles everything automatically.
+
+For more details, see: `docs/SECURITY_ARCHITECTURE.md`
 
 ## 🎯 Quick Start
 
 ### Interactive Installation (Recommended)
 
 ```bash
-# One-time setup (if not already done)
-sudo mkdir -p /opt/misp/logs && sudo chown $USER:$USER /opt/misp && sudo chmod 775 /opt/misp/logs
-
-# Run interactive installation
+# Run as your regular user (NOT as root!)
 python3 misp-install.py
 ```
+
+The script will automatically:
+- Create the `misp-owner` system user (if needed)
+- Switch execution to `misp-owner` user
+- Create all required directories with proper ownership
+- Install and configure MISP
 
 ### Using Configuration File
 
@@ -363,12 +375,19 @@ This script is provided as-is for MISP deployment purposes.
 
 ## ✅ Version History
 
-### v5.3 (Current) - 2025-10-13
+### v5.4 (Current) - 2025-10-13
+- **SECURITY:** Dedicated system user architecture (`misp-owner`)
+- Automatic user creation and privilege management
+- Follows industry best practices (NIST, CIS, OWASP)
+- Principle of least privilege implementation
+- Enhanced security boundaries and audit trails
+- See [CHANGELOG](docs/testing_and_updates/CHANGELOG.md) for details
+
+### v5.3 - 2025-10-13
 - Logger robustness with graceful fallback
 - Fixed log directory permission issues
 - Enhanced error handling and messaging
 - Comprehensive documentation updates
-- See [CHANGELOG](docs/testing_and_updates/CHANGELOG.md) for details
 
 ### v5.2
 - Centralized JSON logging with CIM fields

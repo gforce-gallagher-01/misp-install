@@ -19,8 +19,8 @@ misp-installer/
 │   └── misp-config-production.yaml   # Production config
 │
 ├── scripts/                           # Operational scripts
-│   ├── backup-misp.sh                # Backup script
-│   ├── uninstall-misp.sh             # Uninstall script
+│   ├── backup-misp.py                # Backup script
+│   ├── uninstall-misp.py             # Uninstall script
 │   ├── health-check.sh               # Health check script
 │   ├── monitor-misp.sh               # Monitoring script
 │   └── collect-diagnostics.sh        # Diagnostic collection
@@ -123,8 +123,8 @@ All operational scripts in one place:
 
 ```
 scripts/
-├── backup-misp.sh                 # Automated backup
-├── uninstall-misp.sh              # Clean uninstall
+├── backup-misp.py                 # Automated backup
+├── uninstall-misp.py              # Clean uninstall
 ├── health-check.sh                # Daily health checks
 ├── monitor-misp.sh                # Monitoring script
 ├── collect-diagnostics.sh         # Gather debug info

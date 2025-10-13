@@ -639,7 +639,7 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 cd /opt/misp
 
 # Backup first!
-./backup-misp.sh  # If you created the backup script
+./backup-misp.py  # If you created the backup script
 
 # Or manual backup
 sudo docker compose exec -T db mysqldump -umisp -p misp > backup.sql
@@ -661,7 +661,7 @@ sudo docker compose logs -f
 **Solution:**
 ```bash
 # Create backup script
-cat > ~/backup-misp.sh << 'EOF'
+cat > ~/backup-misp.py << 'EOF'
 #!/bin/bash
 BACKUP_DIR=/opt/misp-backups/$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
@@ -683,14 +683,14 @@ rm -rf $BACKUP_DIR/
 echo "Backup: $BACKUP_DIR.tar.gz"
 EOF
 
-chmod +x ~/backup-misp.sh
+chmod +x ~/backup-misp.py
 
 # Run backup
-~/backup-misp.sh
+~/backup-misp.py
 
 # Schedule with cron
 crontab -e
-# Add: 0 2 * * * /home/yourusername/backup-misp.sh
+# Add: 0 2 * * * /home/yourusername/backup-misp.py
 ```
 
 ---

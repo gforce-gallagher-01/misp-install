@@ -62,7 +62,7 @@ sudo docker compose logs misp-core -f
 ### 1. Backup
 ```bash
 # Run backup script
-~/backup-misp.sh
+~/backup-misp.py
 
 # Verify backup exists
 ls -lh /opt/misp-backups/ | tail -5
@@ -120,7 +120,7 @@ sudo docker compose exec db mysql -umisp -p -e "SHOW VARIABLES LIKE 'slow_query%
 ### 1. Update MISP
 ```bash
 # IMPORTANT: Backup first!
-~/backup-misp.sh
+~/backup-misp.py
 
 cd /opt/misp
 
@@ -236,7 +236,7 @@ sudo docker compose restart
 # CRITICAL: Test your backups actually work!
 
 # 1. Create fresh backup
-~/backup-misp.sh
+~/backup-misp.py
 
 # 2. On test server/VM, restore backup
 # Follow restore instructions in TROUBLESHOOTING.md

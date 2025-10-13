@@ -125,22 +125,28 @@ class MISPBackup:
                 )
 
     def backup_ssl_certificates(self):
-        """Backup SSL certificates"""
+        """Backup SSL certificates
+
+        SECURITY: SSL files are owned by misp-owner. We copy them with sudo
+        and then set ownership to current user for backup portability.
+        """
         self.logger.info("Backing up SSL certificates", event_type="backup", phase="backup_ssl")
 
         ssl_dir = self.config.MISP_DIR / "ssl"
         if ssl_dir.exists():
             try:
-                # Use sudo to copy SSL files due to permission restrictions
+                # Use sudo to copy SSL files (owned by misp-owner)
                 subprocess.run(
                     ['sudo', 'cp', '-r', str(ssl_dir), str(self.backup_dir / "ssl")],
                     check=True,
                     capture_output=True,
                     timeout=30
                 )
-                # Fix ownership of copied files
+                # Fix ownership of copied files to current user for backup portability
+                # SECURITY NOTE: Backup files should be owned by user running backup, not misp-owner
+                current_user = os.environ.get('USER', os.getlogin())
                 subprocess.run(
-                    ['sudo', 'chown', '-R', f'{os.getuid()}:{os.getgid()}', str(self.backup_dir / "ssl")],
+                    ['sudo', 'chown', '-R', f'{current_user}:{current_user}', str(self.backup_dir / "ssl")],
                     check=True,
                     capture_output=True,
                     timeout=10

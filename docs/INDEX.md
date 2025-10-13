@@ -31,10 +31,10 @@ This package contains everything you need for a complete enterprise-grade MISP i
 
 | File | Purpose | Required |
 |------|---------|----------|
-| **backup-misp.sh** | Automated backup script | ⭐ Recommended |
+| **backup-misp.py** | Automated backup script | ⭐ Recommended |
 | **MAINTENANCE.md** | Ongoing maintenance guide | ⭐ Recommended |
 | **TROUBLESHOOTING.md** | Complete troubleshooting guide | ⭐ Recommended |
-| **uninstall-misp.sh** | Safe uninstallation script | ⚪ Optional |
+| **uninstall-misp.py** | Safe uninstallation script | ⚪ Optional |
 
 ### Checklists & Documentation
 
@@ -87,7 +87,7 @@ Installation Complete
     ↓
 Review POST-INSTALL-CHECKLIST.md (auto-generated)
     ↓
-Set up: backup-misp.sh
+Set up: backup-misp.py
     ↓
 Read: MAINTENANCE.md
     ↓
@@ -98,7 +98,7 @@ Bookmark: TROUBLESHOOTING.md
 ```
 Daily: Use daily-health-check.sh
     ↓
-Weekly: Run backup-misp.sh
+Weekly: Run backup-misp.py
     ↓
 Monthly: Follow MAINTENANCE.md
     ↓
@@ -127,10 +127,10 @@ python3 misp-install.py --config prod.yaml --non-interactive
 ### Backup
 ```bash
 # Manual backup
-bash backup-misp.sh
+bash backup-misp.py
 
 # Scheduled backup (cron)
-0 2 * * * /home/user/backup-misp.sh
+0 2 * * * /home/user/backup-misp.py
 ```
 
 ### Maintenance
@@ -162,7 +162,7 @@ bash collect-diagnostics.sh
 ### Uninstallation
 ```bash
 # Complete removal
-bash uninstall-misp.sh
+bash uninstall-misp.py
 ```
 
 ---
@@ -181,10 +181,10 @@ misp-install.py ──────┐
                       └──> Creates: /opt/misp/logs/
                                    └── Installation logs
 
-backup-misp.sh ───────────> Creates: /opt/misp-backups/
+backup-misp.py ───────────> Creates: /opt/misp-backups/
                                      └── Compressed backups
 
-uninstall-misp.sh ────────> Removes: Everything except backups
+uninstall-misp.py ────────> Removes: Everything except backups
 ```
 
 ---
@@ -227,7 +227,7 @@ chmod 700 /opt/misp-backups
 
 ### "I need to maintain MISP"
 → Read: **MAINTENANCE.md**  
-→ Schedule: **backup-misp.sh**  
+→ Schedule: **backup-misp.py**  
 → Create: Daily health check script
 
 ### "Something is broken"
@@ -236,9 +236,9 @@ chmod 700 /opt/misp-backups
 → Review: Docker logs
 
 ### "I need to remove MISP"
-→ Read: **uninstall-misp.sh** header comments  
-→ Backup: Run `backup-misp.sh` first  
-→ Execute: `bash uninstall-misp.sh`
+→ Read: **uninstall-misp.py** header comments  
+→ Backup: Run `backup-misp.py` first  
+→ Execute: `bash uninstall-misp.py`
 
 ---
 
@@ -255,7 +255,7 @@ chmod 700 /opt/misp-backups
 ### Level 2: Intermediate
 1. Review **README.md** fully (45 minutes)
 2. Understand config files (30 minutes)
-3. Set up **backup-misp.sh** (15 minutes)
+3. Set up **backup-misp.py** (15 minutes)
 4. Review **MAINTENANCE.md** (30 minutes)
 5. Practice troubleshooting scenarios (1 hour)
 
@@ -290,7 +290,7 @@ chmod 700 /opt/misp-backups
 → `/opt/misp/PASSWORDS.txt`
 
 ### "How do I backup?"
-→ **backup-misp.sh**
+→ **backup-misp.py**
 
 ### "Where are the logs?"
 → `/opt/misp/logs/` and `sudo docker compose logs`
@@ -344,7 +344,7 @@ After installation, you should:
 - [ ] Save **PASSWORDS.txt** securely
 - [ ] Configure workstation hosts file
 - [ ] Access MISP web interface
-- [ ] Set up **backup-misp.sh**
+- [ ] Set up **backup-misp.py**
 - [ ] Schedule automated backups
 - [ ] Review **MAINTENANCE.md**
 - [ ] Bookmark **TROUBLESHOOTING.md**

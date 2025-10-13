@@ -118,6 +118,7 @@ class MISPUninstall:
         print("  • All MISP Docker images")
         print("  • MISP configuration files")
         print(f"  • MISP directory: {self.config.MISP_DIR}")
+        print("  • misp-owner system user and home directory")
         print()
         print(Colors.warning(f"NOTE: Backups in {self.config.BACKUP_DIR} will NOT be deleted"))
         print()
@@ -131,7 +132,11 @@ class MISPUninstall:
         return response == "DELETE"
 
     def remove_containers(self):
-        """Stop and remove MISP containers"""
+        """Stop and remove MISP containers
+
+        SECURITY: Uses sudo docker compose to ensure containers are properly stopped
+        even if they were created by misp-owner user.
+        """
         self.log("Stopping MISP containers...")
 
         if not self.config.MISP_DIR.exists():
@@ -139,46 +144,64 @@ class MISPUninstall:
             return
 
         try:
-            # Stop and remove containers
-            subprocess.run(
-                ['docker', 'compose', 'down', '-v'],
+            # Stop and remove containers (with volumes)
+            result = subprocess.run(
+                ['sudo', 'docker', 'compose', 'down', '-v'],
                 cwd=self.config.MISP_DIR,
                 capture_output=True,
+                text=True,
                 timeout=120
             )
-            self.log("Containers stopped and removed", "success")
+            if result.returncode == 0:
+                self.log("Containers stopped and removed", "success")
+            else:
+                self.log(f"Warning: docker compose down returned {result.returncode}", "warning")
+                if result.stderr:
+                    self.log(f"Error: {result.stderr[:200]}", "warning")
         except Exception as e:
             self.log(f"Could not stop containers: {e}", "warning")
 
     def remove_images(self):
-        """Remove MISP Docker images"""
+        """Remove MISP Docker images
+
+        Removes all MISP-related Docker images including tagged and untagged.
+        """
         self.log("Removing MISP Docker images...")
 
         try:
             # Get MISP-related images
             result = subprocess.run(
-                ['docker', 'images', '--format', '{{.Repository}}:{{.Tag}}'],
+                ['sudo', 'docker', 'images', '--format', '{{.Repository}}:{{.Tag}}'],
                 capture_output=True,
                 text=True,
                 timeout=30
             )
 
             images = [img for img in result.stdout.strip().split('\n')
-                     if 'misp' in img.lower() or 'ghcr.io/misp' in img.lower()]
+                     if img and ('misp' in img.lower() or 'ghcr.io/misp' in img.lower())]
 
             if images:
+                removed_count = 0
                 for image in images:
                     try:
-                        subprocess.run(
-                            ['docker', 'rmi', '-f', image],
+                        result = subprocess.run(
+                            ['sudo', 'docker', 'rmi', '-f', image],
                             capture_output=True,
+                            text=True,
                             timeout=30
                         )
-                        self.log(f"Removed image: {image}")
-                    except:
-                        pass
+                        if result.returncode == 0:
+                            removed_count += 1
+                            self.log(f"Removed image: {image}")
+                        else:
+                            self.log(f"Could not remove image: {image}", "warning")
+                    except Exception as e:
+                        self.log(f"Error removing {image}: {e}", "warning")
 
-                self.log(f"Removed {len(images)} Docker image(s)", "success")
+                if removed_count > 0:
+                    self.log(f"Removed {removed_count} Docker image(s)", "success")
+                else:
+                    self.log("Could not remove any images", "warning")
             else:
                 self.log("No MISP images found", "info")
 
@@ -186,7 +209,10 @@ class MISPUninstall:
             self.log(f"Could not remove images: {e}", "warning")
 
     def remove_misp_directory(self):
-        """Remove MISP directory"""
+        """Remove MISP directory
+
+        SECURITY: Uses sudo rm to ensure directory is removed even if owned by misp-owner.
+        """
         self.log("Removing MISP directory...")
 
         if not self.config.MISP_DIR.exists():
@@ -202,9 +228,24 @@ class MISPUninstall:
             if len(contents) > 10:
                 print(f"  ... and {len(contents) - 10} more")
 
-            # Remove directory
-            shutil.rmtree(self.config.MISP_DIR, ignore_errors=True)
-            self.log("MISP directory removed", "success")
+            # Remove directory with sudo (may be owned by misp-owner)
+            result = subprocess.run(
+                ['sudo', 'rm', '-rf', str(self.config.MISP_DIR)],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+
+            if result.returncode == 0:
+                self.log("MISP directory removed", "success")
+            else:
+                self.log(f"Warning removing directory: {result.stderr[:200]}", "warning")
+                # Try without sudo as fallback
+                try:
+                    shutil.rmtree(self.config.MISP_DIR, ignore_errors=True)
+                    self.log("MISP directory removed (fallback)", "success")
+                except:
+                    self.log("Some files may require manual removal", "warning")
 
         except Exception as e:
             self.log(f"Could not fully remove MISP directory: {e}", "warning")
@@ -219,6 +260,42 @@ class MISPUninstall:
             self.log("State file removed", "success")
         else:
             self.log("No state file found", "info")
+
+    def remove_misp_user(self):
+        """Remove misp-owner system user
+
+        SECURITY: Removes the dedicated misp-owner user created by the installation.
+        Also removes the user's home directory.
+        """
+        self.log("Removing misp-owner user...")
+
+        try:
+            # Check if user exists
+            result = subprocess.run(
+                ['id', 'misp-owner'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+
+            if result.returncode == 0:
+                # User exists, remove it
+                result = subprocess.run(
+                    ['sudo', 'userdel', '-r', 'misp-owner'],  # -r removes home directory
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+
+                if result.returncode == 0:
+                    self.log("misp-owner user removed", "success")
+                else:
+                    self.log(f"Could not remove misp-owner user: {result.stderr[:200]}", "warning")
+            else:
+                self.log("misp-owner user not found (not created or already removed)", "info")
+
+        except Exception as e:
+            self.log(f"Error checking/removing misp-owner user: {e}", "warning")
 
     def remove_logs(self, remove: bool = False):
         """Optionally remove logs"""
@@ -276,6 +353,7 @@ class MISPUninstall:
         print("  ✓ MISP containers and volumes")
         print("  ✓ MISP Docker images")
         print("  ✓ MISP directory")
+        print("  ✓ misp-owner system user")
         print("  ✓ Installation state files")
         print()
         print("Preserved items:")
@@ -313,6 +391,7 @@ class MISPUninstall:
             self.remove_containers()
             self.remove_images()
             self.remove_misp_directory()
+            self.remove_misp_user()  # Remove dedicated user
             self.remove_state_files()
             self.remove_logs(remove_logs)
 

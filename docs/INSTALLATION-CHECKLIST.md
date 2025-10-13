@@ -166,7 +166,7 @@ Use this checklist to ensure a successful MISP installation.
 ### Backup Script Example
 ```bash
 #!/bin/bash
-# Add to cron: 0 2 * * * /home/user/backup-misp.sh
+# Add to cron: 0 2 * * * /home/user/backup-misp.py
 
 BACKUP_DIR=/opt/misp-backups/$(date +%Y%m%d)
 mkdir -p $BACKUP_DIR
