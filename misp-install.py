@@ -625,7 +625,7 @@ class MISPInstaller:
         packages = [
             'curl', 'wget', 'git', 'ca-certificates', 'gnupg',
             'lsb-release', 'openssl', 'net-tools', 'iputils-ping',
-            'dnsutils', 'jq'
+            'dnsutils', 'jq', 'acl'
         ]
         
         self.logger.info("[1.1] Updating package lists...")
@@ -1343,16 +1343,27 @@ PERFORMANCE:
                     if log_result.returncode == 0:
                         self.logger.info(log_result.stdout)
             
-            # Step 6: Fix log directory permissions (Docker may have created it with www-data ownership)
-            # SECURITY: Ensure misp-owner owns all log directories, but keep world-writable for install script
-            self.logger.info("\n[10.6] Fixing log directory permissions...")
+            # Step 6: Configure ACLs for shared log directory access
+            # ARCHITECTURE: Docker owns directory as www-data, but ACLs allow scripts to write
+            # This solves the permission conflict where Docker resets ownership to www-data:www-data
+            self.logger.info("\n[10.6] Configuring ACLs for log directory...")
             try:
-                self.run_command(['sudo', 'chown', '-R', f'{MISP_USER}:{MISP_USER}', '/opt/misp/logs'], check=False)
-                # SECURITY NOTE: 777 needed because regular user (running install) and misp-owner both need write access
-                self.run_command(['sudo', 'chmod', '777', '/opt/misp/logs'], check=False)
-                self.logger.info(Colors.success(f"✓ Log directory permissions fixed (owner: {MISP_USER}, mode: 777)"))
+                current_user = get_current_username()
+                logs_dir = '/opt/misp/logs'
+
+                # Set ACLs for all users that need write access (existing files)
+                self.run_command(['sudo', 'setfacl', '-R', '-m', 'u:www-data:rwx', logs_dir], check=False)
+                self.run_command(['sudo', 'setfacl', '-R', '-m', f'u:{current_user}:rwx', logs_dir], check=False)
+                self.run_command(['sudo', 'setfacl', '-R', '-m', f'u:{MISP_USER}:rwx', logs_dir], check=False)
+
+                # Set default ACLs for newly created files
+                self.run_command(['sudo', 'setfacl', '-R', '-d', '-m', 'u:www-data:rwx', logs_dir], check=False)
+                self.run_command(['sudo', 'setfacl', '-R', '-d', '-m', f'u:{current_user}:rwx', logs_dir], check=False)
+                self.run_command(['sudo', 'setfacl', '-R', '-d', '-m', f'u:{MISP_USER}:rwx', logs_dir], check=False)
+
+                self.logger.info(Colors.success(f"✓ ACLs configured for shared log access (www-data, {current_user}, {MISP_USER})"))
             except Exception as e:
-                self.logger.warning(f"⚠ Could not fix log directory permissions: {e}")
+                self.logger.warning(f"⚠ Could not configure ACLs: {e}")
 
             self.logger.info(Colors.success("\n✓ Phase 10 completed"))
             self.save_state(10, "Docker Build Complete")
