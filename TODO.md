@@ -2,6 +2,109 @@
 
 ## High Priority
 
+### API Key Generation During Installation
+**Status:** Planned
+**Priority:** Critical (required for all API-based scripts)
+**Target Version:** v5.5
+
+**Description:**
+Automatically generate and store MISP API key during initial installation for use by automation scripts. All scripts should use MISP REST API instead of direct database manipulation for better reliability, error handling, and compatibility.
+
+**Benefits:**
+- No direct database access required (cleaner, more maintainable)
+- Better error handling via API responses
+- Version-independent (API is more stable than DB schema)
+- Supports RBAC and audit logging
+- Industry best practice for automation
+
+**Implementation Tasks:**
+1. **Phase 1: Add PyMISP to System Dependencies**
+   - Install PyMISP during Phase 1 (Dependencies)
+   - Add to system packages: `pip3 install pymisp --break-system-packages`
+   - Also install feedparser for RSS/Atom parsing
+   - Log package installation
+
+2. **Phase 11 (New): API Key Generation**
+   - Wait for MISP initialization to complete
+   - Use MISP CLI or API to generate automation API key
+   - Store API key in `/opt/misp/PASSWORDS.txt`
+   - Store API key in `/opt/misp/.env` as `MISP_API_KEY`
+   - Set proper permissions (600)
+   - Log API key generation
+   - Configure API key allowed IPs (0.0.0.0/0 or localhost)
+
+2. **Convert Existing Scripts to API:**
+   - ✅ `populate-misp-news-api.py` - Already API-based (v2.0)
+   - ⏳ `add-nerc-cip-news-feeds.py` - Convert from direct DB to API
+   - ⏳ `check-misp-feeds.py` - Convert from direct DB to API
+   - ⏳ `list-misp-communities.py` - No changes needed (informational only)
+   - ⏳ `configure-misp-nerc-cip.py` - Convert from direct DB to API
+   - ⏳ `backup-misp.py` - Evaluate if API can replace DB dumps
+   - ⏳ `misp-restore.py` - Evaluate if API can help with validation
+
+3. **Script Pattern (Standard API Usage):**
+   ```python
+   import requests
+
+   # Read API key from environment
+   MISP_URL = os.getenv('MISP_URL', 'https://misp-test.lan')
+   MISP_API_KEY = os.getenv('MISP_API_KEY') or get_api_key_from_passwords()
+
+   headers = {
+       'Authorization': MISP_API_KEY,
+       'Accept': 'application/json',
+       'Content-Type': 'application/json'
+   }
+
+   # Use requests for all MISP operations
+   response = requests.post(
+       f"{MISP_URL}/feeds/add",
+       headers=headers,
+       json=feed_data,
+       verify=False  # Self-signed cert
+   )
+   ```
+
+4. **API Key Helper Module:**
+   - Create `misp_api.py` - Centralized API helper
+   - Functions: `get_api_key()`, `get_misp_client()`, `test_connection()`
+   - Error handling and retry logic
+   - SSL verification handling
+
+5. **Documentation Updates:**
+   - Update all script documentation with API requirements
+   - Add API key retrieval guide
+   - Add troubleshooting for API connection issues
+
+**Files to Create/Modify:**
+- `misp-install.py` - Add Phase 11 for API key generation
+- `misp_api.py` - NEW: Centralized API helper module
+- `scripts/populate-misp-news-api.py` - ✅ Already created (v2.0)
+- `scripts/add-nerc-cip-news-feeds-api.py` - NEW: API version
+- `scripts/check-misp-feeds-api.py` - NEW: API version
+- `scripts/configure-misp-nerc-cip-api.py` - NEW: API version
+- `/opt/misp/PASSWORDS.txt` - Add MISP_API_KEY section
+- `/opt/misp/.env` - Add MISP_API_KEY variable
+- `docs/API_USAGE.md` - NEW: API usage guide for scripts
+
+**Testing Requirements:**
+- Test API key generation during fresh install
+- Test all scripts with API key from environment
+- Test all scripts with API key from PASSWORDS.txt
+- Test error handling when API key is invalid
+- Test error handling when MISP is not reachable
+
+**Priority Order for Conversion:**
+1. ✅ `populate-misp-news-api.py` - DONE
+2. `add-nerc-cip-news-feeds-api.py` - HIGH (actively used)
+3. `check-misp-feeds-api.py` - HIGH (actively used)
+4. `configure-misp-nerc-cip-api.py` - MEDIUM
+5. `backup-misp.py` - LOW (DB dumps still needed for full backup)
+
+**Target:** 100% API-based automation (no direct DB access except for backups)
+
+---
+
 ### Splunk Cloud Integration
 **Status:** Planned
 **Priority:** High (real-time threat intelligence for Splunk SIEM)
