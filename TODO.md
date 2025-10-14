@@ -176,7 +176,7 @@ Extend beyond Azure to support AWS and GCP deployments with cloud-native feature
 
 ## Recently Completed (v5.5 - October 2025)
 
-✅ **Code Refactoring - Phases 1-6** - Eliminated duplicate code across codebase
+✅ **Code Refactoring - Phases 1-9** - Eliminated duplicate code across codebase
   - Phase 1: Centralized Colors class in `lib/colors.py` (242 lines eliminated)
   - Phase 2: Created `lib/database_manager.py` for MySQL operations (150 lines eliminated)
   - Phase 3: Enhanced `lib/docker_manager.py` for Docker operations (60 lines eliminated)
@@ -185,7 +185,10 @@ Extend beyond Azure to support AWS and GCP deployments with cloud-native feature
   - Phase 6: Centralized get_mysql_password() and run_cake_command() (54 net lines eliminated)
     - Phase 6a: DatabaseManager integration (4 scripts)
     - Phase 6b: MISPSetupHelper integration (2 scripts)
-  - **Total Impact:** ~575 lines eliminated, 4 lib/ modules created, improved maintainability
+  - Phase 7: Centralized API key retrieval from database in `misp_api.py` (19 lines eliminated)
+  - Phase 8: Centralized feed constants in `lib/feed_constants.py` (49 lines eliminated)
+  - Phase 9: Created `lib/misp_config.py` for MISP paths (2+ lines per script, 10 scripts affected)
+  - **Total Impact:** ~650+ lines eliminated, 6 lib/ modules created, improved maintainability
 
 ✅ **MISP Complete Setup Script** - Post-installation orchestration with NERC CIP mode
 ✅ **API Key Generation** - Automatic API key during installation (Phase 11.5)
