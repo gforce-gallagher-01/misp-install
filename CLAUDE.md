@@ -806,38 +806,306 @@ See `SCRIPTS.md` for complete documentation of all scripts.
 
 The GUI installer provides a modern graphical alternative to the CLI installer using the Textual framework. It generates configuration files compatible with `misp-install.py`.
 
-**Quick Start**:
+### Quick Start
+
 ```bash
-# Automated installation (recommended)
+# Automated installation (recommended - handles everything)
 cd ~/misp-install/misp-install
 ./install-gui.sh
 
 # Manual installation (Ubuntu 24.04+)
 pipx install .
 misp-install-gui
+
+# Run directly without installing
+python3 misp_install_gui.py
+
+# Web browser mode
+textual serve misp_install_gui.py
 ```
 
-**Key Features**:
-- Multi-step wizard with 5 screens
-- Real-time password strength validation
-- Auto-generate secure passwords
-- Clipboard paste support (Ctrl+V)
-- Runs in terminal OR web browser
-- Configuration file generation (JSON)
-- Full keyboard navigation
-- Dark/Light theme toggle
+### Key Features
 
-**Files**:
-- `misp_install_gui.py` - Main GUI application
-- `install-gui.sh` - Automated setup script
-- `setup.py` - pipx installation configuration
-- `check_deps.py` - Dependency verification
-- `test_clipboard.py` - Clipboard testing tool
-- `docs/GUI_INSTALLER.md` - Complete user guide
+- ✨ Multi-step wizard with 5 screens (Welcome, Network, Security, Environment, Review)
+- 🔒 Real-time password strength validation (12+ chars, mixed case, numbers, special)
+- 🎲 Auto-generate secure passwords (cryptographically secure)
+- 📋 Clipboard paste support (Ctrl+V) - works with pyperclip + xclip
+- 🌐 Runs in terminal OR web browser (same code, dual mode)
+- 💾 Configuration file generation (JSON format)
+- ⌨️ Full keyboard navigation (Tab, Arrow keys, Enter, Esc)
+- 🎨 Dark/Light theme toggle (press 'd' key)
 
-**Architecture**:
-- Frontend: Textual framework (Python TUI)
-- Backend: Calls `misp-install.py --config [file]`
-- Config format: JSON (compatible with CLI installer)
+### Architecture
 
-For complete documentation, see `docs/GUI_INSTALLER.md`.
+**Design Pattern**: Frontend/Backend Separation
+- **Frontend**: Textual TUI framework (Python)
+  - Handles user interaction, form validation, UI rendering
+  - Generates JSON config file
+  - No direct MISP installation logic
+- **Backend**: `misp-install.py --config [file]`
+  - Reads GUI-generated config
+  - Performs actual installation (all 10 phases)
+  - No changes needed to support GUI
+
+**Benefits of This Approach**:
+1. Clean separation of concerns
+2. GUI and CLI share same installation backend
+3. Config files are portable (use in CI/CD)
+4. Easier to maintain (UI bugs don't affect installation)
+
+### Implementation Details
+
+**Wizard Flow**:
+```python
+# misp_install_gui.py structure
+class MISPInstallApp(App):
+    SCREENS = {
+        "welcome": WelcomeScreen,      # Step 1: Introduction
+        "network": NetworkScreen,      # Step 2: IP, domain, email, org
+        "security": SecurityScreen,    # Step 3: Passwords
+        "environment": EnvironmentScreen,  # Step 4: Dev/Staging/Prod
+        "review": ReviewScreen,        # Step 5: Confirm & save
+    }
+
+    def on_mount(self):
+        self.push_screen("welcome")
+
+    def save_config(self):
+        config = {
+            "server_ip": self.server_ip,
+            "domain": self.domain,
+            # ... all fields
+        }
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=2)
+```
+
+**Password Validation**:
+```python
+def validate_password(password: str) -> tuple[bool, str]:
+    """Validate password meets requirements"""
+    if len(password) < 12:
+        return False, "Must be at least 12 characters"
+    if not re.search(r'[A-Z]', password):
+        return False, "Must contain uppercase letter"
+    if not re.search(r'[a-z]', password):
+        return False, "Must contain lowercase letter"
+    if not re.search(r'\d', password):
+        return False, "Must contain number"
+    if not re.search(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]', password):
+        return False, "Must contain special character"
+    return True, "Strong password"
+```
+
+**Clipboard Integration**:
+```python
+import pyperclip  # Requires xclip on Linux
+
+def action_paste_clipboard(self):
+    """Handle Ctrl+V paste"""
+    clipboard_text = pyperclip.paste()
+    focused = self.focused
+    if isinstance(focused, Input):
+        # Insert at cursor position
+        current = focused.value
+        cursor = focused.cursor_position
+        focused.value = current[:cursor] + clipboard_text + current[cursor:]
+        focused.cursor_position = cursor + len(clipboard_text)
+```
+
+### Files & Dependencies
+
+**Core Files**:
+- `misp_install_gui.py` - Main GUI application (800+ lines)
+- `install-gui.sh` - Bootstrap script (handles deps, PATH, installation)
+- `setup.py` - pip/pipx packaging configuration
+- `requirements-gui.txt` - Python dependencies list
+- `check_deps.py` - Dependency verification script
+- `test_clipboard.py` - Clipboard functionality tester
+- `docs/GUI_INSTALLER.md` - Complete user documentation
+
+**Dependencies**:
+```python
+# setup.py - install_requires
+textual>=0.45.0        # TUI framework
+textual-dev>=1.2.0     # Development tools (textual serve)
+pyperclip>=1.8.0       # Clipboard support
+```
+
+**System Dependencies** (Ubuntu):
+```bash
+xclip          # Linux clipboard utility (required for pyperclip)
+pipx           # Python app installer (Ubuntu 24.04+)
+python3.8+     # Minimum Python version
+```
+
+### Installation Methods
+
+**Method 1: Automated (Recommended)**
+```bash
+./install-gui.sh
+# Installs: xclip, pipx, misp-installer-gui package
+# Configures: PATH automatically
+# Verifies: Command works (--version test)
+```
+
+**Method 2: pipx (Manual)**
+```bash
+sudo apt install xclip pipx
+pipx install .
+pipx ensurepath
+misp-install-gui
+```
+
+**Method 3: Direct Run (Development)**
+```bash
+pip install -r requirements-gui.txt
+python3 misp_install_gui.py
+```
+
+**Method 4: Web Browser Mode**
+```bash
+textual serve misp_install_gui.py --port 8080
+# Open: http://localhost:8080
+```
+
+### Configuration Output
+
+**Generated Config File Format**:
+```json
+{
+  "server_ip": "192.168.20.193",
+  "domain": "misp-dev.lan",
+  "admin_email": "admin@company.com",
+  "admin_org": "tKQB Enterprises",
+  "admin_password": "Generated_Or_Manual_123!",
+  "mysql_password": "DbPass456!@#",
+  "gpg_passphrase": "GpgPass789!@#",
+  "environment": "production"
+}
+```
+
+**File Location**: `config/misp-gui-config-YYYYMMDD_HHMMSS.json`
+**Permissions**: 600 (owner read/write only)
+
+### Usage with CLI Installer
+
+```bash
+# 1. Generate config via GUI
+misp-install-gui
+# (Save config, exit without installing)
+
+# 2. Use config with CLI installer
+python3 misp-install.py --config config/misp-gui-config-20251014_120000.json --non-interactive
+
+# Perfect for:
+# - CI/CD pipelines
+# - Automated deployments
+# - Testing multiple configurations
+# - Ansible/Terraform integration
+```
+
+### Troubleshooting Common Issues
+
+**Issue 1: "textual not installed" after pipx install**
+- **Cause**: pipx reused old venv without new dependencies
+- **Fix**: `install-gui.sh` now force-removes venv before reinstall
+- **Verify**: `misp-install-gui --version` should work
+
+**Issue 2: Clipboard paste (Ctrl+V) not working**
+- **Cause**: xclip not installed or pyperclip missing
+- **Fix**: `sudo apt install xclip` then `pipx reinstall .`
+- **Test**: `python3 test_clipboard.py`
+
+**Issue 3: pipx PATH warning**
+- **Cause**: `~/.local/bin` not in PATH
+- **Fix**: `install-gui.sh` runs `pipx ensurepath --force`
+- **Manual**: `export PATH="$HOME/.local/bin:$PATH"` or restart shell
+
+**Issue 4: Web mode not working**
+- **Cause**: textual-dev not installed
+- **Fix**: `pip install textual-dev` or `pipx install textual-dev`
+- **Alternative**: `python3 -m textual serve misp_install_gui.py`
+
+**Issue 5: Permission denied saving config**
+- **Cause**: config/ directory doesn't exist or not writable
+- **Fix**: `mkdir -p config && chmod 755 config`
+
+### Development Notes
+
+**Adding New Screens**:
+1. Create new screen class in `misp_install_gui.py`
+2. Add to `SCREENS` dictionary
+3. Implement `compose()` method for UI
+4. Add navigation buttons (Back/Next)
+5. Update data model with new fields
+6. Test navigation flow
+
+**Modifying Validation**:
+- All validation in `validate_*()` functions
+- Real-time feedback via `watch_*()` methods
+- Error messages shown inline below fields
+- Validation runs on every keystroke
+
+**Testing Workflow**:
+```bash
+# Quick test
+python3 misp_install_gui.py
+
+# Test clipboard
+python3 test_clipboard.py
+
+# Test dependencies
+python3 check_deps.py
+
+# Test web mode
+textual serve misp_install_gui.py --port 8000
+
+# Full install test
+./install-gui.sh
+```
+
+**Keyboard Shortcuts** (for users):
+- `q` - Quit application
+- `d` - Toggle dark/light theme
+- `Ctrl+V` - Paste from clipboard
+- `Tab` - Next field
+- `Shift+Tab` - Previous field
+- `Enter` - Activate button
+- `Esc` - Go back
+
+### Integration with v5.4 Architecture
+
+The GUI installer is **completely independent** of the v5.4 dedicated user architecture:
+
+- ✅ GUI runs as regular user (no sudo needed for GUI itself)
+- ✅ Generates config file in user home directory
+- ✅ CLI installer handles all sudo operations when using config
+- ✅ No conflicts with misp-owner user creation
+- ✅ Works with any installation method (interactive or non-interactive)
+
+**Workflow**:
+1. User runs GUI installer (as regular user)
+2. GUI generates config file (stored in `~/misp-install/config/`)
+3. User runs CLI installer with config (handles misp-owner creation)
+4. CLI installer uses sudo for `/opt/misp` operations (v5.4 architecture)
+
+### Future Enhancements (Planned)
+
+**v1.1**:
+- Real-time installation progress integration
+- Log streaming from misp-install.py backend
+- Resume capability after interruption
+
+**v1.2**:
+- Performance tuning screen (PHP memory, workers)
+- Optional integrations (Splunk, Security Onion, Azure Key Vault)
+- System resource auto-detection
+
+**v2.0**:
+- Multi-language support (i18n)
+- Configuration templates
+- Custom branding
+- Authentication for web mode
+
+For complete user documentation, see `docs/GUI_INSTALLER.md`.
