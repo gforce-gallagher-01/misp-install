@@ -1,0 +1,10 @@
+# MISP GUI Installer - Python Dependencies
+# Install with: pip install -r requirements-gui.txt
+
+# Textual framework for TUI/Web GUI
+textual>=0.45.0
+textual-dev>=1.2.0
+
+# Optional: Enhanced widgets (future use)
+# textual-wizard>=0.1.0
+# textual-forms>=0.1.0

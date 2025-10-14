@@ -89,6 +89,34 @@ python3 misp-install.py --config misp-config.yaml
 python3 misp-install.py --config prod-config.yaml --non-interactive
 ```
 
+### GUI Installer (NEW in v1.0)
+
+For users who prefer a graphical interface:
+
+```bash
+# Terminal mode (TUI)
+python3 misp-install-gui.py
+
+# Web browser mode
+textual serve misp-install-gui.py
+# Then open: http://localhost:8000
+```
+
+**Features:**
+- ✨ Multi-step wizard with validation
+- 🔒 Real-time password strength checking
+- 🎲 Auto-generate secure passwords
+- 💾 Save configurations for reuse
+- 🌐 Run in terminal OR web browser
+- ⌨️ Full keyboard navigation
+
+See `docs/GUI_INSTALLER.md` for complete documentation.
+
+**Installation:**
+```bash
+pip install -r requirements-gui.txt
+```
+
 ## 📝 Usage Examples
 
 ### Basic Interactive Installation
@@ -407,13 +435,16 @@ This script is provided as-is for MISP deployment purposes.
 
 ## 🎯 Roadmap
 
+- [x] GUI installer (Terminal + Web browser)
 - [ ] Email notifications
 - [ ] Slack/Teams integration
+- [ ] Splunk Cloud integration
+- [ ] Security Onion integration
+- [ ] Azure Key Vault integration
 - [ ] Automated testing suite
 - [ ] HA/cluster deployment
 - [ ] Kubernetes support
 - [ ] Ansible playbook version
-- [ ] Web-based GUI installer
 
 ---
 

@@ -389,9 +389,316 @@ Add webhook support for:
 
 ### GUI Installer Option
 **Status:** Planned
-**Priority:** Low
+**Priority:** Medium
+**Target Version:** v5.5 or v6.0
 
-Web-based or TUI installer for users who prefer GUI over CLI.
+**Description:**
+Modern graphical installer using Python Textual framework. Provides an intuitive multi-step wizard interface that runs in terminal (TUI) or web browser, making MISP installation accessible to users who prefer visual interfaces over command-line.
+
+**Framework: Textual** (https://github.com/Textualize/textual)
+- Modern Python TUI framework with web capability
+- Run as terminal application OR serve via web browser (`textual serve`)
+- API inspired by React/web development
+- Built-in validation, forms, widgets
+- Production-ready (MIT license)
+- No external dependencies beyond Python 3.8+
+
+**Benefits:**
+- **User-Friendly**: Visual forms with real-time validation
+- **Multi-Step Wizard**: Guided installation process
+- **Dual Mode**: Terminal or web browser (same code)
+- **Input Validation**: Immediate feedback on configuration errors
+- **Progress Tracking**: Visual progress bars for installation phases
+- **Accessibility**: Easier for non-technical users
+- **Resume Support**: Save progress and resume later
+- **Help Text**: Contextual help for each configuration option
+
+**Architecture:**
+
+```
+misp-install-gui.py (Frontend - Textual UI)
+    ↓ Multi-step wizard interface
+    ↓ Form validation and user input
+    ↓ Generates config JSON
+    ↓ Calls backend with --config flag
+misp-install.py (Backend - Installation Engine)
+    ↓ Shared installation logic (no changes needed)
+    ↓ Uses config file from GUI
+    ↓ Performs actual installation
+```
+
+**User Flow - 8 Step Wizard:**
+
+1. **Welcome Screen**
+   - Introduction to MISP
+   - Prerequisites checklist (Ubuntu 22.04+, 8GB+ RAM, sudo access)
+   - System resource detection
+   - Continue or Exit
+
+2. **Network Configuration**
+   - Server IP address (auto-detect with override)
+   - Domain/FQDN (e.g., misp.company.com)
+   - Admin email address
+   - Admin organization name
+   - Real-time DNS validation
+
+3. **Security Settings**
+   - Admin password (with strength meter)
+   - MySQL password (with strength meter)
+   - GPG passphrase (with strength meter)
+   - Auto-generate option for all passwords
+   - Password visibility toggle
+   - Validation: 12+ chars, uppercase, lowercase, number, special
+
+4. **Performance Tuning**
+   - Auto-detect system resources (recommended)
+   - Manual override options:
+     - PHP memory limit (1024M, 2048M, 4096M)
+     - Worker processes (2, 4, 8, 16)
+   - Resource calculator based on RAM/CPU
+   - Performance impact explanation
+
+5. **Environment Selection**
+   - Development (debug enabled, verbose logging)
+   - Staging (production-like, testing)
+   - Production (optimized, security hardened)
+   - Environment comparison table
+
+6. **Optional Integrations** (Future Expansion)
+   - Splunk Cloud (HEC URL, token)
+   - Security Onion (API URL, key)
+   - Azure Key Vault (vault URL, managed identity)
+   - Email notifications (SMTP settings)
+   - Slack/Teams webhooks
+
+7. **Review & Confirm**
+   - Summary of all configuration
+   - Estimated installation time
+   - Disk space requirements
+   - Final confirmation prompt
+   - Save config option (for CI/CD reuse)
+
+8. **Installation Progress**
+   - Phase-by-phase progress display
+   - Current operation indicator
+   - Estimated time remaining
+   - Real-time log streaming (optional)
+   - Pause/Resume capability
+
+9. **Completion Screen**
+   - Success message
+   - Access credentials display
+   - MISP URL with clickable link
+   - Post-installation checklist
+   - Copy credentials to clipboard
+
+**Implementation Tasks:**
+
+**Phase 1: Core Framework Setup**
+1. Install Textual dependencies (`pip install textual textual-dev`)
+2. Create `misp-install-gui.py` skeleton
+3. Implement welcome screen with system checks
+4. Add basic navigation (Next/Back/Cancel buttons)
+5. Test TUI rendering in terminal
+
+**Phase 2: Form Screens (Steps 2-5)**
+6. Implement Network Configuration screen with validation
+7. Implement Security Settings screen with password strength meter
+8. Implement Performance Tuning screen with auto-detection
+9. Implement Environment Selection screen
+10. Add form state management (save progress between screens)
+
+**Phase 3: Integration & Progress**
+11. Implement Review & Confirm screen with editable summary
+12. Create config JSON generator from form data
+13. Implement Installation Progress screen
+14. Add real-time log streaming from misp-install.py
+15. Implement phase progress tracking
+
+**Phase 4: Completion & Error Handling**
+16. Implement Completion screen with credentials display
+17. Add error handling for installation failures
+18. Implement resume capability (load saved state)
+19. Add rollback option on failure
+20. Create help system (contextual tooltips)
+
+**Phase 5: Testing & Polish**
+21. Test full installation flow end-to-end
+22. Test web browser mode (`textual serve`)
+23. Add keyboard shortcuts (Tab, Enter, Esc)
+24. Implement dark/light theme toggle
+25. Create user documentation
+
+**Files to Create:**
+- `misp-install-gui.py` - Main GUI application (Textual app)
+- `gui/screens/` - Directory for wizard screen modules:
+  - `welcome.py` - Welcome screen with prerequisites
+  - `network.py` - Network configuration form
+  - `security.py` - Password configuration with strength meter
+  - `performance.py` - Performance tuning options
+  - `environment.py` - Environment selection
+  - `integrations.py` - Optional integrations (future)
+  - `review.py` - Configuration review summary
+  - `progress.py` - Installation progress display
+  - `completion.py` - Success/failure results
+- `gui/widgets/` - Custom Textual widgets:
+  - `password_input.py` - Password field with strength meter
+  - `validator.py` - Real-time form validation
+  - `progress_tracker.py` - Phase progress widget
+- `gui/utils.py` - Helper functions (system detection, validation)
+- `docs/GUI_INSTALLER.md` - GUI installer user guide
+- `docs/GUI_DEVELOPMENT.md` - Developer guide for GUI
+
+**Dependencies:**
+```bash
+pip install textual textual-dev textual-wizard
+```
+
+**Configuration Example (Generated by GUI):**
+```json
+{
+  "server_ip": "192.168.20.193",
+  "domain": "misp.company.com",
+  "admin_email": "admin@company.com",
+  "admin_org": "Security Operations",
+  "admin_password": "SecurePass123!@#",
+  "mysql_password": "DBPass456!@#",
+  "gpg_passphrase": "GPGPass789!@#",
+  "encryption_key": "auto-generated",
+  "environment": "production",
+  "php_memory_limit": "2048M",
+  "workers": 4,
+  "integrations": {
+    "splunk_cloud": false,
+    "security_onion": false,
+    "azure_keyvault": false
+  }
+}
+```
+
+**Usage Examples:**
+
+**Terminal Mode (TUI):**
+```bash
+# Launch GUI installer in terminal
+python3 misp-install-gui.py
+
+# Load existing config and edit
+python3 misp-install-gui.py --load config/misp-config.json
+
+# Save config without installing
+python3 misp-install-gui.py --save-only
+```
+
+**Web Browser Mode:**
+```bash
+# Serve GUI on localhost:8000
+textual serve misp-install-gui.py
+
+# Serve on specific port
+textual serve misp-install-gui.py --port 8080
+
+# Share URL with team (accessible from any browser)
+textual serve misp-install-gui.py --host 0.0.0.0
+```
+
+**CI/CD Integration:**
+```bash
+# Generate config via GUI, then use in automation
+python3 misp-install-gui.py --save-only --output ci-config.json
+python3 misp-install.py --config ci-config.json --non-interactive
+```
+
+**Key Features:**
+
+**Input Validation:**
+- IP address format validation
+- Domain name DNS resolution check
+- Email format validation
+- Password strength scoring (zxcvbn-style)
+- Real-time feedback as user types
+
+**System Detection:**
+- Auto-detect server IP from network interfaces
+- Auto-detect RAM and suggest PHP memory limit
+- Auto-detect CPU cores and suggest worker count
+- Disk space check before installation
+
+**Accessibility:**
+- Keyboard navigation (Tab, Shift+Tab, Arrow keys)
+- Screen reader friendly (semantic HTML in web mode)
+- High contrast theme option
+- Tooltips and help text on every field
+
+**Error Handling:**
+- Validation errors shown inline
+- Installation failures show detailed logs
+- Resume from last successful phase
+- Rollback option if installation fails
+- Export error logs for support
+
+**Testing Requirements:**
+- Test on Ubuntu 22.04 and 24.04
+- Test in various terminal emulators (Gnome Terminal, iTerm2, etc.)
+- Test web mode in Chrome, Firefox, Safari
+- Test with screen readers (accessibility)
+- Test keyboard-only navigation
+- Test resume after interruption
+- Test with various screen sizes (responsive)
+- Performance test with slow network/disk
+
+**Documentation Needed:**
+- GUI installer user guide with screenshots
+- Web mode setup instructions
+- Keyboard shortcuts reference
+- Troubleshooting guide for GUI issues
+- Developer guide for adding new screens
+- Theme customization guide
+
+**Security Considerations:**
+- No passwords logged or displayed in web mode without auth
+- Config file saved with 600 permissions
+- Web mode should bind to localhost by default
+- Add authentication option for web mode (future)
+- Clear credentials from memory on exit
+
+**Performance Considerations:**
+- Async UI updates during installation
+- Non-blocking progress display
+- Efficient log streaming (last N lines)
+- Lazy loading of screens
+- Minimal memory footprint
+
+**Future Enhancements (v6.1+):**
+- Multi-language support (i18n)
+- Configuration templates (dev, prod, enterprise)
+- Wizard replay (show what was configured)
+- Integration testing wizard (test Splunk/SO connections)
+- Custom branding (logo, colors, company name)
+- Save favorite configurations
+- Installation time estimation based on hardware
+- Notification when installation complete (desktop notification)
+
+**Related Projects:**
+- [Textual Framework](https://github.com/Textualize/textual)
+- [textual-wizard](https://github.com/SkwalExe/textual-wizard)
+- [textual-forms](https://pypi.org/project/textual-forms/)
+- [Rich (Terminal Styling)](https://github.com/Textualize/rich)
+
+**Estimated Development Time:**
+- Phase 1-2: 8-12 hours (core screens)
+- Phase 3: 6-8 hours (integration & progress)
+- Phase 4: 4-6 hours (completion & errors)
+- Phase 5: 6-8 hours (testing & polish)
+- **Total: 24-34 hours** for complete implementation
+
+**Why This Approach:**
+1. **Non-invasive**: No changes to existing misp-install.py backend
+2. **Reusable**: Generated config files work with CLI installer
+3. **Maintainable**: Separation of UI and installation logic
+4. **Flexible**: Easy to add new screens for integrations
+5. **Modern**: Uses industry-standard framework (Textual)
+6. **Accessible**: Works in terminal AND web browser
 
 ---
 
