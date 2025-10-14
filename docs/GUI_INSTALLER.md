@@ -282,7 +282,7 @@ Use the GUI installer to create configurations, then automate with the CLI:
 
 ```bash
 # 1. Create configuration via GUI (one-time)
-python3 misp-install-gui.py --save-only
+python3 misp_install_gui.py --save-only
 
 # 2. Use configuration in automation
 python3 misp-install.py --config config/misp-gui-config.json --non-interactive
@@ -339,7 +339,7 @@ If the UI looks garbled or incorrect:
 **Solution 2: Set TERM variable**
 ```bash
 export TERM=xterm-256color
-python3 misp-install-gui.py
+python3 misp_install_gui.py
 ```
 
 ### Web Mode Not Working
@@ -355,7 +355,7 @@ textual: command not found
 pip install textual-dev
 
 # Or use python module directly
-python3 -m textual serve misp-install-gui.py
+python3 -m textual serve misp_install_gui.py
 ```
 
 ### Configuration File Permissions
@@ -375,10 +375,10 @@ chmod 755 config
 
 ```bash
 # Serve on port 3000 (safe, doesn't conflict with MISP)
-textual serve misp-install-gui.py --port 3000
+textual serve misp_install_gui.py --port 3000
 
 # Serve on port 8888 (safe alternative)
-textual serve misp-install-gui.py --port 8888
+textual serve misp_install_gui.py --port 8888
 ```
 
 **⚠️ Avoid These Ports:**
@@ -396,7 +396,7 @@ For servers without GUI terminal support:
 # Install via SSH, serve web GUI
 ssh user@server
 cd misp-install
-textual serve misp-install-gui.py --host 0.0.0.0 --port 8080
+textual serve misp_install_gui.py --host 0.0.0.0 --port 8080
 
 # Access from your local browser
 http://server-ip:8080
@@ -406,7 +406,7 @@ http://server-ip:8080
 
 ```bash
 # Load existing config
-python3 misp-install-gui.py --load config/production.json
+python3 misp_install_gui.py --load config/production.json
 
 # Make changes in GUI
 # Save as new config
@@ -418,15 +418,15 @@ Create multiple configurations:
 
 ```bash
 # Development config
-python3 misp-install-gui.py --save-only
+python3 misp_install_gui.py --save-only
 # Save as: config/dev-config.json
 
 # Staging config
-python3 misp-install-gui.py --save-only
+python3 misp_install_gui.py --save-only
 # Save as: config/staging-config.json
 
 # Production config
-python3 misp-install-gui.py --save-only
+python3 misp_install_gui.py --save-only
 # Save as: config/prod-config.json
 ```
 
@@ -453,7 +453,7 @@ python3 misp-install-gui.py --save-only
 - Consider using SSH tunneling for remote access:
   ```bash
   # On server
-  textual serve misp-install-gui.py
+  textual serve misp_install_gui.py
 
   # On local machine
   ssh -L 8000:localhost:8000 user@server

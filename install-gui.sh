@@ -105,16 +105,25 @@ fi
 
 print_step "Step 3: Installing MISP GUI Installer"
 
-# Uninstall old version if exists
+# Force complete removal of old version (including venv)
 if pipx list 2>/dev/null | grep -q "misp-installer-gui"; then
-    echo "Removing old version..."
-    pipx uninstall misp-installer-gui -y 2>/dev/null || true
+    echo "Removing old version completely..."
+    pipx uninstall misp-installer-gui 2>/dev/null || true
+
+    # Remove venv directory if it exists (try both possible locations)
+    if [ -d "$HOME/.local/pipx/venvs/misp-installer-gui" ]; then
+        rm -rf "$HOME/.local/pipx/venvs/misp-installer-gui"
+    fi
+    if [ -d "$HOME/.local/share/pipx/venvs/misp-installer-gui" ]; then
+        rm -rf "$HOME/.local/share/pipx/venvs/misp-installer-gui"
+    fi
+
     print_success "Old version removed"
 fi
 
-# Install from current directory
+# Install from current directory (fresh install)
 echo "Installing misp-installer-gui from current directory..."
-if pipx install . --force; then
+if pipx install .; then
     print_success "MISP GUI Installer installed"
 else
     print_error "Installation failed"
@@ -123,10 +132,11 @@ fi
 
 print_step "Step 4: Verifying installation"
 
-if python3 check_deps.py; then
-    print_success "All dependencies verified"
+# Test that the command works (pipx handles dependencies automatically)
+if "$HOME/.local/bin/misp-install-gui" --version &>/dev/null || command -v misp-install-gui &>/dev/null && misp-install-gui --version &>/dev/null; then
+    print_success "Installation verified - GUI installer is ready"
 else
-    print_error "Dependency check failed"
+    print_error "Installation verification failed"
     exit 1
 fi
 

@@ -785,16 +785,59 @@ Add support for using public signed certificates (Let's Encrypt, commercial CA) 
 All Python scripts in this project:
 
 1. **misp-install.py** - Main installation script (1850+ lines)
-2. **scripts/backup-misp.py** - Manual backup script (v2.0)
-3. **scripts/uninstall-misp.py** - Uninstallation script (v2.0)
-4. **scripts/misp-backup-cron.py** - Automated backup for cron (v2.0)
-5. **scripts/misp-restore.py** - Backup restoration script (v2.0)
-6. **scripts/misp-update.py** - MISP update automation (v2.0)
-7. **scripts/verify-installation.py** - Post-install verification (v1.0)
-8. **misp_logger.py** - Centralized logging module (v1.0)
+2. **misp_install_gui.py** - GUI installer (v1.0 - Textual framework)
+3. **scripts/backup-misp.py** - Manual backup script (v2.0)
+4. **scripts/uninstall-misp.py** - Uninstallation script (v2.0)
+5. **scripts/misp-backup-cron.py** - Automated backup for cron (v2.0)
+6. **scripts/misp-restore.py** - Backup restoration script (v2.0)
+7. **scripts/misp-update.py** - MISP update automation (v2.0)
+8. **scripts/verify-installation.py** - Post-install verification (v1.0)
+9. **misp_logger.py** - Centralized logging module (v1.0)
 
 **Removed Scripts** (v5.4 cleanup):
 - `scripts/backup-misp.sh` - Duplicate of .py version
 - `scripts/uninstall-misp.sh` - Duplicate of .py version
 
 See `SCRIPTS.md` for complete documentation of all scripts.
+
+## GUI Installer (v1.0 - October 2025)
+
+**Status**: ✅ PRODUCTION READY
+
+The GUI installer provides a modern graphical alternative to the CLI installer using the Textual framework. It generates configuration files compatible with `misp-install.py`.
+
+**Quick Start**:
+```bash
+# Automated installation (recommended)
+cd ~/misp-install/misp-install
+./install-gui.sh
+
+# Manual installation (Ubuntu 24.04+)
+pipx install .
+misp-install-gui
+```
+
+**Key Features**:
+- Multi-step wizard with 5 screens
+- Real-time password strength validation
+- Auto-generate secure passwords
+- Clipboard paste support (Ctrl+V)
+- Runs in terminal OR web browser
+- Configuration file generation (JSON)
+- Full keyboard navigation
+- Dark/Light theme toggle
+
+**Files**:
+- `misp_install_gui.py` - Main GUI application
+- `install-gui.sh` - Automated setup script
+- `setup.py` - pipx installation configuration
+- `check_deps.py` - Dependency verification
+- `test_clipboard.py` - Clipboard testing tool
+- `docs/GUI_INSTALLER.md` - Complete user guide
+
+**Architecture**:
+- Frontend: Textual framework (Python TUI)
+- Backend: Calls `misp-install.py --config [file]`
+- Config format: JSON (compatible with CLI installer)
+
+For complete documentation, see `docs/GUI_INSTALLER.md`.

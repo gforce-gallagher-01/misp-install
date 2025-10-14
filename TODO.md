@@ -388,12 +388,23 @@ Add webhook support for:
 ---
 
 ### GUI Installer Option
-**Status:** Planned
-**Priority:** Medium
-**Target Version:** v5.5 or v6.0
+**Status:** ✅ COMPLETED (v1.0 - October 2025)
+**Priority:** ~~Medium~~ **DONE**
+**Target Version:** ~~v5.5 or v6.0~~ **Released: v1.0**
 
 **Description:**
 Modern graphical installer using Python Textual framework. Provides an intuitive multi-step wizard interface that runs in terminal (TUI) or web browser, making MISP installation accessible to users who prefer visual interfaces over command-line.
+
+**✅ IMPLEMENTATION COMPLETE:**
+- Multi-step wizard with 5 screens (Welcome, Network, Security, Environment, Review)
+- Password strength validation and auto-generation
+- Clipboard paste support (Ctrl+V) using pyperclip
+- pipx installation for Ubuntu 24.04+
+- Automated setup script (install-gui.sh)
+- Configuration file generation (JSON format)
+- Full keyboard navigation
+- Dark/Light theme toggle
+- Complete user documentation (docs/GUI_INSTALLER.md)
 
 **Framework: Textual** (https://github.com/Textualize/textual)
 - Modern Python TUI framework with web capability
@@ -416,7 +427,7 @@ Modern graphical installer using Python Textual framework. Provides an intuitive
 **Architecture:**
 
 ```
-misp-install-gui.py (Frontend - Textual UI)
+misp_install_gui.py (Frontend - Textual UI)
     ↓ Multi-step wizard interface
     ↓ Form validation and user input
     ↓ Generates config JSON
@@ -530,7 +541,7 @@ misp-install.py (Backend - Installation Engine)
 25. Create user documentation
 
 **Files to Create:**
-- `misp-install-gui.py` - Main GUI application (Textual app)
+- `misp_install_gui.py` - Main GUI application (Textual app)
 - `gui/screens/` - Directory for wizard screen modules:
   - `welcome.py` - Welcome screen with prerequisites
   - `network.py` - Network configuration form
@@ -581,31 +592,31 @@ pip install textual textual-dev textual-wizard
 **Terminal Mode (TUI):**
 ```bash
 # Launch GUI installer in terminal
-python3 misp-install-gui.py
+python3 misp_install_gui.py
 
 # Load existing config and edit
-python3 misp-install-gui.py --load config/misp-config.json
+python3 misp_install_gui.py --load config/misp-config.json
 
 # Save config without installing
-python3 misp-install-gui.py --save-only
+python3 misp_install_gui.py --save-only
 ```
 
 **Web Browser Mode:**
 ```bash
 # Serve GUI on localhost:8000
-textual serve misp-install-gui.py
+textual serve misp_install_gui.py
 
 # Serve on specific port
-textual serve misp-install-gui.py --port 8080
+textual serve misp_install_gui.py --port 8080
 
 # Share URL with team (accessible from any browser)
-textual serve misp-install-gui.py --host 0.0.0.0
+textual serve misp_install_gui.py --host 0.0.0.0
 ```
 
 **CI/CD Integration:**
 ```bash
 # Generate config via GUI, then use in automation
-python3 misp-install-gui.py --save-only --output ci-config.json
+python3 misp_install_gui.py --save-only --output ci-config.json
 python3 misp-install.py --config ci-config.json --non-interactive
 ```
 
