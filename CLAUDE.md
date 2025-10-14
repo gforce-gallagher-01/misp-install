@@ -221,6 +221,24 @@ Supports JSON and YAML (requires PyYAML):
 }
 ```
 
+### Config Directory Structure
+
+```
+config/
+├── misp-config.yaml.example   # Example YAML config
+├── misp-config.json.example   # Example JSON config
+├── test-debug.json             # Testing configuration
+└── for_testing/                # Temporary test configs (gitignored)
+    └── misp-gui-config-*.json  # GUI installer test outputs
+```
+
+**for_testing/ Directory**:
+- Purpose: Store temporary configuration files generated during testing
+- Content: GUI installer output files, test configurations, experimental configs
+- Status: Not committed to git (add to .gitignore)
+- Cleanup: Can be safely deleted - files are test artifacts only
+- Created: October 2025 to organize GUI installer test files
+
 ## Working with the Code
 
 ### Adding New Scripts

@@ -1,0 +1,10 @@
+{
+  "server_ip": "192.168.20.54",
+  "domain": "misp-dev.lan",
+  "admin_email": "admin@me.com",
+  "admin_org": "Hell Inc",
+  "admin_password": "%6BA5cc#rrt#yFmF",
+  "mysql_password": "i9QFwnkE$k7j7YIP",
+  "gpg_passphrase": "4cFaqy@l^PrCxE#do!yB",
+  "environment": "development"
+}
