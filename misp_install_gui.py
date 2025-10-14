@@ -637,7 +637,17 @@ class EnvironmentScreen(Screen):
         radio_set = self.query_one("#environment-radio", RadioSet)
 
         if radio_set.pressed_button:
-            self.app.config["environment"] = radio_set.pressed_button.value
+            # Get the button ID and extract environment name
+            button_id = radio_set.pressed_button.id
+            if button_id == "env-production":
+                self.app.config["environment"] = "production"
+            elif button_id == "env-staging":
+                self.app.config["environment"] = "staging"
+            elif button_id == "env-development":
+                self.app.config["environment"] = "development"
+            else:
+                self.app.config["environment"] = "production"  # default
+
             self.app.push_screen("review")
         else:
             self.notify("Please select an environment", severity="error")
