@@ -778,6 +778,25 @@ class ReviewScreen(Screen):
         config_file = self.save_config()
         config_file_abs = Path(config_file).resolve()
 
+        # Print to console (will show after app exits)
+        import sys
+        message_lines = [
+            "",
+            "=" * 80,
+            "✓ Configuration saved successfully!",
+            "",
+            f"📁 Location: {config_file_abs}",
+            "",
+            "📋 To use this configuration:",
+            f"   python3 misp-install.py --config {config_file} --non-interactive",
+            "",
+            "💡 The config file contains all your settings and can be reused for",
+            "   automated deployments.",
+            "=" * 80,
+            ""
+        ]
+
+        # Show notification in app
         message = (
             f"✓ Configuration saved successfully!\n\n"
             f"📁 Location: {config_file_abs}\n\n"
@@ -787,10 +806,12 @@ class ReviewScreen(Screen):
         )
         self.notify(message, severity="information", timeout=10)
 
-        # Give user time to see the notification before exiting
-        import time
-        time.sleep(3)  # Increased to allow reading the enhanced notification
+        # Exit and print to console
         self.app.exit()
+
+        # Print after exit (will show in terminal)
+        for line in message_lines:
+            print(line)
 
     @on(Button.Pressed, "#btn-install")
     def on_install(self):
