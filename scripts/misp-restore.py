@@ -31,11 +31,17 @@ if sys.version_info < (3, 8):
     print("❌ Python 3.8 or higher required")
     sys.exit(1)
 
+# Add parent directory to path for lib imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 # Import centralized logger
 from misp_logger import get_logger
 
 # Import centralized Colors class
 from lib.colors import Colors
+
+# Import centralized database manager
+from lib.database_manager import DatabaseManager
 
 # ==========================================
 # Logging Setup
@@ -124,11 +130,14 @@ class RestoreManager:
     def __init__(self, misp_dir: Path, backup_dir: Path):
         self.misp_dir = Path(misp_dir).expanduser()
         self.backup_dir = Path(backup_dir).expanduser()
-        
+
+        # Initialize database manager
+        self.db_manager = DatabaseManager(self.misp_dir)
+
         # Validate directories
         if not self.misp_dir.exists():
             raise ValueError(f"MISP directory not found: {self.misp_dir}")
-        
+
         if not self.backup_dir.exists():
             raise ValueError(f"Backup directory not found: {self.backup_dir}")
     
@@ -202,32 +211,10 @@ class RestoreManager:
         return backup_path
     
     def _backup_database(self, output_file: Path):
-        """Backup database"""
+        """Backup database using DatabaseManager"""
         try:
-            # Get MySQL password from .env
-            env_file = self.misp_dir / '.env'
-            mysql_password = None
-            
-            with open(env_file, 'r') as f:
-                for line in f:
-                    if line.startswith('MYSQL_PASSWORD='):
-                        mysql_password = line.split('=', 1)[1].strip()
-                        break
-            
-            if not mysql_password:
-                raise ValueError("Could not find MYSQL_PASSWORD in .env")
-            
-            # Dump database
-            cmd = [
-                'sudo', 'docker', 'compose', 'exec', '-T', 'db',
-                'mysqldump', '-umisp', f'-p{mysql_password}',
-                '--single-transaction', '--quick', '--lock-tables=false',
-                'misp'
-            ]
-            
-            with open(output_file, 'w') as f:
-                subprocess.run(cmd, cwd=self.misp_dir, stdout=f, check=True)
-        
+            # Use DatabaseManager for backup operation
+            self.db_manager.backup_database(output_file)
         except Exception as e:
             logger.warning(f"Database backup failed: {e}")
     
@@ -281,17 +268,17 @@ class RestoreManager:
         logger.info("")
     
     def restore_database(self, backup: BackupInfo):
-        """Restore database from backup"""
+        """Restore database from backup using DatabaseManager"""
         logger.info("=" * 50)
         logger.info("RESTORING DATABASE")
         logger.info("=" * 50)
         logger.info("")
-        
+
         db_backup = backup.path / 'misp_database.sql'
         if not db_backup.exists():
             logger.error(Colors.error("Database backup file not found"))
             return False
-        
+
         try:
             # Ensure database container is running
             logger.info("Ensuring database container is running...")
@@ -301,50 +288,28 @@ class RestoreManager:
                 check=True,
                 capture_output=True
             )
-            
-            # Wait for database
+
+            # Wait for database using DatabaseManager
             logger.info("Waiting for database to be ready...")
-            max_attempts = 30
-            for i in range(max_attempts):
-                if self.check_database():
-                    break
-                import time
-                time.sleep(2)
-            else:
+            if not self.db_manager.wait_for_database(max_attempts=30, delay=2):
                 logger.error(Colors.error("Database did not become ready"))
                 return False
-            
+
             logger.info(Colors.success("Database is ready"))
-            
-            # Get MySQL password
-            env_file = self.misp_dir / '.env'
-            mysql_password = None
-            
-            with open(env_file, 'r') as f:
-                for line in f:
-                    if line.startswith('MYSQL_PASSWORD='):
-                        mysql_password = line.split('=', 1)[1].strip()
-                        break
-            
-            if not mysql_password:
-                raise ValueError("Could not find MYSQL_PASSWORD in .env")
-            
-            # Restore database
+
+            # Restore database using DatabaseManager
             size_mb = db_backup.stat().st_size / (1024 * 1024)
             logger.info(f"Restoring database from backup ({size_mb:.1f} MB)...")
             logger.info("This may take several minutes...")
-            
-            with open(db_backup, 'r') as f:
-                cmd = [
-                    'sudo', 'docker', 'compose', 'exec', '-T', 'db',
-                    'mysql', '-umisp', f'-p{mysql_password}', 'misp'
-                ]
-                subprocess.run(cmd, cwd=self.misp_dir, stdin=f, check=True)
-            
-            logger.info(Colors.success("Database restored successfully"))
-            logger.info("")
-            return True
-        
+
+            if self.db_manager.restore_database(db_backup):
+                logger.info(Colors.success("Database restored successfully"))
+                logger.info("")
+                return True
+            else:
+                logger.error(Colors.error("Database restore failed"))
+                return False
+
         except Exception as e:
             logger.error(Colors.error(f"Database restore failed: {e}"))
             return False
@@ -399,36 +364,8 @@ class RestoreManager:
             return False
     
     def check_database(self) -> bool:
-        """Check if database is accessible"""
-        try:
-            # Get MySQL password from .env
-            env_file = self.misp_dir / '.env'
-            mysql_password = None
-            
-            if env_file.exists():
-                with open(env_file, 'r') as f:
-                    for line in f:
-                        if line.startswith('MYSQL_PASSWORD='):
-                            mysql_password = line.split('=', 1)[1].strip()
-                            break
-            
-            if not mysql_password:
-                logger.debug("Could not find MYSQL_PASSWORD in .env")
-                return False
-            
-            # Test database connection with proper credentials
-            result = subprocess.run(
-                ['sudo', 'docker', 'compose', 'exec', '-T', 'db', 
-                 'mysql', '-umisp', f'-p{mysql_password}', 
-                 '-e', 'SELECT 1;'],
-                cwd=self.misp_dir,
-                capture_output=True,
-                timeout=10
-            )
-            return result.returncode == 0
-        except Exception as e:
-            logger.debug(f"Database check failed: {e}")
-            return False
+        """Check if database is accessible using DatabaseManager"""
+        return self.db_manager.check_database()
     
     def verify_restore(self) -> bool:
         """Verify that restore was successful"""

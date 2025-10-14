@@ -22,11 +22,17 @@ if sys.version_info < (3, 8):
     print("❌ Python 3.8 or higher required")
     sys.exit(1)
 
+# Add parent directory to path for lib imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 # Import centralized logger
 from misp_logger import get_logger
 
 # Import centralized Colors class
 from lib.colors import Colors
+
+# Import centralized database manager
+from lib.database_manager import DatabaseManager
 
 # ==========================================
 # Configuration
@@ -55,6 +61,9 @@ class MISPBackup:
 
         # Initialize centralized logger
         self.logger = get_logger('backup-misp', 'misp:backup')
+
+        # Initialize database manager
+        self.db_manager = DatabaseManager(self.config.MISP_DIR)
 
         self.logger.info(
             "Backup initiated",
@@ -148,18 +157,6 @@ class MISPBackup:
         else:
             self.logger.warning("SSL directory not found", event_type="backup", action="backup_ssl", component="ssl")
 
-    def get_mysql_password(self) -> Optional[str]:
-        """Get MySQL password from .env file"""
-        env_file = self.config.MISP_DIR / ".env"
-        if not env_file.exists():
-            return None
-
-        with open(env_file, 'r') as f:
-            for line in f:
-                if line.startswith('MYSQL_PASSWORD='):
-                    return line.split('=', 1)[1].strip()
-        return None
-
     def is_container_running(self, container: str) -> bool:
         """Check if Docker container is running using JSON format for reliable parsing"""
         try:
@@ -189,45 +186,19 @@ class MISPBackup:
             return False
 
     def backup_database(self) -> bool:
-        """Backup MySQL database"""
+        """Backup MySQL database using DatabaseManager"""
         self.logger.info("Backing up MySQL database", event_type="backup", phase="backup_database")
 
         if not self.is_container_running('db'):
             self.logger.warning("Database container is not running, skipping database backup", event_type="backup", action="check_container", container="db")
             return False
 
-        mysql_password = self.get_mysql_password()
-        if not mysql_password:
-            self.logger.warning("MySQL password not found in .env", event_type="backup", action="get_password", component="database")
-            return False
-
         self.logger.info("Dumping database (this may take a few minutes)", event_type="backup", action="dump_database", component="database")
 
         db_file = self.backup_dir / "misp_database.sql"
 
-        try:
-            with open(db_file, 'w') as f:
-                result = subprocess.run(
-                    ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
-                     'mysqldump', '-umisp', f'-p{mysql_password}',
-                     '--single-transaction', '--quick', '--lock-tables=false', 'misp'],
-                    cwd=self.config.MISP_DIR,
-                    stdout=f,
-                    stderr=subprocess.PIPE,
-                    timeout=600
-                )
-
-            if result.returncode == 0:
-                size_mb = db_file.stat().st_size / (1024 * 1024)
-                self.logger.success(f"Database backed up successfully ({size_mb:.1f} MB)", event_type="backup", action="backup_database", component="database", bytes=int(size_mb * 1024 * 1024))
-                return True
-            else:
-                self.logger.error("Database backup failed", event_type="backup", action="backup_database", component="database")
-                return False
-
-        except Exception as e:
-            self.logger.error(f"Database backup failed: {e}", event_type="backup", action="backup_database", component="database", error_message=str(e))
-            return False
+        # Use DatabaseManager for backup operation
+        return self.db_manager.backup_database(db_file)
 
     def backup_attachments(self):
         """Backup MISP attachments"""

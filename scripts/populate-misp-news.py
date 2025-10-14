@@ -54,6 +54,9 @@ import re
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from misp_logger import get_logger
 
+# Import centralized database manager
+from lib.database_manager import DatabaseManager
+
 # Try to import feedparser
 try:
     import feedparser
@@ -95,20 +98,11 @@ class MISPNewsPopulator:
         self.max_items = max_items
         self.days = days
         self.logger = get_logger('populate-misp-news', 'misp:news')
-        self.mysql_password = self.get_mysql_password()
-        self.admin_user_id = None
 
-    def get_mysql_password(self) -> str:
-        """Get MySQL password from .env file"""
-        env_file = self.misp_dir / ".env"
-        try:
-            with open(env_file, 'r') as f:
-                for line in f:
-                    if line.startswith('MYSQL_PASSWORD='):
-                        return line.split('=', 1)[1].strip()
-            return 'misp'  # Default fallback
-        except Exception:
-            return 'misp'  # Default fallback
+        # Initialize database manager
+        self.db_manager = DatabaseManager(self.misp_dir)
+        self.mysql_password = self.db_manager.get_mysql_password() or 'misp'
+        self.admin_user_id = None
 
     def check_docker_running(self) -> bool:
         """Check if MISP containers are running"""
