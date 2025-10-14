@@ -19,7 +19,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -31,6 +30,11 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# IMPORTANT: Keep our custom lib/ directory (refactored code)
+# This overrides the generic Python lib/ ignore above
+!lib/
+!lib/*.py
 
 # ============================================
 # MISP Installation Files
@@ -73,6 +77,9 @@ prod-*.json
 !misp-config.json.example
 !config/misp-config-*.yaml
 !config/misp-config-*.json
+
+# Test configuration files (temporary test artifacts)
+config/for_testing/
 
 # Environment files
 .env
@@ -244,7 +251,15 @@ test-output/
 # Generated documentation
 api-docs/
 
-# User notes
+# User notes (personal notes only, not project TODO.md)
 NOTES.md
-TODO.md
 .notes/
+my-notes.md
+
+# IMPORTANT: Keep project TODO.md tracked!
+# TODO.md contains active development priorities and should be versioned
+
+# Backup files (local copies)
+*.backup
+*.bak
+*~
