@@ -229,6 +229,122 @@ ADDITIONAL_FEEDS = [
 
 ---
 
+## NERC CIP News Feeds for Security Awareness
+
+### RSS/Atom News Feeds (Distinct from Threat Intelligence)
+
+MISP can subscribe to RSS/Atom news feeds to provide **security awareness content** for NERC CIP-003-R2 compliance. These are different from threat intelligence IOC feeds - they provide news articles and advisories for training purposes.
+
+**Script**: `scripts/add-nerc-cip-news-feeds.py`
+
+**Usage**:
+```bash
+# List available news feeds
+python3 scripts/add-nerc-cip-news-feeds.py --list
+
+# Test with dry-run mode
+python3 scripts/add-nerc-cip-news-feeds.py --dry-run
+
+# Add feeds to MISP
+python3 scripts/add-nerc-cip-news-feeds.py
+```
+
+### Available News Feeds
+
+**1. CISA ICS Advisories** (PRIMARY - Enabled by default)
+- **URL**: https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml
+- **Use Case**: CIP-010-R3 (Vulnerability Assessment), CIP-003-R2 (Security Awareness)
+- **Content**: Official ICS/SCADA vulnerabilities, solar inverters, wind turbines, battery BMS
+- **Update Frequency**: As threats are discovered
+- **Relevance**: ⭐⭐⭐⭐⭐ Essential for NERC CIP compliance
+
+**2. SecurityWeek - ICS/SCADA News** (Enabled by default)
+- **URL**: https://www.securityweek.com/category/ics-ot-security/feed/
+- **Use Case**: CIP-003-R2 (Security Awareness Training), CIP-008-R1 (Incident Response)
+- **Content**: Industry news about ICS/SCADA threats, vulnerabilities, and attacks
+- **Update Frequency**: Daily
+- **Relevance**: ⭐⭐⭐⭐ Good for security awareness
+
+**3. Bleeping Computer - Critical Infrastructure** (Enabled by default)
+- **URL**: https://www.bleepingcomputer.com/feed/tag/critical-infrastructure/
+- **Use Case**: CIP-003-R2 (Security Awareness), CIP-008-R1 (Incident Response context)
+- **Content**: Breaking news on critical infrastructure attacks and ransomware
+- **Update Frequency**: Daily
+- **Relevance**: ⭐⭐⭐⭐ High relevance to energy sector
+
+**4. Industrial Cyber - News** (Enabled by default)
+- **URL**: https://industrialcyber.co/feed/
+- **Use Case**: CIP-003-R2 (Security Awareness), CIP-010-R3 (Vulnerability context)
+- **Content**: ICS/OT cybersecurity news, product launches, industry trends
+- **Update Frequency**: Daily
+- **Relevance**: ⭐⭐⭐ Industry awareness
+
+**5. NERC - News & Events** (Disabled by default)
+- **URL**: https://www.nerc.com/news/Pages/default.aspx (RSS auto-detected)
+- **Use Case**: CIP-003-R2 (Security Awareness), regulatory updates
+- **Content**: NERC regulatory announcements, reliability standards updates
+- **Relevance**: ⭐⭐⭐ Compliance awareness
+
+**6. Darkreading - ICS/SCADA** (Disabled by default)
+- **URL**: https://www.darkreading.com/rss/ics-ot.xml
+- **Use Case**: CIP-003-R2 (Security Awareness)
+- **Content**: ICS/OT security analysis and commentary
+- **Relevance**: ⭐⭐ Optional
+
+**7. The Hacker News - ICS Security** (Disabled by default)
+- **URL**: https://feeds.feedburner.com/TheHackersNews?format=xml
+- **Use Case**: CIP-003-R2 (Security Awareness)
+- **Content**: General cybersecurity news (filter for ICS/SCADA manually)
+- **Relevance**: ⭐⭐ Optional
+
+### Configuration Details
+
+**Distribution Level**: All news feeds are configured with:
+- `distribution: 0` (Your organization only)
+- Complies with CIP-011-R1 (BCSI Protection)
+- News content stays internal until reviewed
+
+**Enabled Feeds**: 4 feeds enabled by default (CISA, SecurityWeek, Bleeping Computer, Industrial Cyber)
+
+**Disabled Feeds**: 3 feeds disabled (NERC, Darkreading, Hacker News) - enable manually if desired
+
+### NERC CIP Use Cases
+
+**CIP-003-R2: Security Awareness Training**
+- Query MISP news feeds for last 15 months of ICS/SCADA news
+- Generate security awareness training materials
+- Include recent attack trends, vulnerabilities, and incidents
+- Document training with MISP query results
+
+**CIP-008-R1: Incident Response Context**
+- Reference news feeds during incident investigations
+- Understand broader threat landscape
+- Correlate local incidents with industry trends
+
+**CIP-010-R3: Vulnerability Assessment**
+- Use CISA ICS advisories to identify vulnerabilities
+- Cross-reference with asset inventory
+- Prioritize patching based on exploited vulnerabilities
+
+### Important Notes
+
+⚠️ **News Feeds ≠ Threat Intelligence IOCs**
+- News feeds provide **context and awareness**
+- IOC feeds provide **actionable indicators** (IPs, domains, hashes)
+- Use both together for comprehensive security program
+
+⚠️ **BCSI Protection**
+- News content may contain sensitive information
+- Default distribution: "Your organization only"
+- Review before sharing externally
+
+⚠️ **Feed Maintenance**
+- Check feed status monthly: `python3 scripts/check-misp-feeds.py`
+- Update feeds manually or via cron job
+- Remove feeds that become inactive or irrelevant
+
+---
+
 ## NERC CIP-Specific MISP Configuration
 
 ### Taxonomies to Enable

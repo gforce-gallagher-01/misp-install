@@ -2149,8 +2149,9 @@ Adding to the Script Inventory (v5.4):
 10. **scripts/check-misp-feeds.py** - Check feed status (v1.0)
 11. **scripts/enable-misp-feeds.py** - Enable feeds (v1.0)
 12. **scripts/list-misp-communities.py** - Discover communities (v1.0)
+13. **scripts/add-nerc-cip-news-feeds.py** - Add NERC CIP news feeds (v1.0)
 
-**Total Scripts**: 12 Python scripts
+**Total Scripts**: 13 Python scripts
 
 ---
 
