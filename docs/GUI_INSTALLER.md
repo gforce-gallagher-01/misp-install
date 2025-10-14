@@ -30,13 +30,32 @@ The MISP GUI Installer provides a modern, user-friendly graphical interface for 
 
 ### Install Dependencies
 
+**Ubuntu 24.04+ (PEP 668 Protected Environment):**
+
+```bash
+# Option 1: Virtual environment (RECOMMENDED)
+python3 -m venv ~/misp-gui-env
+source ~/misp-gui-env/bin/activate
+pip install -r requirements-gui.txt
+
+# Option 2: System packages (if available)
+sudo apt update
+sudo apt install python3-textual python3-textual-dev
+
+# Option 3: pipx installation
+pipx install textual-dev
+pipx inject textual-dev textual
+```
+
+**Ubuntu 22.04 or older:**
+
 ```bash
 # Install Textual framework
-pip install textual textual-dev
+pip install --user textual textual-dev
 
 # Or install from requirements
 cd misp-install
-pip install -r requirements-gui.txt
+pip install --user -r requirements-gui.txt
 ```
 
 ## Usage

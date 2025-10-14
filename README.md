@@ -112,9 +112,15 @@ textual serve misp-install-gui.py
 
 See `docs/GUI_INSTALLER.md` for complete documentation.
 
-**Installation:**
+**Installation (Ubuntu 24.04+):**
 ```bash
+# Create virtual environment
+python3 -m venv ~/misp-gui-env
+source ~/misp-gui-env/bin/activate
 pip install -r requirements-gui.txt
+
+# Then run GUI installer
+python3 misp-install-gui.py
 ```
 
 ## 📝 Usage Examples
