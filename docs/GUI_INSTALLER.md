@@ -228,6 +228,14 @@ Monitor the installation progress (Future Implementation).
 - `q` - Quit application (with confirmation)
 - `d` - Toggle dark/light mode
 
+### Text Input
+- `Ctrl+Shift+V` - Paste from clipboard (in terminal)
+- `Right-Click` → Paste - Paste from clipboard (in terminal with mouse)
+- `Ctrl+C` / `Ctrl+X` - Copy / Cut (select text first)
+- Standard terminal paste works automatically
+
+**Note:** In terminals, use `Ctrl+Shift+V` instead of `Ctrl+V` (which sends terminal control sequence).
+
 ### Navigation
 - `←` / `→` - Navigate buttons
 - `↑` / `↓` - Navigate radio buttons

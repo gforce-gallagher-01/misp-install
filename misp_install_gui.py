@@ -264,6 +264,7 @@ class NetworkScreen(Screen):
         with ScrollableContainer(id="network-container"):
             yield Label("Network Configuration", id="screen-title")
             yield Static("Step 1 of 5", classes="step-indicator")
+            yield Static("💡 Tip: Use Ctrl+Shift+V or Right-Click to paste", classes="field-help")
 
             yield Label("Server IP Address:", classes="field-label")
             yield Static("The IP address of this server", classes="field-help")
@@ -890,6 +891,7 @@ class MISPInstallerApp(App):
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("d", "toggle_dark", "Toggle Dark Mode"),
+        ("ctrl+v", "paste", "Paste (Ctrl+Shift+V)"),
     ]
 
     def __init__(self, load_config=None, save_only=False):
