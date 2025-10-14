@@ -761,16 +761,35 @@ class ReviewScreen(Screen):
     def on_save(self):
         """Save configuration to file (stays in app)"""
         config_file = self.save_config()
-        self.notify(f"✓ Configuration saved to {config_file}", severity="information")
+        config_file_abs = Path(config_file).resolve()
+
+        message = (
+            f"✓ Configuration saved successfully!\n\n"
+            f"📁 Location: {config_file_abs}\n\n"
+            f"📋 To use this configuration:\n"
+            f"   python3 misp-install.py --config {config_file} --non-interactive\n\n"
+            f"💡 The config file contains all your settings and can be reused for automated deployments."
+        )
+        self.notify(message, severity="information", timeout=10)
 
     @on(Button.Pressed, "#btn-save-exit")
     def on_save_exit(self):
         """Save configuration and exit application"""
         config_file = self.save_config()
-        self.notify(f"✓ Configuration saved to {config_file}", severity="information")
+        config_file_abs = Path(config_file).resolve()
+
+        message = (
+            f"✓ Configuration saved successfully!\n\n"
+            f"📁 Location: {config_file_abs}\n\n"
+            f"📋 To use this configuration:\n"
+            f"   python3 misp-install.py --config {config_file} --non-interactive\n\n"
+            f"💡 The config file contains all your settings and can be reused for automated deployments."
+        )
+        self.notify(message, severity="information", timeout=10)
+
         # Give user time to see the notification before exiting
         import time
-        time.sleep(1)
+        time.sleep(3)  # Increased to allow reading the enhanced notification
         self.app.exit()
 
     @on(Button.Pressed, "#btn-install")
