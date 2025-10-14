@@ -72,6 +72,9 @@ from misp_api import get_api_key, get_misp_client, test_connection
 # Import centralized Colors class
 from lib.colors import Colors
 
+# Import centralized setup helpers
+from lib.setup_helper import MISPSetupHelper, VerificationHelper, StatisticsTracker
+
 # Try to import YAML support
 try:
     import yaml
@@ -114,19 +117,14 @@ class MISPSetupComplete:
         # Get API client
         self.session = get_misp_client(api_key=api_key, misp_url=misp_url)
 
-        # Statistics
-        self.stats = {
-            'settings_applied': 0,
-            'settings_failed': 0,
-            'feeds_added': 0,
-            'feeds_skipped': 0,
-            'feeds_failed': 0,
-            'news_added': 0,
-            'news_failed': 0,
-            'modules_enabled': 0,
-            'taxonomies_enabled': 0,
-            'warninglists_enabled': 0
-        }
+        # Initialize centralized helpers
+        self.setup_helper = MISPSetupHelper(self.logger.logger, dry_run=dry_run)
+        self.verify_helper = VerificationHelper(self.logger.logger, self.session,
+                                                misp_url, dry_run=dry_run)
+        self.stats_tracker = StatisticsTracker()
+
+        # Keep stats dict for backward compatibility
+        self.stats = self.stats_tracker.stats
 
     def print_header(self, text: str):
         """Print section header"""
@@ -139,7 +137,7 @@ class MISPSetupComplete:
         print(f"\n{Colors.BLUE}[{text}]{Colors.NC}")
 
     def run_script(self, script_name: str, args: List[str], description: str) -> Tuple[bool, str]:
-        """Run a setup script and capture output
+        """Run a setup script and capture output (uses centralized helper)
 
         Args:
             script_name: Script filename (e.g., 'configure-misp-nerc-cip.py')
@@ -151,50 +149,11 @@ class MISPSetupComplete:
         """
         script_path = Path(__file__).parent / script_name
 
-        if not script_path.exists():
-            error_msg = f"Script not found: {script_path}"
-            self.logger.error(error_msg, event_type="setup", action="run_script",
-                            script=script_name, result="failed")
-            return False, error_msg
-
-        self.logger.info(f"Running: {description}", event_type="setup",
-                        action="run_script", script=script_name)
-
         if self.dry_run:
             print(f"[DRY-RUN] Would run: python3 {script_path} {' '.join(args)}")
-            return True, "Dry-run mode - skipped"
 
-        try:
-            cmd = ['python3', str(script_path)] + args
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=600,  # 10 minute timeout
-                cwd=Path(__file__).parent.parent
-            )
-
-            if result.returncode == 0:
-                self.logger.info(f"Completed: {description}", event_type="setup",
-                               action="run_script", script=script_name, result="success")
-                return True, result.stdout
-            else:
-                self.logger.error(f"Failed: {description}", event_type="setup",
-                                action="run_script", script=script_name, result="failed",
-                                error=result.stderr[:500])
-                return False, result.stderr
-
-        except subprocess.TimeoutExpired:
-            error_msg = f"Script timeout: {script_name}"
-            self.logger.error(error_msg, event_type="setup", action="run_script",
-                            script=script_name, result="timeout")
-            return False, error_msg
-
-        except Exception as e:
-            error_msg = f"Script execution error: {e}"
-            self.logger.error(error_msg, event_type="setup", action="run_script",
-                            script=script_name, result="error")
-            return False, str(e)
+        # Use centralized setup helper
+        return self.setup_helper.run_script(script_path, args, description)
 
     def step_1_misp_settings(self):
         """Step 1: Apply MISP best practice settings"""
@@ -335,50 +294,32 @@ class MISPSetupComplete:
         return True
 
     def step_4_taxonomies_warninglists(self):
-        """Step 4: Enable taxonomies and warning lists"""
+        """Step 4: Enable taxonomies and warning lists (uses centralized helper)"""
         self.print_subheader("STEP 4: Taxonomies & Warning Lists")
 
         print("Updating and enabling taxonomies...")
 
-        if not self.dry_run:
-            # Update taxonomies
-            try:
-                result = subprocess.run(
-                    ['sudo', 'docker', 'compose', 'exec', '-T', 'misp-core',
-                     '/var/www/MISP/app/Console/cake', 'Admin', 'updateTaxonomies'],
-                    cwd='/opt/misp',
-                    capture_output=True,
-                    text=True,
-                    timeout=300
-                )
-                if result.returncode == 0:
-                    print(Colors.success("Taxonomies updated"))
-                    self.stats['taxonomies_enabled'] += 1
-            except Exception as e:
-                print(Colors.warning(f"Taxonomy update failed: {e}"))
-        else:
+        if self.dry_run:
             print("[DRY-RUN] Would update taxonomies")
+        else:
+            # Use centralized setup helper
+            if self.setup_helper.update_taxonomies():
+                print(Colors.success("Taxonomies updated"))
+                self.stats['taxonomies_enabled'] += 1
+            else:
+                print(Colors.warning("Taxonomy update failed"))
 
         print("\nUpdating warning lists...")
 
-        if not self.dry_run:
-            # Update warning lists
-            try:
-                result = subprocess.run(
-                    ['sudo', 'docker', 'compose', 'exec', '-T', 'misp-core',
-                     '/var/www/MISP/app/Console/cake', 'Admin', 'updateWarningLists'],
-                    cwd='/opt/misp',
-                    capture_output=True,
-                    text=True,
-                    timeout=300
-                )
-                if result.returncode == 0:
-                    print(Colors.success("Warning lists updated"))
-                    self.stats['warninglists_enabled'] += 1
-            except Exception as e:
-                print(Colors.warning(f"Warning list update failed: {e}"))
-        else:
+        if self.dry_run:
             print("[DRY-RUN] Would update warning lists")
+        else:
+            # Use centralized setup helper
+            if self.setup_helper.update_warninglists():
+                print(Colors.success("Warning lists updated"))
+                self.stats['warninglists_enabled'] += 1
+            else:
+                print(Colors.warning("Warning list update failed"))
 
         return True
 
@@ -440,24 +381,15 @@ class MISPSetupComplete:
         return True
 
     def _verify_connection(self) -> bool:
-        """Verify MISP API connection"""
-        if self.dry_run:
-            return True
-        success, _ = test_connection(self.session)
-        return success
+        """Verify MISP API connection (uses centralized helper)"""
+        return self.verify_helper.verify_connection()
 
     def _verify_feeds(self) -> bool:
-        """Verify feeds are configured"""
-        if self.dry_run or self.skip_feeds:
+        """Verify feeds are configured (uses centralized helper)"""
+        if self.skip_feeds:
             return True
-        try:
-            response = self.session.get(f"{self.misp_url}/feeds/index")
-            if response.status_code == 200:
-                feeds = response.json()
-                return len(feeds) > 0
-        except:
-            pass
-        return False
+        success, count = self.verify_helper.verify_feeds(min_feeds=1)
+        return success
 
     def _verify_news(self) -> bool:
         """Verify news content exists"""
