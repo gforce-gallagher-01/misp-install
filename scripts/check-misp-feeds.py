@@ -35,13 +35,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from misp_logger import get_logger
 from lib.database_manager import DatabaseManager
 from lib.feed_constants import NERC_CIP_FEEDS
+from lib.misp_config import MISPConfig
 
 
 class MISPFeedChecker:
     """Check MISP feed status"""
 
     def __init__(self, show_all: bool = False, nerc_only: bool = False):
-        self.misp_dir = Path("/opt/misp")
+        self.config = MISPConfig()
+        self.misp_dir = self.config.MISP_DIR
         self.show_all = show_all
         self.nerc_only = nerc_only
         self.logger = get_logger('check-misp-feeds', 'misp:feeds')

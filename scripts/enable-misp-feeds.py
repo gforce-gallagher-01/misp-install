@@ -41,13 +41,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from misp_logger import get_logger
 from lib.database_manager import DatabaseManager
 from lib.feed_constants import NERC_CIP_FEEDS, FEED_NAME_MAPPINGS
+from lib.misp_config import MISPConfig
 
 
 class MISPFeedEnabler:
     """Enable MISP feeds"""
 
     def __init__(self, dry_run: bool = False):
-        self.misp_dir = Path("/opt/misp")
+        self.config = MISPConfig()
+        self.misp_dir = self.config.MISP_DIR
         self.dry_run = dry_run
         self.logger = get_logger('enable-misp-feeds', 'misp:feeds')
 
