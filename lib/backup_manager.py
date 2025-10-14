@@ -1,33 +1,57 @@
 """
 Backup management for MISP installation
+Centralized backup operations using database_manager and docker_manager
+
+This module provides unified backup/restore operations including:
+- Configuration file backup/restore
+- SSL certificate backup/restore
+- Database backup/restore (via database_manager)
+- Docker container status capture
+- Backup listing and management
 """
 
 import shutil
 import subprocess
+import sys
 import logging
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from lib.colors import Colors
+
+# Add parent directory for database_manager import
+_parent_dir = Path(__file__).parent.parent
+if str(_parent_dir) not in sys.path:
+    sys.path.insert(0, str(_parent_dir))
+
+from lib.database_manager import DatabaseManager
+from lib.docker_manager import DockerCommandRunner
 
 
 class BackupManager:
-    """Manages backups of MISP installation"""
+    """Manages backups of MISP installation using centralized managers"""
 
-    def __init__(self, logger: logging.Logger, backup_dir: Optional[Path] = None):
+    def __init__(self, logger: logging.Logger, misp_dir: Path = Path("/opt/misp"),
+                 backup_dir: Optional[Path] = None):
         """Initialize backup manager
 
         Args:
             logger: Logger instance
+            misp_dir: MISP installation directory
             backup_dir: Backup directory. Defaults to ~/misp-backups
         """
         self.logger = logger
+        self.misp_dir = Path(misp_dir)
 
         if backup_dir is None:
             backup_dir = Path.home() / "misp-backups"
 
         self.backup_dir = backup_dir
         self.backup_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
+
+        # Initialize centralized managers
+        self.db_manager = DatabaseManager(self.misp_dir)
+        self.docker = DockerCommandRunner(logger)
 
     def create_backup(self, misp_dir: Path) -> Optional[Path]:
         """Create backup of existing MISP installation
@@ -64,20 +88,10 @@ class BackupManager:
                 shutil.copytree(misp_dir / "ssl", backup_path / "ssl")
                 self.logger.info("  ✓ Backed up SSL certificates")
 
-            # Backup database
+            # Backup database using DatabaseManager
             try:
-                result = subprocess.run(
-                    ["docker", "compose", "exec", "-T", "db",
-                     "mysqldump", "-umisp", "-ppassword", "misp"],
-                    cwd=misp_dir,
-                    capture_output=True,
-                    text=True,
-                    timeout=300
-                )
-
-                if result.returncode == 0:
-                    with open(backup_path / "misp_database.sql", 'w') as f:
-                        f.write(result.stdout)
+                db_file = backup_path / "misp_database.sql"
+                if self.db_manager.backup_database(db_file):
                     self.logger.info("  ✓ Backed up database")
                 else:
                     self.logger.warning("  ⚠ Could not backup database (might not be running)")
@@ -154,10 +168,14 @@ class BackupManager:
                 shutil.copytree(backup_path / "ssl", ssl_dest)
                 self.logger.info("  ✓ Restored SSL certificates")
 
-            # Restore database (requires MISP to be running)
+            # Restore database using DatabaseManager
             if (backup_path / "misp_database.sql").exists():
-                self.logger.info("  Database restore requires manual import")
-                self.logger.info(f"  Run: docker compose exec -T db mysql -umisp -ppassword misp < {backup_path / 'misp_database.sql'}")
+                self.logger.info("  Restoring database...")
+                if self.db_manager.restore_database(backup_path / "misp_database.sql"):
+                    self.logger.info("  ✓ Restored database")
+                else:
+                    self.logger.warning("  ⚠ Database restore failed (might not be running)")
+                    self.logger.info(f"  Manual restore: docker compose exec -T db mysql -umisp -p[password] misp < {backup_path / 'misp_database.sql'}")
 
             self.logger.info(Colors.success("Restore completed"))
             return True
