@@ -170,51 +170,39 @@ class MISPNewsPopulator:
             return 1
 
     def get_rss_feeds(self) -> List[Dict]:
-        """Get list of RSS/Atom news feeds from MISP feeds table"""
-        try:
-            result = subprocess.run(
-                ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
-                 'mysql', '-umisp', f'-p{self.mysql_password}', 'misp', '-e',
-                 "SELECT id, name, url FROM feeds WHERE source_format = 'csv' AND input_source = 'network' AND enabled = 1;"],
-                cwd=str(self.misp_dir),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                text=True,
-                check=True
-            )
+        """Get list of RSS/Atom news feeds (hardcoded NERC CIP sources)"""
+        # Hardcoded RSS feed sources for utilities/energy sector
+        # These are independent of MISP's threat intel feeds system
+        feeds = [
+            {
+                'id': 'cisa-ics',
+                'name': 'CISA ICS Advisories',
+                'url': 'https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml'
+            },
+            {
+                'id': 'securityweek-ics',
+                'name': 'SecurityWeek - ICS/SCADA News',
+                'url': 'https://www.securityweek.com/category/ics-ot-security/feed/'
+            },
+            {
+                'id': 'bleeping-infra',
+                'name': 'Bleeping Computer - Critical Infrastructure',
+                'url': 'https://www.bleepingcomputer.com/feed/tag/critical-infrastructure/'
+            },
+            {
+                'id': 'industrialcyber',
+                'name': 'Industrial Cyber - News',
+                'url': 'https://industrialcyber.co/feed/'
+            }
+        ]
 
-            # Parse MySQL output
-            feeds = []
-            lines = result.stdout.strip().split('\n')
+        self.logger.info(f"Using {len(feeds)} hardcoded RSS feed sources",
+                        event_type="news_population",
+                        action="get_feeds",
+                        result="success",
+                        feed_count=len(feeds))
 
-            if len(lines) <= 1:
-                return []
-
-            # Skip header line
-            for line in lines[1:]:
-                if line.strip():
-                    parts = line.split('\t')
-                    if len(parts) >= 3:
-                        feeds.append({
-                            'id': parts[0],
-                            'name': parts[1],
-                            'url': parts[2]
-                        })
-
-            return feeds
-
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Failed to get RSS feeds: {e.stderr}",
-                            event_type="news_population",
-                            action="get_feeds",
-                            result="failed")
-            return []
-        except Exception as e:
-            self.logger.error(f"Error getting RSS feeds: {e}",
-                            event_type="news_population",
-                            action="get_feeds",
-                            result="failed")
-            return []
+        return feeds
 
     def is_utilities_relevant(self, title: str, summary: str) -> bool:
         """Check if article is relevant to utilities/energy sector"""
