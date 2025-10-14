@@ -1109,3 +1109,198 @@ The GUI installer is **completely independent** of the v5.4 dedicated user archi
 - Authentication for web mode
 
 For complete user documentation, see `docs/GUI_INSTALLER.md`.
+
+---
+
+## Post-Installation Configuration Script
+
+**Script**: `scripts/configure-misp-ready.py`
+**Purpose**: Automates MISP "ready-to-run" configuration after initial installation
+**Version**: 2.0 (with Centralized Logging)
+**Status**: ⚠️ Partially Tested - Has bugs that need fixing
+
+### What It Does
+
+Automates post-installation MISP configuration for production-ready deployment:
+- Updates taxonomies (classification tags)
+- Updates galaxies (MITRE ATT&CK, threat actors, malware families)
+- Updates warninglists (false positive filters)
+- Updates notice lists
+- Updates object templates
+- Enables recommended OSINT feeds
+- Configures enrichment/import/export modules
+- Sets security best practices
+- Enables background jobs
+- Creates initial backup
+
+### Known Issues (October 2025)
+
+**Issue 1: Container Detection Bug** (Line 155):
+```python
+running_services = result.stdout.strip().split('\\n')  # WRONG - literal backslash-n
+# Should be:
+running_services = result.stdout.strip().split('\n')   # Correct newline
+```
+**Impact**: Container detection always fails, thinks services aren't running
+
+**Issue 2: Missing sudo for docker commands**:
+```python
+# Current (fails with permission denied):
+subprocess.run(['docker', 'compose', 'ps', ...], cwd='/opt/misp')
+
+# Should be:
+subprocess.run(['sudo', 'docker', 'compose', 'ps', ...], cwd='/opt/misp')
+```
+**Impact**: All docker commands fail with permission denied in v5.4 architecture
+
+**Issue 3: SQL query string escaping** (Line 155):
+- `split('\\n')` is a literal backslash-n, not newline character
+- Results in container detection always failing
+
+### Usage
+
+```bash
+# Test without making changes (dry-run)
+python3 scripts/configure-misp-ready.py --dry-run
+
+# Run actual configuration
+python3 scripts/configure-misp-ready.py
+```
+
+### Testing Results (2025-10-14)
+
+**Dry-Run Test**:
+```bash
+cd ~/misp-install/misp-install && python3 scripts/configure-misp-ready.py --dry-run
+```
+
+**Partial Success**:
+- ✅ Script runs without crashing
+- ✅ Logging integration works
+- ✅ Banner and output formatting works
+- ✅ Shows what commands would run
+- ❌ Container detection fails (backslash-n bug)
+- ❌ Docker commands need sudo (permission denied)
+- ❌ Wait-for-MISP timeout (60s) - couldn't detect readiness
+
+**Expected Behavior** (from dry-run):
+1. Check if MISP containers running
+2. Start containers if needed
+3. Wait for MISP to be ready (heartbeat check)
+4. Update taxonomies
+5. Update warninglists
+6. Update object templates
+7. Update notice lists
+8. Update galaxies (takes 5-10 minutes)
+9. Configure 10 core settings
+10. Show recommended feeds to enable manually
+11. Create initial backup
+
+### What Needs Fixing
+
+**Priority 1: Fix container detection** (Line 155):
+```python
+# Change this:
+running_services = result.stdout.strip().split('\\n')
+
+# To this:
+running_services = result.stdout.strip().split('\n')
+```
+
+**Priority 2: Add sudo to all docker commands**:
+```python
+# Pattern to apply throughout:
+subprocess.run(['sudo', 'docker', 'compose', ...], cwd=self.config.MISP_DIR)
+```
+
+**Affected lines**:
+- Line 148: `docker compose ps`
+- Line 179: `docker compose exec -T misp-core curl`
+- Line 201: `docker compose exec -T misp-core /var/www/MISP/app/Console/cake`
+- Line 296: `docker compose exec -T db mysql`
+- Line 408: `docker compose up -d`
+
+**Priority 3: Test actual execution** (not just dry-run):
+```bash
+# After fixes applied
+python3 scripts/configure-misp-ready.py
+
+# Monitor progress:
+tail -f /opt/misp/logs/configure-misp-ready-*.log | jq '.'
+```
+
+### Recommended OSINT Feeds (from script)
+
+The script recommends enabling these feeds via Web UI:
+- CIRCL OSINT Feed
+- Abuse.ch Feodo Tracker
+- Abuse.ch URLhaus
+- Abuse.ch ThreatFox
+- Botvrij.eu
+- OpenPhish url
+
+**Manual Steps Required**:
+1. Login to MISP web interface
+2. Go to: Sync Actions > List Feeds
+3. Enable each feed
+4. Click "Fetch and store all feed data" for each
+
+### Core Settings Configured
+
+```python
+CORE_SETTINGS = {
+    "MISP.background_jobs": True,
+    "MISP.cached_attachments": True,
+    "MISP.enable_advanced_correlations": True,
+    "MISP.correlation_engine": "Default",
+    "Plugin.Enrichment_services_enable": True,
+    "Plugin.Import_services_enable": True,
+    "Plugin.Export_services_enable": True,
+    "Plugin.Enrichment_services_url": "http://misp-modules",
+    "Plugin.Import_services_url": "http://misp-modules",
+    "Plugin.Export_services_url": "http://misp-modules",
+}
+```
+
+### Integration with Installation Workflow
+
+**Recommended Usage Pattern**:
+```bash
+# 1. Install MISP
+python3 misp-install.py --config config/production.json --non-interactive
+
+# 2. Wait for initialization (10-15 min)
+# Check: https://your-misp-domain
+
+# 3. Run post-install configuration
+python3 scripts/configure-misp-ready.py
+
+# 4. Manual steps (can't automate):
+#    - Change default admin password
+#    - Enable OSINT feeds via web UI
+#    - Configure SMTP settings
+#    - Set up authentication (Azure AD/LDAP)
+```
+
+### Future Improvements
+
+**Needed**:
+- Fix bugs listed above (Priority 1 & 2)
+- Add PyMISP integration for feed automation
+- Add progress bar for galaxy updates (slow operation)
+- Add rollback capability if configuration fails
+- Better error handling for network timeouts
+
+**Nice-to-Have**:
+- Interactive mode (ask which feeds to enable)
+- Custom feed list via config file
+- Performance tuning auto-configuration
+- Integration test suite
+
+### Related Documentation
+
+- **Usage Guide**: Run with `--help` flag
+- **MISP Documentation**: https://www.misp-project.org/documentation/
+- **Taxonomies**: https://github.com/MISP/misp-taxonomies
+- **Galaxies**: https://github.com/MISP/misp-galaxy
+- **Feeds**: https://github.com/MISP/MISP/tree/2.4/app/files/feed-metadata
