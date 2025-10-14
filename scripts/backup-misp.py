@@ -34,6 +34,9 @@ from lib.colors import Colors
 # Import centralized database manager
 from lib.database_manager import DatabaseManager
 
+# Import centralized Docker manager
+from lib.docker_manager import DockerCommandRunner
+
 # ==========================================
 # Configuration
 # ==========================================
@@ -64,6 +67,9 @@ class MISPBackup:
 
         # Initialize database manager
         self.db_manager = DatabaseManager(self.config.MISP_DIR)
+
+        # Initialize Docker manager
+        self.docker = DockerCommandRunner(self.logger.logger)
 
         self.logger.info(
             "Backup initiated",
@@ -158,32 +164,8 @@ class MISPBackup:
             self.logger.warning("SSL directory not found", event_type="backup", action="backup_ssl", component="ssl")
 
     def is_container_running(self, container: str) -> bool:
-        """Check if Docker container is running using JSON format for reliable parsing"""
-        try:
-            result = subprocess.run(
-                ['sudo', 'docker', 'compose', 'ps', '--format', 'json', container],
-                cwd=self.config.MISP_DIR,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            if result.returncode != 0:
-                return False
-
-            # Parse JSON output - docker compose returns one JSON object per line
-            import json
-            for line in result.stdout.strip().split('\n'):
-                if line:
-                    try:
-                        container_info = json.loads(line)
-                        # Check if container state is 'running'
-                        if container_info.get('State') == 'running':
-                            return True
-                    except json.JSONDecodeError:
-                        continue
-            return False
-        except Exception:
-            return False
+        """Check if Docker container is running using DockerCommandRunner"""
+        return self.docker.is_container_running(self.config.MISP_DIR, container)
 
     def backup_database(self) -> bool:
         """Backup MySQL database using DatabaseManager"""
@@ -201,17 +183,15 @@ class MISPBackup:
         return self.db_manager.backup_database(db_file)
 
     def backup_attachments(self):
-        """Backup MISP attachments"""
+        """Backup MISP attachments using DockerCommandRunner"""
         self.logger.info("Backing up MISP attachments", event_type="backup", phase="backup_attachments")
 
         # Check if misp-core container is accessible
         try:
-            result = subprocess.run(
-                ['sudo', 'docker', 'compose', 'exec', '-T', 'misp-core',
-                 'test', '-d', '/var/www/MISP/app/files'],
-                cwd=self.config.MISP_DIR,
-                capture_output=True,
-                timeout=10
+            result = self.docker.compose_exec(
+                self.config.MISP_DIR,
+                'misp-core',
+                ['test', '-d', '/var/www/MISP/app/files']
             )
 
             if result.returncode != 0:
@@ -224,12 +204,11 @@ class MISPBackup:
             attach_dir = self.backup_dir / "attachments"
             attach_dir.mkdir(exist_ok=True)
 
-            # Copy attachments from container
-            result = subprocess.run(
-                ['sudo', 'docker', 'compose', 'cp', 'misp-core:/var/www/MISP/app/files', str(attach_dir) + '/'],
-                cwd=self.config.MISP_DIR,
-                capture_output=True,
-                timeout=300
+            # Copy attachments from container using DockerCommandRunner
+            result = self.docker.compose_cp(
+                self.config.MISP_DIR,
+                'misp-core:/var/www/MISP/app/files',
+                str(attach_dir) + '/'
             )
 
             if result.returncode == 0 and attach_dir.exists():
@@ -254,18 +233,12 @@ class MISPBackup:
             self.logger.warning(f"Attachments backup failed: {e}", event_type="backup", action="backup_attachments", component="attachments", error_message=str(e))
 
     def create_backup_metadata(self):
-        """Create backup metadata file"""
+        """Create backup metadata file using DockerCommandRunner"""
         self.logger.info("Creating backup metadata", event_type="backup", phase="create_metadata")
 
-        # Get container status
+        # Get container status using DockerCommandRunner
         try:
-            result = subprocess.run(
-                ['sudo', 'docker', 'compose', 'ps'],
-                cwd=self.config.MISP_DIR,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
+            result = self.docker.compose_ps(self.config.MISP_DIR)
             # Filter out warning messages (lines starting with "time=")
             container_status = '\n'.join(line for line in result.stdout.split('\n') if not line.startswith('time='))
         except:
