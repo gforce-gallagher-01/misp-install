@@ -94,15 +94,16 @@ python3 misp-install.py --config prod-config.yaml --non-interactive
 For users who prefer a graphical interface:
 
 ```bash
-# Install with pipx (Ubuntu 24.04+)
+# ONE-COMMAND INSTALL (handles everything automatically!)
 cd ~/misp-install/misp-install
-pipx install .
+./install-gui.sh
 
-# Run the GUI installer
-misp-install-gui
-
-# Or run directly without installing
-python3 misp_install_gui.py
+# That's it! The script will:
+# - Install all dependencies (xclip, pipx, pyperclip)
+# - Configure PATH automatically
+# - Install the GUI installer
+# - Verify everything works
+# - Optionally launch the GUI installer
 ```
 
 **Features:**
@@ -112,6 +113,15 @@ python3 misp_install_gui.py
 - 💾 Save configurations for reuse
 - 🌐 Run in terminal OR web browser
 - ⌨️ Full keyboard navigation
+- 📋 **Ctrl+V clipboard paste support**
+
+**Manual installation** (if you prefer):
+```bash
+sudo apt install xclip pipx
+pipx install .
+pipx ensurepath
+misp-install-gui
+```
 
 See `docs/GUI_INSTALLER.md` for complete documentation.
 

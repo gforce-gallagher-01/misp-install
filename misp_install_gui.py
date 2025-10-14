@@ -55,8 +55,25 @@ try:
     CLIPBOARD_AVAILABLE = True
 except ImportError:
     CLIPBOARD_AVAILABLE = False
-    print("⚠️  pyperclip not installed - clipboard paste disabled")
-    print("📦 Install with: pip install pyperclip")
+    print("")
+    print("=" * 60)
+    print("⚠️  CLIPBOARD SUPPORT NOT AVAILABLE")
+    print("=" * 60)
+    print("")
+    print("The GUI installer requires pyperclip for Ctrl+V paste support.")
+    print("")
+    print("To install all dependencies automatically, run:")
+    print("  ./install-gui.sh")
+    print("")
+    print("Or install manually:")
+    print("  sudo apt install xclip")
+    print("  pipx uninstall misp-installer-gui")
+    print("  pipx install .")
+    print("")
+    print("Continuing without clipboard support...")
+    print("")
+    import time
+    time.sleep(3)
 
 # ==========================================
 # Custom Validators
