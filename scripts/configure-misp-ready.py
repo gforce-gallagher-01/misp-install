@@ -28,6 +28,7 @@ from misp_logger import get_logger
 from lib.colors import Colors
 from lib.database_manager import DatabaseManager
 from lib.setup_helper import MISPSetupHelper
+from misp_api import get_api_key_from_db
 
 # Check Python version
 if sys.version_info < (3, 8):
@@ -265,27 +266,8 @@ class MISPReadyConfig:
         self.logger.success(f"Configured {success_count}/{len(self.config.CORE_SETTINGS)} settings", event_type="configure", action="configure_settings", count=success_count)
 
     def get_api_key(self) -> str:
-        """Get admin API key from MISP (uses centralized DatabaseManager)"""
-        try:
-            # Try to get API key from database using DatabaseManager
-            mysql_password = self.db_manager.get_mysql_password() or ""
-            result = subprocess.run(
-                ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
-                 'mysql', '-umisp', '-p' + mysql_password,
-                 'misp', '-e', 'SELECT authkey FROM auth_keys WHERE user_id=1 LIMIT 1;'],
-                cwd=self.config.MISP_DIR,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-
-            lines = result.stdout.strip().split('\n')
-            if len(lines) >= 2:
-                return lines[1].strip()
-        except:
-            pass
-
-        return None
+        """Get admin API key from MISP (uses centralized misp_api.get_api_key_from_db)"""
+        return get_api_key_from_db(str(self.config.MISP_DIR))
 
     def enable_recommended_feeds(self):
         """Enable recommended OSINT feeds"""

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 MISP API Helper Module
-Version: 1.0
+Version: 1.1
 Date: 2025-10-14
 
 Purpose:
@@ -9,10 +9,13 @@ Purpose:
     Handles API key retrieval, connection setup, and common operations.
 
 Usage:
-    from misp_api import get_api_key, get_misp_client, test_connection
+    from misp_api import get_api_key, get_api_key_from_db, get_misp_client, test_connection
 
-    # Get API key from environment
+    # Get API key from file (.env or PASSWORDS.txt)
     api_key = get_api_key()
+
+    # OR get API key from database (requires Docker + sudo)
+    api_key = get_api_key_from_db()
 
     # Get configured requests session
     session = get_misp_client(api_key)
@@ -24,6 +27,7 @@ Usage:
 
 import os
 import sys
+import subprocess
 import requests
 import urllib3
 from pathlib import Path
@@ -97,6 +101,65 @@ def get_api_key(env_file: Optional[str] = None) -> Optional[str]:
             print(f"   Try: sudo cat {passwords_file}")
         except Exception as e:
             print(f"⚠️  Error reading {passwords_file}: {e}")
+
+    return None
+
+
+def get_api_key_from_db(misp_dir: str = "/opt/misp") -> Optional[str]:
+    """Get MISP API key directly from database (for admin user)
+
+    Args:
+        misp_dir: MISP installation directory (defaults to /opt/misp)
+
+    Returns:
+        API key string for user_id=1 (admin), or None if not found
+
+    Note:
+        This queries the MySQL database directly and requires:
+        - Docker containers running
+        - MySQL password from .env file
+        - sudo access to docker commands
+
+    Usage:
+        # For scripts that need database-level access
+        api_key = get_api_key_from_db()
+
+        # For most scripts, use get_api_key() instead (file-based)
+    """
+    try:
+        # Import DatabaseManager for MySQL password retrieval
+        sys.path.insert(0, str(Path(__file__).parent))
+        from lib.database_manager import DatabaseManager
+
+        db_manager = DatabaseManager(Path(misp_dir))
+        mysql_password = db_manager.get_mysql_password() or ""
+
+        # Query database for admin API key
+        result = subprocess.run(
+            ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
+             'mysql', '-umisp', f'-p{mysql_password}',
+             'misp', '-e', 'SELECT authkey FROM auth_keys WHERE user_id=1 LIMIT 1;'],
+            cwd=misp_dir,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        if result.returncode == 0:
+            lines = result.stdout.strip().split('\n')
+            if len(lines) >= 2:
+                # First line is column header, second is the key
+                api_key = lines[1].strip()
+                if api_key and api_key != 'authkey':  # Ignore header
+                    return api_key
+    except ImportError:
+        print("⚠️  lib.database_manager not found - cannot query database")
+    except FileNotFoundError:
+        print("⚠️  Docker not found - cannot query database")
+    except subprocess.TimeoutExpired:
+        print("⚠️  Database query timeout")
+    except Exception as e:
+        print(f"⚠️  Error querying database: {e}")
 
     return None
 
