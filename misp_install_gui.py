@@ -778,27 +778,19 @@ class ReviewScreen(Screen):
         config_file = self.save_config()
         config_file_abs = Path(config_file).resolve()
 
-        # Print to console immediately (before app exits)
-        print("")
-        print("=" * 80)
-        print("✓ Configuration saved successfully!")
-        print("")
-        print(f"📁 Location: {config_file_abs}")
-        print("")
-        print("📋 To use this configuration:")
-        print(f"   python3 misp-install.py --config {config_file} --non-interactive")
-        print("")
-        print("💡 The config file contains all your settings and can be reused for")
-        print("   automated deployments.")
-        print("=" * 80)
-        print("")
+        # Store message for printing after app exits
+        self.app.exit_message = {
+            "type": "save_exit",
+            "config_file": str(config_file),
+            "config_file_abs": str(config_file_abs)
+        }
 
-        # Also show in-app notification
+        # Show brief in-app notification
         message = (
             f"✓ Configuration saved to:\n{config_file_abs}\n\n"
-            f"See terminal for usage instructions."
+            f"Exiting... (check terminal for usage instructions)"
         )
-        self.notify(message, severity="information", timeout=3)
+        self.notify(message, severity="information", timeout=2)
 
         # Schedule exit after brief delay to show notification
         self.set_timer(0.5, self.app.exit)
@@ -977,6 +969,7 @@ class MISPInstallerApp(App):
         self.config = {}
         self.load_config_file = load_config
         self.save_only = save_only
+        self.exit_message = None  # Store message to print after exit
 
     def on_mount(self):
         """Initialize the application"""
@@ -1070,6 +1063,25 @@ Examples:
     # Run the application
     app = MISPInstallerApp(load_config=args.load, save_only=args.save_only)
     app.run()
+
+    # Print exit message if one was set (after TUI has fully exited)
+    if app.exit_message and app.exit_message.get("type") == "save_exit":
+        config_file = app.exit_message.get("config_file")
+        config_file_abs = app.exit_message.get("config_file_abs")
+
+        print("")
+        print("=" * 80)
+        print("✓ Configuration saved successfully!")
+        print("")
+        print(f"📁 Location: {config_file_abs}")
+        print("")
+        print("📋 To use this configuration:")
+        print(f"   python3 misp-install.py --config {config_file} --non-interactive")
+        print("")
+        print("💡 The config file contains all your settings and can be reused for")
+        print("   automated deployments.")
+        print("=" * 80)
+        print("")
 
 if __name__ == "__main__":
     main()
