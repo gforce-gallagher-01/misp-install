@@ -778,40 +778,30 @@ class ReviewScreen(Screen):
         config_file = self.save_config()
         config_file_abs = Path(config_file).resolve()
 
-        # Print to console (will show after app exits)
-        import sys
-        message_lines = [
-            "",
-            "=" * 80,
-            "✓ Configuration saved successfully!",
-            "",
-            f"📁 Location: {config_file_abs}",
-            "",
-            "📋 To use this configuration:",
-            f"   python3 misp-install.py --config {config_file} --non-interactive",
-            "",
-            "💡 The config file contains all your settings and can be reused for",
-            "   automated deployments.",
-            "=" * 80,
-            ""
-        ]
+        # Print to console immediately (before app exits)
+        print("")
+        print("=" * 80)
+        print("✓ Configuration saved successfully!")
+        print("")
+        print(f"📁 Location: {config_file_abs}")
+        print("")
+        print("📋 To use this configuration:")
+        print(f"   python3 misp-install.py --config {config_file} --non-interactive")
+        print("")
+        print("💡 The config file contains all your settings and can be reused for")
+        print("   automated deployments.")
+        print("=" * 80)
+        print("")
 
-        # Show notification in app
+        # Also show in-app notification
         message = (
-            f"✓ Configuration saved successfully!\n\n"
-            f"📁 Location: {config_file_abs}\n\n"
-            f"📋 To use this configuration:\n"
-            f"   python3 misp-install.py --config {config_file} --non-interactive\n\n"
-            f"💡 The config file contains all your settings and can be reused for automated deployments."
+            f"✓ Configuration saved to:\n{config_file_abs}\n\n"
+            f"See terminal for usage instructions."
         )
-        self.notify(message, severity="information", timeout=10)
+        self.notify(message, severity="information", timeout=3)
 
-        # Exit and print to console
-        self.app.exit()
-
-        # Print after exit (will show in terminal)
-        for line in message_lines:
-            print(line)
+        # Schedule exit after brief delay to show notification
+        self.set_timer(0.5, self.app.exit)
 
     @on(Button.Pressed, "#btn-install")
     def on_install(self):
