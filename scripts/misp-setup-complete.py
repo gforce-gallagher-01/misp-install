@@ -69,38 +69,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from misp_logger import get_logger
 from misp_api import get_api_key, get_misp_client, test_connection
 
+# Import centralized Colors class
+from lib.colors import Colors
+
 # Try to import YAML support
 try:
     import yaml
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
-
-
-class Colors:
-    """ANSI color codes for terminal output"""
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    BLUE = '\033[0;34m'
-    CYAN = '\033[0;36m'
-    NC = '\033[0m'
-
-    @staticmethod
-    def success(text: str) -> str:
-        return f"{Colors.GREEN}✓ {text}{Colors.NC}"
-
-    @staticmethod
-    def error(text: str) -> str:
-        return f"{Colors.RED}✗ {text}{Colors.NC}"
-
-    @staticmethod
-    def warning(text: str) -> str:
-        return f"{Colors.YELLOW}⚠ {text}{Colors.NC}"
-
-    @staticmethod
-    def info(text: str) -> str:
-        return f"{Colors.CYAN}{text}{Colors.NC}"
 
 
 class MISPSetupComplete:

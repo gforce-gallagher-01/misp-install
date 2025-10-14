@@ -24,6 +24,9 @@ if sys.version_info < (3, 8):
 # Import centralized logger
 from misp_logger import get_logger
 
+# Import centralized Colors class
+from lib.colors import Colors
+
 # ==========================================
 # Configuration
 # ==========================================
@@ -34,38 +37,6 @@ class UninstallConfig:
     BACKUP_DIR = Path.home() / "misp-backups"
     STATE_FILE = Path.home() / ".misp-install" / "state.json"
     LOG_DIR = Path.home() / ".misp-install" / "logs"
-
-# ==========================================
-# Color Output
-# ==========================================
-
-class Colors:
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    BLUE = '\033[0;34m'
-    CYAN = '\033[0;36m'
-    NC = '\033[0m'
-
-    @staticmethod
-    def colored(text: str, color: str) -> str:
-        return f"{color}{text}{Colors.NC}"
-
-    @classmethod
-    def error(cls, text: str) -> str:
-        return cls.colored(f"[ERROR] {text}", cls.RED)
-
-    @classmethod
-    def success(cls, text: str) -> str:
-        return cls.colored(f"[SUCCESS] {text}", cls.GREEN)
-
-    @classmethod
-    def warning(cls, text: str) -> str:
-        return cls.colored(f"[WARNING] {text}", cls.YELLOW)
-
-    @classmethod
-    def info(cls, text: str) -> str:
-        return cls.colored(f"[INFO] {text}", cls.BLUE)
 
 # ==========================================
 # Uninstall Manager

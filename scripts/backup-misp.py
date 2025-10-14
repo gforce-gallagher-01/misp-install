@@ -25,6 +25,9 @@ if sys.version_info < (3, 8):
 # Import centralized logger
 from misp_logger import get_logger
 
+# Import centralized Colors class
+from lib.colors import Colors
+
 # ==========================================
 # Configuration
 # ==========================================
@@ -34,18 +37,6 @@ class BackupConfig:
     MISP_DIR = Path("/opt/misp")
     BACKUP_BASE_DIR = Path.home() / "misp-backups"
     RETENTION_DAYS = 30
-
-# ==========================================
-# Color Output (for terminal display only)
-# ==========================================
-
-class Colors:
-    GREEN = '\033[0;32m'
-    NC = '\033[0m'
-
-    @staticmethod
-    def colored(text: str, color: str) -> str:
-        return f"{color}{text}{Colors.NC}"
 
 # ==========================================
 # Backup Manager

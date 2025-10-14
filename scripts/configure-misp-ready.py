@@ -23,6 +23,9 @@ from typing import List, Dict
 # Import centralized logger
 from misp_logger import get_logger
 
+# Import centralized Colors class
+from lib.colors import Colors
+
 # Check Python version
 if sys.version_info < (3, 8):
     print("❌ Python 3.8 or higher required")
@@ -77,42 +80,6 @@ class ConfigureConfig:
         "Plugin.Import_services_url": "http://misp-modules",
         "Plugin.Export_services_url": "http://misp-modules",
     }
-
-# ==========================================
-# Color Output
-# ==========================================
-
-class Colors:
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    BLUE = '\033[0;34m'
-    CYAN = '\033[0;36m'
-    NC = '\033[0m'
-
-    @staticmethod
-    def colored(text: str, color: str) -> str:
-        return f"{color}{text}{Colors.NC}"
-
-    @classmethod
-    def error(cls, text: str) -> str:
-        return cls.colored(f"[ERROR] {text}", cls.RED)
-
-    @classmethod
-    def success(cls, text: str) -> str:
-        return cls.colored(f"[SUCCESS] {text}", cls.GREEN)
-
-    @classmethod
-    def warning(cls, text: str) -> str:
-        return cls.colored(f"[WARNING] {text}", cls.YELLOW)
-
-    @classmethod
-    def info(cls, text: str) -> str:
-        return cls.colored(f"[INFO] {text}", cls.BLUE)
-
-    @classmethod
-    def step(cls, text: str) -> str:
-        return cls.colored(f"[STEP] {text}", cls.CYAN)
 
 # ==========================================
 # MISP Configuration Manager

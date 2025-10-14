@@ -39,44 +39,15 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Import centralized logger
 from misp_logger import get_logger
 
+# Import centralized Colors class
+from lib.colors import Colors
+
 # ==========================================
 # Constants
 # ==========================================
 
 MISP_DIR = Path('/opt/misp')
 BACKUP_DIR = Path.home() / 'misp-backups'
-
-# ==========================================
-# Color Output
-# ==========================================
-
-class Colors:
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    BLUE = '\033[0;34m'
-    CYAN = '\033[0;36m'
-    NC = '\033[0m'
-
-    @staticmethod
-    def colored(text: str, color: str) -> str:
-        return f"{color}{text}{Colors.NC}"
-
-    @classmethod
-    def error(cls, text: str) -> str:
-        return cls.colored(f"❌ {text}", cls.RED)
-
-    @classmethod
-    def success(cls, text: str) -> str:
-        return cls.colored(f"✓ {text}", cls.GREEN)
-
-    @classmethod
-    def warning(cls, text: str) -> str:
-        return cls.colored(f"⚠ {text}", cls.YELLOW)
-
-    @classmethod
-    def info(cls, text: str) -> str:
-        return cls.colored(text, cls.CYAN)
 
 # ==========================================
 # Logging Setup
