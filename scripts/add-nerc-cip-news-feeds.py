@@ -267,7 +267,7 @@ class NERCCIPNewsFeedManager:
             sql = f"""
             INSERT INTO feeds (
                 name, provider, url, rules, enabled, distribution,
-                sharing_group_id, tag_id, default, source_format,
+                sharing_group_id, tag_id, `default`, source_format,
                 fixed_event, delta_merge, event_id, publish, override_ids,
                 settings, input_source, delete_local_file, lookup_visible,
                 headers, caching_enabled, force_to_ids, orgc_id, tag_collection_id
