@@ -270,18 +270,75 @@ class MISPReadyConfig:
         return get_api_key_from_db(str(self.config.MISP_DIR))
 
     def enable_recommended_feeds(self):
-        """Enable recommended OSINT feeds"""
+        """Enable recommended OSINT feeds (uses enable-misp-feeds.py script)"""
         self.logger.info("Enabling recommended OSINT feeds", event_type="configure", phase="enable_feeds")
-        self.logger.info("Note: Feeds will be enabled but not cached initially", event_type="configure", action="enable_feeds")
-        self.logger.info("Run feed caching manually or via cron job", event_type="configure", action="enable_feeds")
 
-        # This would require PyMISP or API calls
-        # For now, just inform the user
-        self.logger.info("Recommended feeds to enable manually:", event_type="configure", action="enable_feeds")
-        for feed in self.config.RECOMMENDED_FEEDS:
-            print(f"  - {feed}")
+        if self.dry_run:
+            print("[DRY-RUN] Would enable recommended OSINT feeds")
+            print("\nRecommended feeds to enable:")
+            for feed in self.config.RECOMMENDED_FEEDS:
+                print(f"  - {feed}")
+            return True
 
-        self.logger.info("Enable feeds via: Sync Actions > List Feeds", event_type="configure", action="enable_feeds")
+        # Use enable-misp-feeds.py script to enable feeds programmatically
+        enable_script = Path(__file__).parent / "enable-misp-feeds.py"
+
+        if not enable_script.exists():
+            self.logger.warning("enable-misp-feeds.py not found, skipping feed enablement",
+                              event_type="configure", action="enable_feeds", result="skipped")
+            print("⚠️  Feed enablement script not found")
+            print("\nManually enable recommended feeds via:")
+            print("  Sync Actions > List Feeds")
+            for feed in self.config.RECOMMENDED_FEEDS:
+                print(f"  - Enable: {feed}")
+            return False
+
+        # Run enable-misp-feeds.py with --nerc-cip flag (covers all recommended feeds)
+        print("Enabling NERC CIP recommended feeds automatically...")
+        print("(This will take a few minutes to enable and fetch all feeds)")
+
+        try:
+            result = subprocess.run(
+                ['python3', str(enable_script), '--nerc-cip'],
+                cwd=str(Path(__file__).parent),
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minute timeout for all feed operations
+            )
+
+            if result.returncode == 0:
+                print("✓ NERC CIP feeds enabled successfully")
+                self.logger.info("NERC CIP feeds enabled",
+                               event_type="configure",
+                               action="enable_feeds",
+                               result="success")
+                return True
+            else:
+                print(f"⚠️  Some feeds may have failed (continuing...)")
+                self.logger.warning(f"Feed enablement completed with warnings: {result.stderr[:200]}",
+                                  event_type="configure",
+                                  action="enable_feeds",
+                                  result="warning")
+                return True  # Continue even if some feeds failed
+
+        except subprocess.TimeoutExpired:
+            print("⚠️  Feed enablement timeout (feeds may still be fetching in background)")
+            self.logger.warning("Feed enablement timeout",
+                              event_type="configure",
+                              action="enable_feeds",
+                              result="timeout")
+            return True  # Continue even if timeout
+
+        except Exception as e:
+            self.logger.error(f"Failed to enable feeds: {e}",
+                            event_type="configure",
+                            action="enable_feeds",
+                            result="failed",
+                            error_message=str(e))
+            print(f"❌ Feed enablement failed: {e}")
+            print("\nManually enable recommended feeds via:")
+            print("  python3 scripts/enable-misp-feeds.py --nerc-cip")
+            return False
 
     def create_initial_backup(self):
         """Create initial backup after configuration"""
