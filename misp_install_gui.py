@@ -746,7 +746,8 @@ class ReviewScreen(Screen):
 
             with Horizontal(id="button-container"):
                 yield Button("← Back", id="btn-back", variant="default")
-                yield Button("Save Config Only", id="btn-save", variant="default")
+                yield Button("Save Config", id="btn-save", variant="default")
+                yield Button("Save & Exit", id="btn-save-exit", variant="default")
                 yield Button("Install MISP", id="btn-install", variant="success")
 
         yield Footer()
@@ -758,9 +759,19 @@ class ReviewScreen(Screen):
 
     @on(Button.Pressed, "#btn-save")
     def on_save(self):
-        """Save configuration to file without installing"""
-        self.save_config()
-        self.notify("✓ Configuration saved successfully", severity="information")
+        """Save configuration to file (stays in app)"""
+        config_file = self.save_config()
+        self.notify(f"✓ Configuration saved to {config_file}", severity="information")
+
+    @on(Button.Pressed, "#btn-save-exit")
+    def on_save_exit(self):
+        """Save configuration and exit application"""
+        config_file = self.save_config()
+        self.notify(f"✓ Configuration saved to {config_file}", severity="information")
+        # Give user time to see the notification before exiting
+        import time
+        time.sleep(1)
+        self.app.exit()
 
     @on(Button.Pressed, "#btn-install")
     def on_install(self):
