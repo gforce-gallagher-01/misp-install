@@ -5,7 +5,7 @@
 #
 # Usage: ./install-gui.sh
 #
-# This script is IDIOT-PROOF and handles everything automatically:
+# This script handles everything automatically:
 # - Installs system dependencies (xclip, pipx)
 # - Configures PATH automatically
 # - Installs MISP GUI Installer
