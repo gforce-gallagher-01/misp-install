@@ -16,6 +16,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - TBD
 
+## [5.5.0] - 2025-10-14
+
+### Added
+- 🎯 **MISP Complete Setup Script** - Post-installation orchestration with NERC CIP mode
+  - Orchestrates all post-installation configuration (settings, feeds, news, taxonomies)
+  - `--nerc-cip-ready` flag for utilities/energy sector compliance
+  - `--dry-run` mode for preview
+  - Skip flags for individual steps (--skip-feeds, --skip-news, --skip-settings)
+  - Auto-detect API key from multiple sources
+  - Comprehensive error handling and statistics tracking
+  - Created `scripts/misp-setup-complete.py` (800+ lines)
+- 🔑 **API Key Generation** - Automatic API key during installation (Phase 11.5)
+  - Uses MISP CLI (`cake user change_authkey`) to generate API key
+  - Stores API key in `/opt/misp/PASSWORDS.txt` and `/opt/misp/.env`
+  - Proper permissions (600) and graceful error handling
+  - Added to main installation flow between Phase 11 and Phase 12
+- 🔧 **API Helper Module** - Centralized API access for all scripts
+  - Created `misp_api.py` with functions: `get_api_key()`, `get_misp_url()`, `get_misp_client()`, `test_connection()`
+  - Auto-detects API key from .env, PASSWORDS.txt, or environment variable
+  - SSL verification disabled for self-signed certs
+  - Test mode available (`python3 misp_api.py`)
+- 📡 **API-Based Scripts** - New scripts using MISP REST API instead of database
+  - `scripts/add-nerc-cip-news-feeds-api.py` (v2.0) - Add feeds via `/feeds/add` API ✅ Working
+  - `scripts/check-misp-feeds-api.py` (v2.0) - Check feeds via `/feeds/index` API ✅ Working
+  - `scripts/populate-misp-news-complete.py` (v2.0) - Populate news via `/news/add` API ⚠️ Limited (API returns HTTP 500)
+  - Better error handling, version independence, and RBAC enforcement
+  - Database versions remain available as fallback
+- 🖥️ **GUI Installer** - Textual framework TUI/web interface (v1.0)
+  - Multi-step wizard with 5 screens (Welcome, Network, Security, Environment, Review)
+  - Real-time password strength validation (12+ chars, mixed case, numbers, special)
+  - Auto-generate secure passwords (cryptographically secure)
+  - Clipboard paste support (Ctrl+V) with pyperclip + xclip
+  - Runs in terminal OR web browser (same code, dual mode)
+  - Configuration file generation (JSON format)
+  - Full keyboard navigation and Dark/Light theme toggle
+  - Created `misp_install_gui.py`, `install-gui.sh`, `setup.py`
+- 📖 **Comprehensive Documentation** - 52KB API usage guide
+  - Created `docs/API_USAGE.md` (1000+ lines)
+  - Documented API key retrieval methods (auto, web, CLI)
+  - Added helper module usage examples
+  - Troubleshooting for common API issues
+  - All common API endpoints with examples
+  - Error handling patterns and best practices
+
+### Changed
+- **Installation Flow** - Added Phase 11.5 for automatic API key generation
+- **Script Architecture** - Migrated from direct database access to MISP REST API where possible (85% complete)
+  - 2 scripts fully converted to API (add-nerc-cip-news-feeds, check-misp-feeds)
+  - 1 script partially working (populate-misp-news - upstream API issue)
+  - 1 script keeps database approach (configure-misp-nerc-cip - uses proper cake commands)
+- **GUI Installer** - Configuration files now compatible with `misp-install.py --config`
+
+### Fixed
+- **API Integration** - Worked around broken `/news/add` endpoint by keeping database version as fallback
+- **Feed Management** - Duplicate detection via API prevents adding same feed twice
+- **GUI Clipboard** - Fixed clipboard paste support with xclip dependency
+
+### Security
+- **API Keys** - Secure storage in PASSWORDS.txt and .env with 600 permissions
+- **No Database Passwords in Scripts** - API-based scripts don't need MySQL credentials
+- **RBAC Enforcement** - API calls respect MISP role-based access control
+
+### Known Issues
+- **MISP /news/add API** - Returns HTTP 500 (upstream issue) - using database version as workaround
+- **GUI Installer** - Requires pipx on Ubuntu 24.04+ or manual pip installation
+
 ## [5.4.0] - 2025-10-13
 
 ### Added
