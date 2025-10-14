@@ -43,10 +43,20 @@ try:
     from textual.screen import Screen
     from textual import on
     from textual.validation import ValidationResult, Validator
+    from textual.events import Paste
 except ImportError:
     print("❌ Textual framework not installed")
     print("📦 Install with: pip install textual textual-dev")
     sys.exit(1)
+
+# Try to import pyperclip for clipboard support
+try:
+    import pyperclip
+    CLIPBOARD_AVAILABLE = True
+except ImportError:
+    CLIPBOARD_AVAILABLE = False
+    print("⚠️  pyperclip not installed - clipboard paste disabled")
+    print("📦 Install with: pip install pyperclip")
 
 # ==========================================
 # Custom Validators
@@ -264,7 +274,7 @@ class NetworkScreen(Screen):
         with ScrollableContainer(id="network-container"):
             yield Label("Network Configuration", id="screen-title")
             yield Static("Step 1 of 5", classes="step-indicator")
-            yield Static("💡 Tip: Use Ctrl+Shift+V or Right-Click to paste", classes="field-help")
+            yield Static("💡 Tip: Press Ctrl+V to paste from clipboard", classes="field-help")
 
             yield Label("Server IP Address:", classes="field-label")
             yield Static("The IP address of this server", classes="field-help")
@@ -891,7 +901,7 @@ class MISPInstallerApp(App):
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("d", "toggle_dark", "Toggle Dark Mode"),
-        ("ctrl+v", "paste", "Paste (Ctrl+Shift+V)"),
+        ("ctrl+v", "paste_clipboard", "Paste"),
     ]
 
     def __init__(self, load_config=None, save_only=False):
@@ -924,6 +934,39 @@ class MISPInstallerApp(App):
     def action_toggle_dark(self):
         """Toggle dark mode"""
         self.dark = not self.dark
+
+    def action_paste_clipboard(self):
+        """Paste from clipboard into focused Input widget"""
+        if not CLIPBOARD_AVAILABLE:
+            self.notify("⚠️  Clipboard not available - install pyperclip", severity="warning")
+            return
+
+        try:
+            # Get clipboard content
+            clipboard_text = pyperclip.paste()
+
+            # Get the currently focused widget
+            focused = self.focused
+
+            # If it's an Input widget, insert the clipboard text
+            if isinstance(focused, Input):
+                # Get current value and cursor position
+                current_value = focused.value
+                cursor_pos = focused.cursor_position
+
+                # Insert clipboard text at cursor position
+                new_value = current_value[:cursor_pos] + clipboard_text + current_value[cursor_pos:]
+                focused.value = new_value
+
+                # Move cursor to end of pasted text
+                focused.cursor_position = cursor_pos + len(clipboard_text)
+
+                self.notify("✓ Pasted from clipboard", severity="information")
+            else:
+                self.notify("⚠️  Focus an input field first", severity="warning")
+
+        except Exception as e:
+            self.notify(f"⚠️  Paste failed: {e}", severity="error")
 
 # ==========================================
 # Main Entry Point

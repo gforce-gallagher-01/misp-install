@@ -25,6 +25,7 @@ setup(
     install_requires=[
         "textual>=0.45.0",
         "textual-dev>=1.2.0",
+        "pyperclip>=1.8.0",
     ],
     entry_points={
         "console_scripts": [

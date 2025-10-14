@@ -229,12 +229,15 @@ Monitor the installation progress (Future Implementation).
 - `d` - Toggle dark/light mode
 
 ### Text Input
-- `Ctrl+Shift+V` - Paste from clipboard (in terminal)
-- `Right-Click` → Paste - Paste from clipboard (in terminal with mouse)
-- `Ctrl+C` / `Ctrl+X` - Copy / Cut (select text first)
-- Standard terminal paste works automatically
+- `Ctrl+V` - **Paste from system clipboard** (works everywhere!)
+- `Ctrl+C` - Copy selected text (select with mouse first)
+- `Ctrl+X` - Cut selected text (select with mouse first)
 
-**Note:** In terminals, use `Ctrl+Shift+V` instead of `Ctrl+V` (which sends terminal control sequence).
+**How it works:**
+- The GUI installer uses `pyperclip` for full clipboard support
+- Copy text anywhere (browser, terminal, editor)
+- Press `Ctrl+V` in any input field to paste
+- Works on Linux (with xclip/xsel), macOS, and Windows
 
 ### Navigation
 - `←` / `→` - Navigate buttons
