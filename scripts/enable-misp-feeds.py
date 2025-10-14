@@ -36,43 +36,11 @@ from typing import List, Dict, Optional
 import argparse
 import time
 
-# Import centralized logger
+# Import centralized logger and modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from misp_logger import get_logger
 from lib.database_manager import DatabaseManager
-
-# NERC CIP recommended feeds (from configure-misp-nerc-cip.py)
-NERC_CIP_FEEDS = [
-    "CIRCL OSINT Feed",
-    "Abuse.ch URLhaus",
-    "Abuse.ch ThreatFox",
-    "Abuse.ch Feodo Tracker",
-    "Abuse.ch SSL Blacklist",
-    "OpenPhish url",
-    "Phishtank online valid phishing",
-    "Bambenek Consulting - C2 All Indicator Feed",
-    "Botvrij.eu",
-    "Blocklist.de",
-    "DigitalSide Threat-Intel",
-    "Cybercrime-Tracker - All",
-    "MalwareBazaar Recent Additions",
-    "Dataplane.org - sipquery",
-    "Dataplane.org - vncrfb",
-]
-
-# Known feed name mappings (MISP name → NERC CIP name)
-FEED_NAME_MAPPINGS = {
-    "urlhaus": ["URLHaus Malware URLs", "URLhaus"],
-    "threatfox": ["Threatfox", "threatfox indicators of compromise"],
-    "ssl blacklist": ["abuse.ch SSL IPBL"],
-    "cybercrime": ["http://cybercrime-tracker.net gatelist", "http://cybercrime-tracker.net hashlist"],
-    "sipquery": ["sipquery"],
-    "digitalside": ["DigitalSide Threat-Intel OSINT Feed"],
-    "blocklist": ["blocklist.de/lists/all.txt"],
-    "botvrij": ["The Botvrij.eu Data"],
-    "openphish": ["OpenPhish url list"],
-    "phishtank": ["Phishtank online valid phishing"],
-}
+from lib.feed_constants import NERC_CIP_FEEDS, FEED_NAME_MAPPINGS
 
 
 class MISPFeedEnabler:

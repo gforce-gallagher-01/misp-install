@@ -34,25 +34,7 @@ import argparse
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from misp_logger import get_logger
 from lib.database_manager import DatabaseManager
-
-# NERC CIP recommended feeds (from configure-misp-nerc-cip.py)
-NERC_CIP_FEEDS = [
-    "CIRCL OSINT Feed",
-    "Abuse.ch URLhaus",
-    "Abuse.ch ThreatFox",
-    "Abuse.ch Feodo Tracker",
-    "Abuse.ch SSL Blacklist",
-    "OpenPhish url",
-    "Phishtank online valid phishing",
-    "Bambenek Consulting - C2 All Indicator Feed",
-    "Botvrij.eu",
-    "Blocklist.de",
-    "DigitalSide Threat-Intel",
-    "Cybercrime-Tracker - All",
-    "MalwareBazaar Recent Additions",
-    "Dataplane.org - sipquery",
-    "Dataplane.org - vncrfb",
-]
+from lib.feed_constants import NERC_CIP_FEEDS
 
 
 class MISPFeedChecker:
