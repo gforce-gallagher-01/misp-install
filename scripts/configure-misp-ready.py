@@ -36,14 +36,32 @@ class ConfigureConfig:
     """Configuration for MISP setup"""
     MISP_DIR = Path("/opt/misp")
 
-    # Recommended OSINT feeds to enable
+    # Recommended OSINT feeds to enable (2025 Best Practices)
     RECOMMENDED_FEEDS = [
+        # Core Malware Feeds (High Priority)
         "CIRCL OSINT Feed",
-        "Abuse.ch Feodo Tracker",
-        "Abuse.ch URLhaus",
-        "Abuse.ch ThreatFox",
+        "Abuse.ch URLhaus",              # Malware distribution URLs
+        "Abuse.ch ThreatFox",            # IOCs from various malware families
+        "Abuse.ch Feodo Tracker",        # Botnet C2 infrastructure
+        "Abuse.ch SSL Blacklist",        # Malicious SSL certificates
+
+        # Phishing Feeds
+        "OpenPhish url",                 # Phishing URLs
+        "Phishtank online valid phishing", # Community phishing feed
+
+        # Botnet & C2 Infrastructure
+        "Bambenek Consulting - C2 All Indicator Feed",
         "Botvrij.eu",
-        "OpenPhish url",
+
+        # IP Reputation
+        "Blocklist.de",                  # SSH, mail, apache attacks
+        "Dataplane.org - sipquery",      # SIP attack attempts
+        "Dataplane.org - vncrfb",        # VNC brute force attempts
+
+        # Additional High-Value Feeds
+        "Cybercrime-Tracker - All",      # Various cybercrime infrastructure
+        "MalwareBazaar Recent Additions", # Latest malware samples
+        "DigitalSide Threat-Intel",      # Comprehensive threat intelligence
     ]
 
     # Core settings to configure
@@ -145,14 +163,14 @@ class MISPReadyConfig:
 
         try:
             result = subprocess.run(
-                ['docker', 'compose', 'ps', '--services', '--filter', 'status=running'],
+                ['sudo', 'docker', 'compose', 'ps', '--services', '--filter', 'status=running'],
                 cwd=self.config.MISP_DIR,
                 capture_output=True,
                 text=True,
                 timeout=10
             )
 
-            running_services = result.stdout.strip().split('\\n')
+            running_services = result.stdout.strip().split('\n')
             required_services = ['misp-core', 'db', 'redis', 'misp-modules']
 
             all_running = all(svc in running_services for svc in required_services)
@@ -176,7 +194,7 @@ class MISPReadyConfig:
         for i in range(max_wait):
             try:
                 result = subprocess.run(
-                    ['docker', 'compose', 'exec', '-T', 'misp-core',
+                    ['sudo', 'docker', 'compose', 'exec', '-T', 'misp-core',
                      'curl', '-k', 'https://localhost/users/heartbeat'],
                     cwd=self.config.MISP_DIR,
                     capture_output=True,
@@ -198,7 +216,7 @@ class MISPReadyConfig:
 
     def run_cake_command(self, command: List[str]) -> bool:
         """Run MISP console cake command"""
-        cmd = ['docker', 'compose', 'exec', '-T', 'misp-core',
+        cmd = ['sudo', 'docker', 'compose', 'exec', '-T', 'misp-core',
                '/var/www/MISP/app/Console/cake'] + command
 
         if self.dry_run:
@@ -293,7 +311,7 @@ class MISPReadyConfig:
         try:
             # Try to get API key from database
             result = subprocess.run(
-                ['docker', 'compose', 'exec', '-T', 'db',
+                ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
                  'mysql', '-umisp', '-p' + self.get_mysql_password(),
                  'misp', '-e', 'SELECT authkey FROM auth_keys WHERE user_id=1 LIMIT 1;'],
                 cwd=self.config.MISP_DIR,
@@ -302,7 +320,7 @@ class MISPReadyConfig:
                 timeout=10
             )
 
-            lines = result.stdout.strip().split('\\n')
+            lines = result.stdout.strip().split('\n')
             if len(lines) >= 2:
                 return lines[1].strip()
         except:
@@ -405,7 +423,7 @@ class MISPReadyConfig:
             self.logger.info("Starting MISP containers", event_type="configure", action="start_containers")
             try:
                 subprocess.run(
-                    ['docker', 'compose', 'up', '-d'],
+                    ['sudo', 'docker', 'compose', 'up', '-d'],
                     cwd=self.config.MISP_DIR,
                     timeout=60
                 )

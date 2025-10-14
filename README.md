@@ -346,6 +346,153 @@ After installation completes:
    sudo cat /opt/misp/POST-INSTALL-CHECKLIST.md
    ```
 
+5. **Post-Install Configuration (Recommended):**
+   ```bash
+   # Run general configuration (updates taxonomies, galaxies, feeds)
+   python3 scripts/configure-misp-ready.py
+
+   # For NERC CIP compliance (energy utilities)
+   python3 scripts/configure-misp-nerc-cip.py
+
+   # Check which feeds are enabled
+   python3 scripts/check-misp-feeds.py
+
+   # Enable all NERC CIP recommended feeds automatically
+   python3 scripts/enable-misp-feeds.py --nerc-cip
+   ```
+
+### Feed Management (NEW - October 2025)
+
+**Check Feed Status:**
+```bash
+# View feed summary (NERC CIP focus)
+python3 scripts/check-misp-feeds.py
+
+# Show all 88 feeds
+python3 scripts/check-misp-feeds.py --show-all
+```
+
+**Enable Feeds:**
+```bash
+# Enable all NERC CIP recommended feeds (14 feeds)
+python3 scripts/enable-misp-feeds.py --nerc-cip
+
+# Enable specific feed by ID
+python3 scripts/enable-misp-feeds.py --id 60
+
+# Enable feeds by name (partial match)
+python3 scripts/enable-misp-feeds.py --name "URLhaus"
+
+# Preview changes without making them
+python3 scripts/enable-misp-feeds.py --nerc-cip --dry-run
+```
+
+**What it does:**
+- ✅ Checks which of 88 feeds are enabled/disabled
+- ✅ Highlights NERC CIP recommended feeds
+- ✅ Enables feeds individually or in bulk
+- ✅ Automatically fetches feed data after enabling
+- ✅ Provides detailed feed information (ID, name, URL, format)
+
+### Community Discovery (NEW - October 2025)
+
+**IMPORTANT**: Communities involve **two-way data sharing** (unlike feeds which are one-way). For NERC CIP organizations, joining communities requires management approval and CIP-011 BCSI protection controls.
+
+**Discover Available Communities:**
+```bash
+# List energy sector communities (NERC CIP relevant)
+python3 scripts/list-misp-communities.py --sector energy
+
+# Show only NERC CIP relevant communities
+python3 scripts/list-misp-communities.py --nerc-cip
+
+# Show all communities across all sectors
+python3 scripts/list-misp-communities.py --all
+
+# List financial sector communities
+python3 scripts/list-misp-communities.py --sector financial
+
+# List ICS/SCADA focused communities
+python3 scripts/list-misp-communities.py --sector ics
+```
+
+**What it does:**
+- ✅ Lists 8 MISP communities (3 NERC CIP relevant, 5 general)
+- ✅ Shows cost information (FREE to $50,000/year)
+- ✅ Displays requirements and contact information
+- ✅ Highlights NERC CIP relevant communities for energy utilities
+- ✅ Provides warnings about two-way data sharing
+- ✅ **Informational only** - does not configure any connections
+
+**Featured Communities:**
+
+| Community | Sector | Cost | NERC CIP Relevant |
+|-----------|--------|------|-------------------|
+| **E-ISAC** | Energy | $5,000 - $25,000/year | ✅ **PRIMARY** |
+| **CISA ICS-CERT** | Multi-Sector | FREE | ✅ Essential |
+| **OT-ISAC** | ICS/SCADA | Paid | ✅ Recommended |
+| CIRCL MISP | Multi-Sector | FREE | - |
+| FIRST | Multi-Sector | $3,500 - $50,000/year | - |
+| FS-ISAC | Financial | Paid | - |
+| MS-ISAC | Government | FREE | - |
+| Danish MISP | Multi-Sector | FREE | - |
+
+**Key Differences: Feeds vs Communities:**
+
+| Feature | Feeds (Already Enabled) | Communities (This Script) |
+|---------|-------------------------|---------------------------|
+| Data Flow | One-way (consume only) | Two-way (share and receive) |
+| BCSI Risk | None (no data leaves MISP) | Yes (requires CIP-011 controls) |
+| Approval | None required | Management + Legal required |
+| Cost | FREE | FREE to $50K/year |
+| Setup | Automatic (via scripts) | Manual (via community contact) |
+
+**For NERC CIP Compliance:**
+- ⚠️ **E-ISAC membership HIGHLY RECOMMENDED** - $5K-$25K/year, PRIMARY for electric utilities
+- ⚠️ **CISA ICS-CERT is FREE and essential** - US government ICS threat intelligence
+- ⚠️ Before joining ANY community, ensure:
+  - Management approval obtained
+  - CIP-011 BCSI protection controls in place
+  - Sharing groups configured to "Your organization only" by default
+  - Legal review of community agreements (NDAs, TLP)
+
+**Next Steps After Running Script:**
+1. Review community requirements and costs
+2. Obtain management approval (required for NERC CIP organizations)
+3. Contact community using provided contact information
+4. Complete membership application and agreements
+5. Configure MISP server connection (after approval)
+
+See `docs/NERC_CIP_CONFIGURATION.md` for E-ISAC integration guidance.
+
+### NERC CIP Configuration (Energy Utilities)
+
+**NEW**: For electric utilities operating solar, wind, and battery storage systems under NERC CIP compliance:
+
+```bash
+# Configure MISP for NERC CIP compliance
+python3 scripts/configure-misp-nerc-cip.py
+```
+
+**What it does:**
+- ✅ Configures 11 NERC CIP-specific settings
+- ✅ Recommends 15 ICS/SCADA threat intelligence feeds
+- ✅ Maps MISP features to 8 NERC CIP standards (CIP-003 through CIP-015)
+- ✅ Provides audit evidence guidance for compliance
+
+**Documentation:** See `docs/NERC_CIP_CONFIGURATION.md` for complete 50+ page guide including:
+- NERC CIP 2025 requirements
+- ICS/SCADA threat intelligence sources (CISA ICS-CERT, E-ISAC)
+- Solar/wind/battery-specific considerations
+- Vendor-specific intelligence (Siemens, Schneider, ABB, GE)
+- Audit checklist with evidence mapping
+- Cost estimates (Free to $475K/year)
+
+**Relevant for:**
+- Electric utilities (Low & Medium Impact BES Cyber Systems)
+- Energy sector security teams
+- ICS/SCADA cybersecurity professionals
+
 ## 🛠️ Useful Commands
 
 ```bash
