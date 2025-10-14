@@ -170,16 +170,30 @@ class MISPBackup:
         return None
 
     def is_container_running(self, container: str) -> bool:
-        """Check if Docker container is running"""
+        """Check if Docker container is running using JSON format for reliable parsing"""
         try:
             result = subprocess.run(
-                ['docker', 'compose', 'ps', container],
+                ['sudo', 'docker', 'compose', 'ps', '--format', 'json', container],
                 cwd=self.config.MISP_DIR,
                 capture_output=True,
                 text=True,
                 timeout=10
             )
-            return 'Up' in result.stdout
+            if result.returncode != 0:
+                return False
+
+            # Parse JSON output - docker compose returns one JSON object per line
+            import json
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    try:
+                        container_info = json.loads(line)
+                        # Check if container state is 'running'
+                        if container_info.get('State') == 'running':
+                            return True
+                    except json.JSONDecodeError:
+                        continue
+            return False
         except Exception:
             return False
 
@@ -203,7 +217,7 @@ class MISPBackup:
         try:
             with open(db_file, 'w') as f:
                 result = subprocess.run(
-                    ['docker', 'compose', 'exec', '-T', 'db',
+                    ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
                      'mysqldump', '-umisp', f'-p{mysql_password}',
                      '--single-transaction', '--quick', '--lock-tables=false', 'misp'],
                     cwd=self.config.MISP_DIR,
@@ -231,7 +245,7 @@ class MISPBackup:
         # Check if misp-core container is accessible
         try:
             result = subprocess.run(
-                ['docker', 'compose', 'exec', '-T', 'misp-core',
+                ['sudo', 'docker', 'compose', 'exec', '-T', 'misp-core',
                  'test', '-d', '/var/www/MISP/app/files'],
                 cwd=self.config.MISP_DIR,
                 capture_output=True,
@@ -250,13 +264,23 @@ class MISPBackup:
 
             # Copy attachments from container
             result = subprocess.run(
-                ['docker', 'compose', 'cp', 'misp-core:/var/www/MISP/app/files', str(attach_dir) + '/'],
+                ['sudo', 'docker', 'compose', 'cp', 'misp-core:/var/www/MISP/app/files', str(attach_dir) + '/'],
                 cwd=self.config.MISP_DIR,
                 capture_output=True,
                 timeout=300
             )
 
             if result.returncode == 0 and attach_dir.exists():
+                # Fix ownership of copied files to current user for backup portability
+                # Files from container are owned by www-data, need to chown for compression
+                current_user = os.environ.get('USER', os.getlogin())
+                subprocess.run(
+                    ['sudo', 'chown', '-R', f'{current_user}:{current_user}', str(attach_dir)],
+                    check=True,
+                    capture_output=True,
+                    timeout=30
+                )
+
                 # Calculate size
                 total_size = sum(f.stat().st_size for f in attach_dir.rglob('*') if f.is_file())
                 size_mb = total_size / (1024 * 1024)
@@ -274,13 +298,14 @@ class MISPBackup:
         # Get container status
         try:
             result = subprocess.run(
-                ['docker', 'compose', 'ps'],
+                ['sudo', 'docker', 'compose', 'ps'],
                 cwd=self.config.MISP_DIR,
                 capture_output=True,
                 text=True,
                 timeout=10
             )
-            container_status = result.stdout
+            # Filter out warning messages (lines starting with "time=")
+            container_status = '\n'.join(line for line in result.stdout.split('\n') if not line.startswith('time='))
         except:
             container_status = "Could not get container status"
 

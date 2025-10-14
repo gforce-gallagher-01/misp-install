@@ -128,14 +128,14 @@ class MISPUpdateManager:
         self.check_only = check_only
         self.backup_path: Optional[Path] = None
 
-    def run_command(self, cmd: List[str], check: bool = True, capture_output: bool = False) -> subprocess.CompletedProcess:
+    def run_command(self, cmd: List[str], check: bool = True, capture_output: bool = False, cwd: Optional[Path] = None) -> subprocess.CompletedProcess:
         """Run a shell command with logging"""
         logger.debug(f"Running command: {' '.join(cmd)}")
         try:
             if capture_output:
-                result = subprocess.run(cmd, check=check, capture_output=True, text=True)
+                result = subprocess.run(cmd, check=check, capture_output=True, text=True, cwd=cwd)
             else:
-                result = subprocess.run(cmd, check=check)
+                result = subprocess.run(cmd, check=check, cwd=cwd)
             return result
         except subprocess.CalledProcessError as e:
             logger.error(f"Command failed: {' '.join(cmd)}")
@@ -145,39 +145,42 @@ class MISPUpdateManager:
             raise
 
     def get_current_version(self, service: str) -> Optional[str]:
-        """Get current version of a MISP service"""
+        """Get current version of a MISP service using ps to check running containers"""
         try:
-            # Get image tag for service
+            # Get running container info using JSON format
             result = self.run_command(
-                ['sudo', 'docker', 'compose', '-f', str(self.misp_dir / 'docker-compose.yml'),
-                 'images', service, '--format', '{{.Tag}}'],
+                ['sudo', 'docker', 'compose', 'ps', '--format', 'json', service],
+                cwd=self.misp_dir,
                 capture_output=True
             )
-            version = result.stdout.strip()
-            return version if version else None
+
+            if result.returncode != 0:
+                return None
+
+            # Parse JSON output
+            for line in result.stdout.strip().split('\n'):
+                if line and not line.startswith('time='):
+                    try:
+                        container_info = json.loads(line)
+                        # Extract image name which includes the tag
+                        image = container_info.get('Image', '')
+                        if ':' in image:
+                            # Extract tag from image (e.g., "ghcr.io/misp/misp-docker/misp-core:latest" -> "latest")
+                            version = image.split(':')[-1]
+                            return version
+                    except json.JSONDecodeError:
+                        continue
+            return None
         except Exception as e:
             logger.warning(f"Could not get version for {service}: {e}")
             return None
 
     def get_latest_version(self, image: str) -> Optional[str]:
-        """Get latest available version from Docker Hub"""
-        try:
-            # Pull latest tag info
-            result = self.run_command(
-                ['sudo', 'docker', 'pull', '-q', image],
-                capture_output=True
-            )
-
-            # Get digest of pulled image
-            result = self.run_command(
-                ['sudo', 'docker', 'images', image, '--digests', '--format', '{{.Tag}}'],
-                capture_output=True
-            )
-            version = result.stdout.strip().split('\n')[0]
-            return version if version else None
-        except Exception as e:
-            logger.warning(f"Could not get latest version for {image}: {e}")
-            return None
+        """Get latest available version from Docker Hub (simplified for 'latest' tag)"""
+        # For docker images using 'latest' tag, we can't easily determine if updates are available
+        # The update process will pull the latest image regardless
+        # This function is informational only
+        return "latest"
 
     def check_updates(self) -> Dict[str, VersionInfo]:
         """Check for available updates"""
