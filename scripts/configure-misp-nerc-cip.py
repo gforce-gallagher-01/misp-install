@@ -18,11 +18,13 @@ import json
 from pathlib import Path
 from typing import List, Dict
 
-# Import centralized logger
-from misp_logger import get_logger
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Import centralized Colors class
+# Import centralized modules
+from misp_logger import get_logger
 from lib.colors import Colors
+from lib.setup_helper import MISPSetupHelper
 
 # Check Python version
 if sys.version_info < (3, 8):
@@ -122,6 +124,9 @@ class MISPNERCCIPConfig:
         # Initialize centralized logger
         self.logger = get_logger('configure-misp-nerc-cip', 'misp:nerc-cip')
 
+        # Initialize centralized setup helper
+        self.setup_helper = MISPSetupHelper(self.logger.logger, self.config.MISP_DIR, dry_run=dry_run)
+
         self.logger.info(
             "MISP NERC CIP configuration initiated",
             event_type="nerc_cip_config",
@@ -188,32 +193,15 @@ class MISPNERCCIPConfig:
             return False
 
     def run_cake_command(self, command: List[str]) -> bool:
-        """Run MISP console cake command"""
-        cmd = ['sudo', 'docker', 'compose', 'exec', '-T', 'misp-core',
-               '/var/www/MISP/app/Console/cake'] + command
-
-        if self.dry_run:
-            self.log(f"[DRY RUN] Would run: {' '.join(cmd)}", "info")
-            return True
-
-        try:
-            result = subprocess.run(
-                cmd,
-                cwd=self.config.MISP_DIR,
-                capture_output=True,
-                text=True,
-                timeout=300
-            )
-
-            if result.returncode == 0:
-                return True
-            else:
-                self.logger.warning(f"Command failed: {result.stderr[:200]}", event_type="nerc_cip_config", action="run_command")
-                return False
-
-        except Exception as e:
-            self.logger.warning(f"Could not run command: {e}", event_type="nerc_cip_config", action="run_command", error_message=str(e))
-            return False
+        """Run MISP console cake command (uses centralized MISPSetupHelper)"""
+        if len(command) >= 2:
+            # Use centralized setup helper
+            success, output = self.setup_helper.run_cake_command(command[0], command[1])
+            if not success and output:
+                self.logger.warning(f"Command failed: {output[:200]}",
+                                  event_type="nerc_cip_config", action="run_command")
+            return success
+        return False
 
     def set_setting(self, setting: str, value) -> bool:
         """Set a MISP setting"""
