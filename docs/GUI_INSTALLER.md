@@ -30,32 +30,28 @@ The MISP GUI Installer provides a modern, user-friendly graphical interface for 
 
 ### Install Dependencies
 
-**Ubuntu 24.04+ (PEP 668 Protected Environment):**
+**Ubuntu 24.04+ (Recommended - uses pipx):**
 
 ```bash
-# Option 1: Virtual environment (RECOMMENDED)
+# Install with pipx (handles everything automatically)
+cd ~/misp-install/misp-install
+pipx install .
+
+# Or install from GitHub directly
+pipx install git+https://github.com/gforce-gallagher-01/misp-install.git
+```
+
+**Alternative Methods:**
+
+```bash
+# Option 2: Virtual environment
 python3 -m venv ~/misp-gui-env
 source ~/misp-gui-env/bin/activate
 pip install -r requirements-gui.txt
 
-# Option 2: System packages (if available)
+# Option 3: System packages (if available)
 sudo apt update
 sudo apt install python3-textual python3-textual-dev
-
-# Option 3: pipx installation
-pipx install textual-dev
-pipx inject textual-dev textual
-```
-
-**Ubuntu 22.04 or older:**
-
-```bash
-# Install Textual framework
-pip install --user textual textual-dev
-
-# Or install from requirements
-cd misp-install
-pip install --user -r requirements-gui.txt
 ```
 
 ## Usage
@@ -65,14 +61,17 @@ pip install --user -r requirements-gui.txt
 Launch the GUI installer directly in your terminal:
 
 ```bash
-# Basic usage
-python3 misp-install-gui.py
+# If installed with pipx
+misp-install-gui
 
 # Load existing configuration
-python3 misp-install-gui.py --load config/misp-config.json
+misp-install-gui --load config/misp-config.json
 
 # Save configuration without installing
-python3 misp-install-gui.py --save-only
+misp-install-gui --save-only
+
+# Or run directly without installing
+python3 misp_install_gui.py
 ```
 
 ### Web Browser Mode
@@ -80,14 +79,17 @@ python3 misp-install-gui.py --save-only
 Serve the GUI installer in a web browser:
 
 ```bash
-# Serve on localhost:8000 (default)
-textual serve misp-install-gui.py
+# If installed with pipx
+textual run --command misp-install-gui
+
+# Or serve the Python module directly
+textual serve misp_install_gui.py
 
 # Serve on specific port
-textual serve misp-install-gui.py --port 8080
+textual serve misp_install_gui.py --port 8080
 
 # Make accessible from other machines
-textual serve misp-install-gui.py --host 0.0.0.0 --port 8080
+textual serve misp_install_gui.py --host 0.0.0.0 --port 8080
 ```
 
 Then open your browser to: `http://localhost:8000`

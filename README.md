@@ -94,12 +94,15 @@ python3 misp-install.py --config prod-config.yaml --non-interactive
 For users who prefer a graphical interface:
 
 ```bash
-# Terminal mode (TUI)
-python3 misp-install-gui.py
+# Install with pipx (Ubuntu 24.04+)
+cd ~/misp-install/misp-install
+pipx install .
 
-# Web browser mode
-textual serve misp-install-gui.py
-# Then open: http://localhost:8000
+# Run the GUI installer
+misp-install-gui
+
+# Or run directly without installing
+python3 misp_install_gui.py
 ```
 
 **Features:**
@@ -111,17 +114,6 @@ textual serve misp-install-gui.py
 - ⌨️ Full keyboard navigation
 
 See `docs/GUI_INSTALLER.md` for complete documentation.
-
-**Installation (Ubuntu 24.04+):**
-```bash
-# Create virtual environment
-python3 -m venv ~/misp-gui-env
-source ~/misp-gui-env/bin/activate
-pip install -r requirements-gui.txt
-
-# Then run GUI installer
-python3 misp-install-gui.py
-```
 
 ## 📝 Usage Examples
 
