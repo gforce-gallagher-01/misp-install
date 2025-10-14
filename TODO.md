@@ -2,6 +2,201 @@
 
 ## High Priority
 
+### Splunk Cloud Integration
+**Status:** Planned
+**Priority:** High (real-time threat intelligence for Splunk SIEM)
+
+**Description:**
+Integrate MISP with Splunk Cloud for real-time threat intelligence sharing and automated response. Provides bidirectional integration using Splunk Cloud-compatible methods including HEC (HTTP Event Collector), certified apps, and Universal Forwarder.
+
+**Benefits:**
+- Real-time IOC ingestion into Splunk Cloud
+- Automated event enrichment with MISP threat data
+- SOAR workflow automation for incident response
+- CIM-compliant data format for ES correlation
+- Leverage existing MISP JSON logs from v5.4 installation
+- Bidirectional threat intelligence sharing
+
+**Integration Methods:**
+
+**Method 1: MISP App for SOAR Cloud (Certified)**
+- App ID: 5820 (Splunk LLC official app)
+- Cloud Compatible: ✅ Yes
+- SOAR Cloud Supported: ✅ Yes
+- Latest Version: 2.2.7 (August 2025)
+- Actions: Test connectivity, create event, update event, run query, get attributes
+- Requires: Splunk SOAR Cloud subscription
+
+**Method 2: HTTP Event Collector (HEC) + Custom Scripts**
+- Direct MISP API → Splunk HEC integration
+- Works with Splunk Cloud Platform (no SOAR required)
+- Python script pulls MISP data and pushes via HEC
+- Scheduled collection (cron/systemd)
+- Full control over data transformation
+
+**Method 3: Universal Forwarder for MISP Logs**
+- Forward existing `/opt/misp/logs/*.log` to Splunk Cloud
+- JSON logs with CIM field names (already implemented in v5.4)
+- Real-time log forwarding
+- Sourcetypes: misp:json, misp:install, misp:backup, misp:update
+
+**Method 4: MISP42 or Benni0 App (Requires Vetting)**
+- Request private app installation via Splunk support
+- Full-featured MISP integration
+- Custom commands: mispgetioc, mispcollect, mispsearch, mispsight
+- Alert actions for creating/updating MISP events
+
+**Implementation Tasks:**
+
+**Phase 1: Universal Forwarder Setup**
+1. Install Splunk Universal Forwarder on MISP server
+2. Configure inputs.conf to monitor /opt/misp/logs/
+3. Configure props.conf for JSON parsing
+4. Set up forwarding to Splunk Cloud
+5. Create `misp` index in Splunk Cloud
+6. Verify log ingestion and field extraction
+
+**Phase 2: HEC Integration**
+7. Create HEC token in Splunk Cloud
+8. Develop Python script for MISP → HEC:
+   - Query MISP API for events/attributes
+   - Transform to CIM format
+   - Push to Splunk HEC endpoint
+9. Implement error handling and retry logic
+10. Schedule script execution (every 15 min for high severity, hourly for all)
+11. Create monitoring dashboard for integration health
+
+**Phase 3: Splunk App Configuration**
+12. Evaluate SOAR Cloud vs custom integration
+13. If SOAR: Install MISP App (5820) from Splunkbase
+14. If Platform: Request MISP42/Benni0 vetting or use HEC
+15. Configure MISP instance connection (URL + API key)
+16. Test connectivity and data flow
+
+**Phase 4: Threat Intelligence Framework**
+17. Create lookup tables for IOC enrichment
+18. Configure saved searches for scheduled IOC pulls
+19. Set up ES threat intelligence collections (if using ES)
+20. Create correlation searches for MISP-enriched events
+21. Configure alert actions for automated MISP event creation
+
+**Phase 5: Dashboards and Reports**
+22. Create MISP Threat Intelligence dashboard
+23. Build IOC tracking and trending reports
+24. Set up automated threat briefing reports
+25. Create executive summary dashboard
+
+**Files to Create:**
+- `scripts/splunk-hec-forwarder.py` - HEC integration script
+- `scripts/splunk-misp-sync.py` - Bidirectional sync service
+- `config/splunk-forwarder-inputs.conf` - UF inputs configuration
+- `config/splunk-forwarder-props.conf` - UF props configuration
+- `config/splunk-hec.yaml` - HEC configuration template
+- `docs/SPLUNK_CLOUD_INTEGRATION.md` - Complete integration guide
+- `docs/SPLUNK_DASHBOARDS.md` - Dashboard XML examples
+
+**Configuration Examples:**
+
+**Universal Forwarder inputs.conf:**
+```ini
+[monitor:///opt/misp/logs/*.log]
+disabled = false
+index = misp
+sourcetype = misp:json
+recursive = true
+
+[monitor:///opt/misp/logs/misp-install-*.log]
+disabled = false
+index = misp
+sourcetype = misp:install
+```
+
+**HEC Python Script (splunk-hec-forwarder.py):**
+```python
+import requests
+import json
+from datetime import datetime, timedelta
+
+MISP_URL = "https://misp-test.lan"
+MISP_KEY = "${MISP_API_KEY}"
+HEC_URL = "https://inputs.splunkcloud.com:8088/services/collector"
+HEC_TOKEN = "${SPLUNK_HEC_TOKEN}"
+
+def get_misp_events(hours=1):
+    headers = {"Authorization": MISP_KEY}
+    params = {"last": f"{hours}h", "published": 1}
+    r = requests.get(f"{MISP_URL}/events/restSearch",
+                     headers=headers, params=params, verify=False)
+    return r.json()
+
+def send_to_splunk(event):
+    headers = {"Authorization": f"Splunk {HEC_TOKEN}"}
+    payload = {
+        "sourcetype": "misp:event",
+        "source": "misp_api",
+        "event": event
+    }
+    requests.post(HEC_URL, json=payload, headers=headers)
+```
+
+**Splunk Search Examples:**
+```spl
+# Search for IOCs in your data
+index=network sourcetype=firewall
+| lookup misp_ioc_lookup value AS dest_ip OUTPUT misp_event_id threat_level
+| where isnotnull(misp_event_id)
+
+# Pull recent high-severity events
+| mispgetioc misp_instance=prod last=24h threat_level=high
+
+# Enrich with MISP data
+index=proxy
+| mispsearch field=url
+| where misp_found=1
+```
+
+**Testing Requirements:**
+- Test HEC token creation and data ingestion
+- Verify JSON log forwarding from UF
+- Test MISP API connectivity from script
+- Validate CIM field mappings
+- Performance test with large IOC sets
+- Test alert actions (if using MISP42)
+- Verify ES threat intel framework integration (if applicable)
+
+**Performance Considerations:**
+- HEC batch size: 1000 events per request
+- Collection interval: 15 min (high severity), 1 hour (all events)
+- Universal Forwarder: Monitor /opt/misp/logs/ in real-time
+- Lookup table size: Monitor and prune old IOCs (90-day retention)
+- Index sizing: Estimate 10-50 MB/day for typical MISP usage
+
+**Documentation Needed:**
+- HEC token creation guide
+- Universal Forwarder installation steps
+- Python script deployment and scheduling
+- Splunk Cloud app vetting process
+- Saved search configuration
+- Dashboard deployment
+- Troubleshooting guide
+- Performance tuning recommendations
+
+**Security Considerations:**
+- Store HEC token in Splunk secrets management
+- Use MISP API key with read-only permissions for pulls
+- Implement TLS verification for production
+- Audit log all MISP → Splunk data transfers
+- RBAC for MISP dashboards in Splunk
+
+**Related Projects:**
+- [Splunk MISP App](https://splunkbase.splunk.com/app/5820)
+- [MISP42Splunk](https://splunkbase.splunk.com/app/4335)
+- [Benni0 App for MISP](https://splunkbase.splunk.com/app/7536)
+- [TA-misp_es](https://github.com/splunk/TA-misp_es)
+- [Splunk HEC Documentation](https://docs.splunk.com/Documentation/Splunk/latest/Data/UsetheHTTPEventCollector)
+
+---
+
 ### Security Onion (SO) Integration
 **Status:** Planned
 **Priority:** High (threat intelligence sharing with SIEM/IDS platform)
