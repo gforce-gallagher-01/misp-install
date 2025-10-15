@@ -106,6 +106,100 @@ def check_misp_installed() -> bool:
     except:
         return False
 
+
+def verify_uninstall_complete() -> dict:
+    """Verify that MISP has been completely uninstalled
+
+    Returns:
+        dict: Health check results with status and details
+    """
+    health_checks = {
+        'misp_directory': False,
+        'docker_containers': False,
+        'docker_images': False,
+        'misp_user': False,
+        'all_clean': True
+    }
+
+    details = []
+
+    # Check 1: MISP directory should not exist
+    misp_dir = Path("/opt/misp")
+    if not misp_dir.exists():
+        health_checks['misp_directory'] = True
+        details.append("✓ MISP directory removed (/opt/misp)")
+    else:
+        health_checks['misp_directory'] = False
+        health_checks['all_clean'] = False
+        details.append("✗ MISP directory still exists (/opt/misp)")
+
+    # Check 2: No MISP Docker containers running
+    try:
+        result = subprocess.run(
+            ['sudo', 'docker', 'ps', '-a', '--filter', 'name=misp', '--format', '{{.Names}}'],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        containers = [c for c in result.stdout.strip().split('\n') if c]
+        if not containers:
+            health_checks['docker_containers'] = True
+            details.append("✓ No MISP Docker containers found")
+        else:
+            health_checks['docker_containers'] = False
+            health_checks['all_clean'] = False
+            details.append(f"✗ Found {len(containers)} MISP container(s) still present")
+            for container in containers[:3]:  # Show first 3
+                details.append(f"  - {container}")
+    except Exception as e:
+        details.append(f"⚠️  Could not check Docker containers: {e}")
+        health_checks['all_clean'] = False
+
+    # Check 3: No MISP Docker images
+    try:
+        result = subprocess.run(
+            ['sudo', 'docker', 'images', '--filter', 'reference=*misp*', '--format', '{{.Repository}}:{{.Tag}}'],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        images = [img for img in result.stdout.strip().split('\n') if img and img != '<none>:<none>']
+        if not images:
+            health_checks['docker_images'] = True
+            details.append("✓ No MISP Docker images found")
+        else:
+            health_checks['docker_images'] = False
+            health_checks['all_clean'] = False
+            details.append(f"⚠️  Found {len(images)} MISP image(s) still present")
+            for image in images[:3]:  # Show first 3
+                details.append(f"  - {image}")
+    except Exception as e:
+        details.append(f"⚠️  Could not check Docker images: {e}")
+
+    # Check 4: misp-owner user should not exist
+    try:
+        result = subprocess.run(
+            ['id', 'misp-owner'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode != 0:
+            health_checks['misp_user'] = True
+            details.append("✓ misp-owner user removed")
+        else:
+            health_checks['misp_user'] = False
+            health_checks['all_clean'] = False
+            details.append("✗ misp-owner user still exists")
+    except Exception as e:
+        details.append(f"⚠️  Could not check misp-owner user: {e}")
+        health_checks['all_clean'] = False
+
+    return {
+        'checks': health_checks,
+        'details': details
+    }
+
 # ==========================================
 # Custom Validators
 # ==========================================
@@ -240,6 +334,7 @@ class WelcomeScreen(Screen):
         with Container(id="welcome-container"):
             yield Label("MISP Installation Wizard", id="title")
             yield Label("tKQB Enterprises Edition v2.0", id="subtitle")
+            yield Static("💡 Tip: Press Ctrl+Q to quit at any time", classes="tip-text")
 
             # Check if MISP is installed
             misp_installed = check_misp_installed()
@@ -353,7 +448,7 @@ class NetworkScreen(Screen):
         with ScrollableContainer(id="network-container"):
             yield Label("Network Configuration", id="screen-title")
             yield Static("Step 1 of 5", classes="step-indicator")
-            yield Static("💡 Tip: Press Ctrl+V to paste from clipboard", classes="field-help")
+            yield Static("💡 Tip: Press Ctrl+V to paste from clipboard | Ctrl+Q to quit", classes="field-help")
 
             yield Label("Server IP Address:", classes="field-label")
             yield Static("The IP address of this server", classes="field-help")
@@ -510,7 +605,7 @@ class SecurityScreen(Screen):
         yield Header()
         with ScrollableContainer(id="security-container"):
             yield Label("Security Settings", id="screen-title")
-            yield Static("Step 2 of 5", classes="step-indicator")
+            yield Static("Step 2 of 5 | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield Static(
                 "⚠️  Strong passwords are required for security.\n"
@@ -664,7 +759,7 @@ class EnvironmentScreen(Screen):
         yield Header()
         with ScrollableContainer(id="environment-container"):
             yield Label("Environment Selection", id="screen-title")
-            yield Static("Step 3 of 5", classes="step-indicator")
+            yield Static("Step 3 of 5 | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield Static("Select the deployment environment:")
 
@@ -779,7 +874,7 @@ class FeaturesScreen(Screen):
         yield Header()
         with ScrollableContainer(id="features-container"):
             yield Label("Enhanced Features Configuration", id="screen-title")
-            yield Static("Step 4 of 6", classes="step-indicator")
+            yield Static("Step 4 of 6 | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield Static(
                 "📦 Select the enhanced features to install and configure.\n"
@@ -950,7 +1045,7 @@ class ReviewScreen(Screen):
         yield Header()
         with ScrollableContainer(id="review-container"):
             yield Label("Review Configuration", id="screen-title")
-            yield Static("Step 5 of 6", classes="step-indicator")
+            yield Static("Step 5 of 6 | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield Static("Please review your configuration before installation:\n")
 
@@ -1138,6 +1233,7 @@ class UpdateScreen(Screen):
         yield Header()
         with ScrollableContainer(id="update-container"):
             yield Label("Update MISP", id="screen-title")
+            yield Static("Press Ctrl+Q to quit", classes="step-indicator")
 
             yield Static(
                 "Select which components to update:\n",
@@ -1241,6 +1337,7 @@ class UninstallScreen(Screen):
         yield Header()
         with ScrollableContainer(id="uninstall-container"):
             yield Label("Uninstall MISP", id="screen-title")
+            yield Static("Press Ctrl+Q to quit", classes="step-indicator")
 
             with Container(classes="warning-box"):
                 yield Static(
@@ -1550,8 +1647,28 @@ class UninstallProgressScreen(Screen):
                 process.wait()
 
                 if process.returncode == 0:
-                    self.update_status("✓ Uninstall completed successfully!")
-                    self.append_log("\n✓ MISP has been uninstalled")
+                    self.update_status("✓ Uninstall completed - Running health checks...")
+                    self.append_log("\n✓ MISP uninstall script completed")
+                    self.append_log("\n" + "=" * 50)
+                    self.append_log("Running post-uninstall health checks...")
+                    self.append_log("=" * 50)
+
+                    # Run health checks
+                    health_results = verify_uninstall_complete()
+
+                    self.append_log("")
+                    for detail in health_results['details']:
+                        self.append_log(detail)
+
+                    self.append_log("")
+                    self.append_log("=" * 50)
+                    if health_results['checks']['all_clean']:
+                        self.update_status("✓ Uninstall completed successfully - System is clean!")
+                        self.append_log("✓ All health checks passed - MISP fully removed")
+                    else:
+                        self.update_status("⚠️  Uninstall completed with warnings")
+                        self.append_log("⚠️  Some components may require manual cleanup")
+                    self.append_log("=" * 50)
                 else:
                     self.update_status("✗ Uninstall failed")
                     self.append_log(f"\n✗ Uninstall failed with exit code {process.returncode}")
@@ -1654,7 +1771,7 @@ class InstallScreen(Screen):
         yield Header()
         with Container(id="install-container"):
             yield Label("Installing MISP", id="screen-title")
-            yield Static("Step 6 of 6 - Please wait...", classes="step-indicator")
+            yield Static("Step 6 of 6 - Please wait... | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield ProgressBar(total=100, show_eta=False, id="progress-bar")
             yield Static("Initializing installation...", id="status-text")
