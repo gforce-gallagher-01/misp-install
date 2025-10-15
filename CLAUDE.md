@@ -144,13 +144,36 @@ logger.info("Operation started",
 
 ## Working with the Code
 
+### Coding Best Practices
+
+**⚠️ ALWAYS Follow DRY Principle** (Don't Repeat Yourself):
+
+- **NO code duplication** - Extract common functionality into reusable functions/classes
+- **Centralize constants** - Use configuration classes (e.g., `UtilitiesSectorConfig`)
+- **Reuse existing modules** - Import from `misp_logger.py`, `misp_api.py`, etc.
+- **Extract repeated patterns** - Create helper functions for common operations
+- **Single source of truth** - One definition, referenced everywhere
+
+**Examples of DRY in this project**:
+- ✅ `misp_logger.py` - Centralized logging (NOT repeated in each script)
+- ✅ `misp_api.py` - API helpers (NOT duplicated across scripts)
+- ✅ Configuration classes - Constants defined once (NOT hardcoded everywhere)
+- ✅ Temp file pattern - Documented once, referenced everywhere
+
+**Anti-patterns to avoid**:
+- ❌ Copy-pasting code between scripts
+- ❌ Hardcoding values in multiple places
+- ❌ Reimplementing existing functionality
+- ❌ Duplicating validation logic
+
 ### Adding New Scripts
 
 1. Import centralized logger: `from misp_logger import get_logger`
 2. Initialize with sourcetype: `logger = get_logger('script-name', 'misp:category')`
 3. Use structured logging with CIM fields
-4. Add to [SCRIPTS.md](SCRIPTS.md) documentation
-5. Ensure logs go to `/opt/misp/logs/` with rotation
+4. **Follow DRY**: Extract common patterns into reusable functions
+5. Add to [SCRIPTS.md](SCRIPTS.md) documentation
+6. Ensure logs go to `/opt/misp/logs/` with rotation
 
 ### Modifying Installation Phases
 

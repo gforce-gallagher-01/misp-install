@@ -49,6 +49,7 @@ from typing import List, Dict, Tuple
 import argparse
 from datetime import datetime, timedelta
 import re
+import html
 
 # Import centralized logger
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -92,11 +93,12 @@ UTILITIES_KEYWORDS = [
 class MISPNewsPopulator:
     """Populate MISP news from RSS feeds"""
 
-    def __init__(self, dry_run: bool = False, max_items: int = 20, days: int = 30):
+    def __init__(self, dry_run: bool = False, max_items: int = 20, days: int = 30, quiet: bool = False):
         self.misp_dir = Path("/opt/misp")
         self.dry_run = dry_run
         self.max_items = max_items
         self.days = days
+        self.quiet = quiet  # Suppress output for cron
         self.logger = get_logger('populate-misp-news', 'misp:news')
 
         # Initialize database manager
@@ -172,6 +174,11 @@ class MISPNewsPopulator:
                 'id': 'cisa-ics',
                 'name': 'CISA ICS Advisories',
                 'url': 'https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml'
+            },
+            {
+                'id': 'utility-dive',
+                'name': 'Utility Dive - Electric Utilities',
+                'url': 'https://www.utilitydive.com/feeds/news/'
             },
             {
                 'id': 'securityweek-ics',
@@ -289,15 +296,33 @@ class MISPNewsPopulator:
                 if self.is_duplicate(title, date_created):
                     continue
 
-                # Build message (summary + link)
-                message = summary[:500]  # Limit summary length
+                # Title is plain text (MISP doesn't render Markdown in <h3> titles)
+                plain_title = title
+
+                # Clean HTML from summary (RSS feeds often include HTML tags)
+                clean_summary = re.sub(r'<[^>]+>', '', summary)  # Remove HTML tags
+                clean_summary = html.unescape(clean_summary)      # Decode HTML entities
+                clean_summary = re.sub(r'\s+', ' ', clean_summary).strip()  # Normalize whitespace
+
+                # Build professional-looking message with Markdown formatting
+                message_parts = []
+
+                # Add summary (limit to first 2-3 sentences or 250 chars)
+                summary_text = clean_summary[:250].rsplit('.', 1)[0] + '.'
+                message_parts.append(summary_text)
+
+                # Add link on new line
                 if link:
-                    message += f"\n\nSource: {link}"
-                message += f"\n\nFeed: {feed['name']}"
+                    message_parts.append(f"\n\n**[→ Read full article]({link})**")
+
+                # Add source attribution
+                message_parts.append(f"\n\n---\n*Source: {feed['name']}*")
+
+                message = ''.join(message_parts)
 
                 articles.append({
-                    'title': title,
-                    'message': message,
+                    'title': plain_title,  # Plain text title
+                    'message': message,     # Message with Markdown link
                     'date_created': date_created,
                     'feed_name': feed['name']
                 })
@@ -367,9 +392,15 @@ class MISPNewsPopulator:
 
     def print_header(self, text: str):
         """Print section header"""
-        print(f"\n{'='*80}")
-        print(f"  {text}")
-        print(f"{'='*80}\n")
+        if not self.quiet:
+            print(f"\n{'='*80}")
+            print(f"  {text}")
+            print(f"{'='*80}\n")
+
+    def print_msg(self, msg: str):
+        """Print message (respects quiet mode)"""
+        if not self.quiet:
+            print(msg)
 
     def run(self):
         """Main execution"""
@@ -521,13 +552,16 @@ Automation (crontab):
                        help='Maximum number of articles to insert (default: 20)')
     parser.add_argument('--days', type=int, default=30,
                        help='Number of days to look back for articles (default: 30)')
+    parser.add_argument('--quiet', action='store_true',
+                       help='Suppress output (for cron jobs)')
 
     args = parser.parse_args()
 
     populator = MISPNewsPopulator(
         dry_run=args.dry_run,
         max_items=args.max_items,
-        days=args.days
+        days=args.days,
+        quiet=args.quiet
     )
 
     return populator.run()
