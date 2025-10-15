@@ -87,6 +87,12 @@ UTILITIES_KEYWORDS = [
 
     # Energy companies/organizations
     'e-isac', 'department of energy', 'doe', 'ferc',
+
+    # Vendor/technology keywords (for vendor security advisories)
+    'cisco', 'fortinet', 'fortigate', 'palo alto', 'pan-os', 'microsoft',
+    'windows', 'ubuntu', 'linux', 'zero-day', 'zero day', 'vulnerability',
+    'cve-', 'security advisory', 'patch', 'firewall', 'vpn', 'router',
+    'switch', 'network', 'authentication', 'remote code execution', 'rce',
 ]
 
 
@@ -169,31 +175,79 @@ class MISPNewsPopulator:
         """Get list of RSS/Atom news feeds (hardcoded NERC CIP sources)"""
         # Hardcoded RSS feed sources for utilities/energy sector
         # These are independent of MISP's threat intel feeds system
+        #
+        # Categories:
+        # 1. Utilities Sector News - CISA ICS, Utility Dive, Industrial Cyber
+        # 2. Vendor Security Advisories - Cisco, Microsoft, Fortinet, Palo Alto, Ubuntu
+        # 3. Zero-Day Vulnerabilities - Zero Day Initiative
         feeds = [
+            # === Utilities Sector & ICS/SCADA News ===
             {
                 'id': 'cisa-ics',
                 'name': 'CISA ICS Advisories',
-                'url': 'https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml'
+                'url': 'https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml',
+                'description': 'Official ICS-CERT advisories from CISA',
+                'category': 'ics'
             },
             {
                 'id': 'utility-dive',
-                'name': 'Utility Dive - Electric Utilities',
-                'url': 'https://www.utilitydive.com/feeds/news/'
-            },
-            {
-                'id': 'securityweek-ics',
-                'name': 'SecurityWeek - ICS/SCADA News',
-                'url': 'https://www.securityweek.com/category/ics-ot-security/feed/'
-            },
-            {
-                'id': 'bleeping-infra',
-                'name': 'Bleeping Computer - Critical Infrastructure',
-                'url': 'https://www.bleepingcomputer.com/feed/tag/critical-infrastructure/'
+                'name': 'Utility Dive',
+                'url': 'https://www.utilitydive.com/feeds/news/',
+                'description': 'Energy utility industry news and policy',
+                'category': 'utilities'
             },
             {
                 'id': 'industrialcyber',
-                'name': 'Industrial Cyber - News',
-                'url': 'https://industrialcyber.co/feed/'
+                'name': 'Industrial Cyber',
+                'url': 'https://industrialcyber.co/feed/',
+                'description': 'ICS/OT cybersecurity news and threats',
+                'category': 'ics'
+            },
+
+            # === Vendor Security Advisories ===
+            {
+                'id': 'cisco-security',
+                'name': 'Cisco Security Advisories',
+                'url': 'https://tools.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml',
+                'description': 'Cisco product security vulnerabilities',
+                'category': 'vendor'
+            },
+            {
+                'id': 'microsoft-security',
+                'name': 'Microsoft Security Updates',
+                'url': 'https://api.msrc.microsoft.com/update-guide/rss',
+                'description': 'Microsoft CVE and security updates',
+                'category': 'vendor'
+            },
+            {
+                'id': 'fortinet-psirt',
+                'name': 'Fortinet PSIRT',
+                'url': 'https://www.fortiguard.com/rss/ir.xml',
+                'description': 'Fortinet product security advisories',
+                'category': 'vendor'
+            },
+            {
+                'id': 'paloalto-security',
+                'name': 'Palo Alto Networks Security',
+                'url': 'https://security.paloaltonetworks.com/rss.xml',
+                'description': 'Palo Alto product vulnerabilities',
+                'category': 'vendor'
+            },
+            {
+                'id': 'ubuntu-security',
+                'name': 'Ubuntu Security Notices',
+                'url': 'https://ubuntu.com/security/notices/rss.xml',
+                'description': 'Ubuntu Linux security patches (USN)',
+                'category': 'vendor'
+            },
+
+            # === Zero-Day Vulnerabilities ===
+            {
+                'id': 'zerodayinitiative',
+                'name': 'Zero Day Initiative',
+                'url': 'https://www.zerodayinitiative.com/rss/published/',
+                'description': 'Published zero-day vulnerabilities',
+                'category': 'zeroday'
             }
         ]
 
