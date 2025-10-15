@@ -31,8 +31,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system -r requirements.txt
-          uv pip install --system -r requirements-gui.txt
+          uv pip install -r requirements.txt
+          uv pip install -r requirements-gui.txt
 
       - name: Validate Python syntax (all scripts)
         run: |
@@ -135,9 +135,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system -r requirements.txt
-          uv pip install --system -r requirements-gui.txt
-          uv pip install --system pytest pytest-cov pytest-mock
+          uv pip install -r requirements.txt
+          uv pip install -r requirements-gui.txt
+          uv pip install pytest pytest-cov pytest-mock
 
       - name: Run pytest (if tests exist)
         run: |
