@@ -1183,8 +1183,14 @@ class UpdateScreen(Screen):
         }
 
         self.app.config["update_options"] = update_options
-        self.notify("Update functionality will be implemented", severity="information")
-        # TODO: Implement actual update by calling scripts/misp-update.py
+
+        # Confirm before starting
+        if not any(update_options.values()):
+            self.notify("Please select at least one update option", severity="error")
+            return
+
+        # Push to update progress screen
+        self.app.push_screen("update_progress")
 
 # ==========================================
 # Uninstall MISP Screen
@@ -1289,8 +1295,285 @@ class UninstallScreen(Screen):
         }
 
         self.app.config["uninstall_options"] = uninstall_options
-        self.notify("Uninstall functionality will be implemented", severity="information")
-        # TODO: Implement actual uninstall by calling scripts/uninstall-misp.py
+
+        # Push to uninstall progress screen
+        self.app.push_screen("uninstall_progress")
+
+# ==========================================
+# Update Progress Screen
+# ==========================================
+
+class UpdateProgressScreen(Screen):
+    """Update progress screen with live output"""
+
+    CSS = """
+    UpdateProgressScreen {
+        align: center middle;
+    }
+
+    #update-progress-container {
+        width: 90;
+        height: auto;
+        border: solid $accent;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $accent;
+        margin-bottom: 2;
+    }
+
+    #status-text {
+        text-align: center;
+        color: $text-muted;
+        margin: 1 0;
+    }
+
+    #log-container {
+        height: 25;
+        border: solid $primary;
+        padding: 1;
+        margin: 2 0;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with Container(id="update-progress-container"):
+            yield Label("Updating MISP", id="screen-title")
+            yield Static("Starting update process...", id="status-text")
+
+            yield Label("Update Log:", classes="log-header")
+            with ScrollableContainer(id="log-container"):
+                yield Static("", id="log-output")
+
+            with Horizontal(id="button-container"):
+                yield Button("Close", id="btn-close", variant="default", disabled=True)
+
+        yield Footer()
+
+    def on_mount(self):
+        """Start update when screen mounts"""
+        self.run_update()
+
+    def run_update(self):
+        """Execute misp-update.py script"""
+        import threading
+
+        def update_thread():
+            try:
+                self.update_status("Running MISP update script...")
+
+                # Build command based on options
+                cmd = ['sudo', 'python3', 'scripts/misp-update.py']
+
+                # Run the update script
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1
+                )
+
+                # Stream output
+                for line in process.stdout:
+                    self.append_log(line.rstrip())
+
+                process.wait()
+
+                if process.returncode == 0:
+                    self.update_status("✓ Update completed successfully!")
+                    self.append_log("\n✓ MISP has been updated successfully")
+                else:
+                    self.update_status("✗ Update failed")
+                    self.append_log(f"\n✗ Update failed with exit code {process.returncode}")
+
+            except Exception as e:
+                self.update_status("✗ Update error")
+                self.append_log(f"\n✗ Error: {str(e)}")
+
+            finally:
+                # Enable close button
+                self.call_from_thread(lambda: self.query_one("#btn-close", Button).__setattr__("disabled", False))
+
+        # Start update in background thread
+        thread = threading.Thread(target=update_thread, daemon=True)
+        thread.start()
+
+    def update_status(self, message: str):
+        """Update status text"""
+        try:
+            self.query_one("#status-text", Static).update(message)
+        except:
+            pass
+
+    def append_log(self, message: str):
+        """Append message to log output"""
+        try:
+            log_widget = self.query_one("#log-output", Static)
+            current = str(log_widget.renderable)
+            log_widget.update(current + "\n" + message if current else message)
+        except:
+            pass
+
+    @on(Button.Pressed, "#btn-close")
+    def on_close(self):
+        """Close and return to welcome"""
+        self.app.pop_screen()
+
+# ==========================================
+# Uninstall Progress Screen
+# ==========================================
+
+class UninstallProgressScreen(Screen):
+    """Uninstall progress screen with live output"""
+
+    CSS = """
+    UninstallProgressScreen {
+        align: center middle;
+    }
+
+    #uninstall-progress-container {
+        width: 90;
+        height: auto;
+        border: solid $error;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $error;
+        margin-bottom: 2;
+    }
+
+    #status-text {
+        text-align: center;
+        color: $text-muted;
+        margin: 1 0;
+    }
+
+    #log-container {
+        height: 25;
+        border: solid $primary;
+        padding: 1;
+        margin: 2 0;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with Container(id="uninstall-progress-container"):
+            yield Label("Uninstalling MISP", id="screen-title")
+            yield Static("Starting uninstall process...", id="status-text")
+
+            yield Label("Uninstall Log:", classes="log-header")
+            with ScrollableContainer(id="log-container"):
+                yield Static("", id="log-output")
+
+            with Horizontal(id="button-container"):
+                yield Button("Close", id="btn-close", variant="default", disabled=True)
+
+        yield Footer()
+
+    def on_mount(self):
+        """Start uninstall when screen mounts"""
+        self.run_uninstall()
+
+    def run_uninstall(self):
+        """Execute uninstall-misp.py script"""
+        import threading
+
+        def uninstall_thread():
+            try:
+                self.update_status("Running MISP uninstall script...")
+
+                # Build command based on options
+                cmd = ['sudo', 'python3', 'scripts/uninstall-misp.py', '--force']
+
+                options = self.app.config.get("uninstall_options", {})
+                if not options.get("keep_logs", True):
+                    cmd.append('--remove-logs')
+
+                # Run the uninstall script
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1
+                )
+
+                # Stream output
+                for line in process.stdout:
+                    self.append_log(line.rstrip())
+
+                process.wait()
+
+                if process.returncode == 0:
+                    self.update_status("✓ Uninstall completed successfully!")
+                    self.append_log("\n✓ MISP has been uninstalled")
+                else:
+                    self.update_status("✗ Uninstall failed")
+                    self.append_log(f"\n✗ Uninstall failed with exit code {process.returncode}")
+
+            except Exception as e:
+                self.update_status("✗ Uninstall error")
+                self.append_log(f"\n✗ Error: {str(e)}")
+
+            finally:
+                # Enable close button
+                self.call_from_thread(lambda: self.query_one("#btn-close", Button).__setattr__("disabled", False))
+
+        # Start uninstall in background thread
+        thread = threading.Thread(target=uninstall_thread, daemon=True)
+        thread.start()
+
+    def update_status(self, message: str):
+        """Update status text"""
+        try:
+            self.query_one("#status-text", Static).update(message)
+        except:
+            pass
+
+    def append_log(self, message: str):
+        """Append message to log output"""
+        try:
+            log_widget = self.query_one("#log-output", Static)
+            current = str(log_widget.renderable)
+            log_widget.update(current + "\n" + message if current else message)
+        except:
+            pass
+
+    @on(Button.Pressed, "#btn-close")
+    def on_close(self):
+        """Close and return to welcome"""
+        self.app.pop_screen()
 
 # ==========================================
 # Installation Progress Screen
@@ -1421,7 +1704,9 @@ class MISPInstallerApp(App):
         "review": ReviewScreen,
         "install": InstallScreen,
         "update": UpdateScreen,
-        "uninstall": UninstallScreen
+        "uninstall": UninstallScreen,
+        "update_progress": UpdateProgressScreen,
+        "uninstall_progress": UninstallProgressScreen
     }
 
     BINDINGS = [
