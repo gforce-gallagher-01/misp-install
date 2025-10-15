@@ -1377,16 +1377,20 @@ class UpdateProgressScreen(Screen):
             try:
                 self.update_status("Running MISP update script...")
 
+                # Get the directory where the GUI script is located
+                script_dir = Path(__file__).parent
+
                 # Build command based on options
                 cmd = ['sudo', 'python3', 'scripts/misp-update.py']
 
-                # Run the update script
+                # Run the update script from project root
                 process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
-                    bufsize=1
+                    bufsize=1,
+                    cwd=str(script_dir)
                 )
 
                 # Stream output
@@ -1407,8 +1411,14 @@ class UpdateProgressScreen(Screen):
                 self.append_log(f"\n✗ Error: {str(e)}")
 
             finally:
-                # Enable close button
-                self.call_from_thread(lambda: self.query_one("#btn-close", Button).__setattr__("disabled", False))
+                # Enable close button using Textual's thread-safe method
+                def enable_button():
+                    try:
+                        btn = self.query_one("#btn-close", Button)
+                        btn.disabled = False
+                    except:
+                        pass
+                self.call_from_thread(enable_button)
 
         # Start update in background thread
         thread = threading.Thread(target=update_thread, daemon=True)
@@ -1513,6 +1523,9 @@ class UninstallProgressScreen(Screen):
             try:
                 self.update_status("Running MISP uninstall script...")
 
+                # Get the directory where the GUI script is located
+                script_dir = Path(__file__).parent
+
                 # Build command based on options
                 cmd = ['sudo', 'python3', 'scripts/uninstall-misp.py', '--force']
 
@@ -1520,13 +1533,14 @@ class UninstallProgressScreen(Screen):
                 if not options.get("keep_logs", True):
                     cmd.append('--remove-logs')
 
-                # Run the uninstall script
+                # Run the uninstall script from project root
                 process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
-                    bufsize=1
+                    bufsize=1,
+                    cwd=str(script_dir)
                 )
 
                 # Stream output
@@ -1547,8 +1561,14 @@ class UninstallProgressScreen(Screen):
                 self.append_log(f"\n✗ Error: {str(e)}")
 
             finally:
-                # Enable close button
-                self.call_from_thread(lambda: self.query_one("#btn-close", Button).__setattr__("disabled", False))
+                # Enable close button using Textual's thread-safe method
+                def enable_button():
+                    try:
+                        btn = self.query_one("#btn-close", Button)
+                        btn.disabled = False
+                    except:
+                        pass
+                self.call_from_thread(enable_button)
 
         # Start uninstall in background thread
         thread = threading.Thread(target=uninstall_thread, daemon=True)
