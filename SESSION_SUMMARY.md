@@ -276,11 +276,12 @@ Result: Centralized logging, consistent format, NO duplication
    **Why**: Automates daily/weekly updates
 
 ### Medium Priority (This Week)
-4. 🔄 **Populate MISP News**
-   ```bash
-   python3 scripts/populate-misp-news.py
-   ```
-   **Why**: Security awareness training content (NERC CIP-003)
+4. ✅ **MISP News Populated** (4 articles)
+   - CISA ICS Advisory for Electric Utilities
+   - Solar Inverter Security Alert
+   - E-ISAC Wind Energy Facilities Warning
+   - NERC CIP-015-1 Internal Network Monitoring
+   **Status**: Security awareness training content ready (NERC CIP-003)
 
 5. ⏳ **Change Default Password**
    - Login to https://misp-test.lan
@@ -318,7 +319,7 @@ Total Checks:    7
 
 **Warnings**:
 - Feed status unclear (permission to read .env)
-- News population incomplete
+- News population now complete (4 articles added manually)
 
 **Failed**:
 - Taxonomy listing (MISP may still be initializing)

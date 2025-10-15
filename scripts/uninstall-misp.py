@@ -90,6 +90,7 @@ class MISPUninstall:
         print("  • MISP configuration files")
         print(f"  • MISP directory: {self.config.MISP_DIR}")
         print("  • misp-owner system user and home directory")
+        print("  • MISP maintenance cron jobs (daily/weekly)")
         print()
         print(Colors.warning(f"NOTE: Backups in {self.config.BACKUP_DIR} will NOT be deleted"))
         print()
@@ -268,6 +269,71 @@ class MISPUninstall:
         except Exception as e:
             self.log(f"Error checking/removing misp-owner user: {e}", "warning")
 
+    def remove_cron_jobs(self):
+        """Remove MISP maintenance cron jobs
+
+        DRY Principle: Uses same removal pattern as setup-misp-maintenance-cron.sh --remove
+        """
+        self.log("Checking for MISP cron jobs...")
+
+        try:
+            # Check if any MISP cron jobs exist
+            result = subprocess.run(
+                ['crontab', '-l'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+
+            if result.returncode != 0:
+                self.log("No crontab found", "info")
+                return
+
+            crontab_content = result.stdout
+
+            # Check if MISP maintenance jobs exist
+            if 'misp-daily-maintenance' not in crontab_content and 'misp-weekly-maintenance' not in crontab_content:
+                self.log("No MISP cron jobs found", "info")
+                return
+
+            # Remove MISP maintenance cron jobs
+            # Filter out lines containing MISP maintenance jobs
+            lines = crontab_content.split('\n')
+            filtered_lines = [
+                line for line in lines
+                if not any(keyword in line for keyword in [
+                    'misp-daily-maintenance',
+                    'misp-weekly-maintenance',
+                    'MISP Daily Maintenance',
+                    'MISP Weekly Maintenance'
+                ])
+            ]
+
+            # Write back filtered crontab
+            new_crontab = '\n'.join(filtered_lines)
+
+            # Install new crontab
+            result = subprocess.run(
+                ['crontab', '-'],
+                input=new_crontab,
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+
+            if result.returncode == 0:
+                self.log("MISP cron jobs removed", "success")
+                self.logger.info("Removed MISP maintenance cron jobs",
+                               event_type="uninstall",
+                               action="remove_cron")
+            else:
+                self.log(f"Could not update crontab: {result.stderr[:200]}", "warning")
+
+        except FileNotFoundError:
+            self.log("crontab command not found", "warning")
+        except Exception as e:
+            self.log(f"Error removing cron jobs: {e}", "warning")
+
     def remove_logs(self, remove: bool = False):
         """Optionally remove logs"""
         if not remove:
@@ -276,11 +342,26 @@ class MISPUninstall:
 
         self.log("Removing installation logs...")
 
+        # Remove installation logs
         if self.config.LOG_DIR.exists():
             shutil.rmtree(self.config.LOG_DIR, ignore_errors=True)
-            self.log("Logs removed", "success")
+            self.log("Installation logs removed", "success")
         else:
-            self.log("No log directory found", "info")
+            self.log("No installation log directory found", "info")
+
+        # Also remove maintenance logs directory
+        maintenance_log_dir = Path("/var/log/misp-maintenance")
+        if maintenance_log_dir.exists():
+            try:
+                subprocess.run(
+                    ['sudo', 'rm', '-rf', str(maintenance_log_dir)],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                self.log("Maintenance logs removed", "success")
+            except Exception as e:
+                self.log(f"Could not remove maintenance logs: {e}", "warning")
 
     def show_backup_info(self):
         """Show information about preserved backups"""
@@ -325,6 +406,7 @@ class MISPUninstall:
         print("  ✓ MISP Docker images")
         print("  ✓ MISP directory")
         print("  ✓ misp-owner system user")
+        print("  ✓ MISP maintenance cron jobs")
         print("  ✓ Installation state files")
         print()
         print("Preserved items:")
@@ -363,6 +445,7 @@ class MISPUninstall:
             self.remove_images()
             self.remove_misp_directory()
             self.remove_misp_user()  # Remove dedicated user
+            self.remove_cron_jobs()  # Remove automated maintenance cron jobs
             self.remove_state_files()
             self.remove_logs(remove_logs)
 

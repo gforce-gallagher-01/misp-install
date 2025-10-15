@@ -1,8 +1,8 @@
 # MISP Installation Scripts Inventory
 
-**Version**: 5.4
-**Date**: 2025-10-13
-**Total Scripts**: 8 Python scripts
+**Version**: 5.5
+**Date**: 2025-10-15
+**Total Scripts**: 9 Python scripts
 
 ---
 
@@ -279,6 +279,69 @@ python3 scripts/uninstall-misp.py --force
 
 ---
 
+### 9. populate-misp-news.py
+
+**Location**: `/home/gallagher/misp-install/misp-install/scripts/populate-misp-news.py`
+**Version**: 1.0
+**Size**: ~21KB
+**Purpose**: Automatically populate MISP News from RSS feeds (utilities sector focus)
+
+**Features**:
+- Fetches articles from 4 RSS feeds (CISA ICS, SecurityWeek, Bleeping Computer, Industrial Cyber)
+- Filters content for utilities/energy sector relevance
+- Markdown-formatted news entries with clickable links
+- HTML cleanup from RSS summaries
+- Duplicate detection (prevents re-adding same articles)
+- Configurable time range and article limits
+- Dry-run mode for preview
+
+**RSS Feed Sources** (5 feeds):
+1. CISA ICS Advisories - https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml
+2. Utility Dive Electric Utilities - https://www.utilitydive.com/feeds/news/
+3. SecurityWeek ICS/SCADA News - https://www.securityweek.com/category/ics-ot-security/feed/
+4. Bleeping Computer Critical Infrastructure - https://www.bleepingcomputer.com/feed/tag/critical-infrastructure/
+5. Industrial Cyber News - https://industrialcyber.co/feed/
+
+**Usage**:
+```bash
+# Populate news (default: last 30 days, max 20 articles)
+python3 scripts/populate-misp-news.py
+
+# Preview without inserting
+python3 scripts/populate-misp-news.py --dry-run
+
+# Limit to 10 articles from last 7 days
+python3 scripts/populate-misp-news.py --max-items 10 --days 7
+
+# Set up automated daily updates
+bash scripts/setup-news-cron.sh
+
+# Manual cron setup (if needed)
+0 8 * * * cd /home/gallagher/misp-install/misp-install && python3 scripts/populate-misp-news.py --quiet --days 2
+```
+
+**Cron Automation**:
+- Run `bash scripts/setup-news-cron.sh` to install daily cron job
+- Checks feeds daily at 8 AM
+- Only fetches articles from last 2 days (efficient)
+- Automatically skips duplicates
+- Quiet mode for minimal cron email
+- Remove with: `bash scripts/setup-news-cron.sh --remove`
+
+**News Format**:
+- **Title**: Plain text (article headline)
+- **Message**: Markdown-formatted with:
+  - Clean summary (250 chars, HTML removed)
+  - Clickable link: `**[→ Read full article](URL)**`
+  - Horizontal rule separator
+  - Source attribution: `*Source: Feed Name*`
+
+**Filtering Keywords**: Energy, utility, electric, power, grid, solar, wind, SCADA, ICS, OT, NERC CIP, critical infrastructure
+
+**Log Output**: `/opt/misp/logs/populate-misp-news-TIMESTAMP.log`
+
+---
+
 ## Script Dependencies
 
 ### Python Version
@@ -293,9 +356,13 @@ All scripts use only Python standard library modules:
 - `pwd`, `grp` (Unix-specific)
 
 ### Optional Dependencies
-- `yaml` - For YAML config file support (misp-install.py)
+- `pyyaml` - For YAML config file support (misp-install.py)
   ```bash
   pip3 install pyyaml
+  ```
+- `feedparser` - For RSS feed parsing (populate-misp-news.py)
+  ```bash
+  pip3 install feedparser
   ```
 
 ### System Dependencies
@@ -505,6 +572,7 @@ newgrp docker
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 5.5 | 2025-10-15 | Added populate-misp-news.py with Markdown support |
 | 5.4 | 2025-10-13 | Dedicated user architecture, removed .sh scripts |
 | 5.3 | 2025-10-13 | Logger robustness, log directory fixes |
 | 5.2 | 2025-10-12 | Centralized JSON logging (CIM fields) |
@@ -524,5 +592,5 @@ newgrp docker
 ---
 
 **Created by tKQB Enterprises MISP Installation Suite**
-**Documentation Version**: 5.4
-**Last Updated**: 2025-10-13
+**Documentation Version**: 5.5
+**Last Updated**: 2025-10-15
