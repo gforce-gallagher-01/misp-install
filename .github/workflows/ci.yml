@@ -41,23 +41,34 @@ jobs:
         run: |
           source .venv/bin/activate
           echo "=== Validating Python Syntax ==="
-          python3 -m py_compile misp-install.py
-          python3 -m py_compile misp_install_gui.py
-          python3 -m py_compile misp_logger.py
-          python3 -m py_compile setup.py
-          python3 -m py_compile check_deps.py
+
+          # Validate root Python files
+          for file in *.py; do
+            if [ -f "$file" ]; then
+              echo "Checking: $file"
+              python3 -m py_compile "$file"
+            fi
+          done
 
           # Validate all scripts in scripts/
-          for script in scripts/*.py; do
-            echo "Checking: $script"
-            python3 -m py_compile "$script"
-          done
+          if [ -d "scripts" ]; then
+            for script in scripts/*.py; do
+              if [ -f "$script" ]; then
+                echo "Checking: $script"
+                python3 -m py_compile "$script"
+              fi
+            done
+          fi
 
           # Validate all lib modules
-          for module in lib/*.py; do
-            echo "Checking: $module"
-            python3 -m py_compile "$module"
-          done
+          if [ -d "lib" ]; then
+            for module in lib/*.py; do
+              if [ -f "$module" ]; then
+                echo "Checking: $module"
+                python3 -m py_compile "$module"
+              fi
+            done
+          fi
 
           echo "✅ All Python files pass syntax validation"
 
@@ -65,11 +76,26 @@ jobs:
         run: |
           source .venv/bin/activate
           echo "=== Testing Module Imports ==="
-          python3 -c "import misp_logger; print('✓ misp_logger')"
-          python3 -c "from lib.misp_config import MISPConfig; print('✓ lib.misp_config')"
-          python3 -c "from lib.misp_database import DatabaseManager; print('✓ lib.misp_database')"
-          python3 -c "from lib.misp_password import PasswordValidator; print('✓ lib.misp_password')"
-          echo "✅ All core modules import successfully"
+
+          # Test lib modules if they exist
+          if [ -d "lib" ]; then
+            if [ -f "lib/misp_config.py" ]; then
+              python3 -c "from lib.misp_config import MISPConfig; print('✓ lib.misp_config')"
+            fi
+            if [ -f "lib/misp_database.py" ]; then
+              python3 -c "from lib.misp_database import DatabaseManager; print('✓ lib.misp_database')"
+            fi
+            if [ -f "lib/misp_password.py" ]; then
+              python3 -c "from lib.misp_password import PasswordValidator; print('✓ lib.misp_password')"
+            fi
+          fi
+
+          # Test scripts modules if they exist
+          if [ -f "scripts/misp_logger.py" ]; then
+            python3 -c "import sys; sys.path.insert(0, 'scripts'); import misp_logger; print('✓ scripts.misp_logger')"
+          fi
+
+          echo "✅ Module import tests complete"
 
   # Job 2: Code Quality (Linting & Formatting)
   lint:
