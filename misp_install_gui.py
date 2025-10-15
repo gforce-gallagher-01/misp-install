@@ -633,7 +633,7 @@ class EnvironmentScreen(Screen):
 
     @on(Button.Pressed, "#btn-next")
     def on_next(self):
-        """Move to review screen"""
+        """Move to features screen"""
         radio_set = self.query_one("#environment-radio", RadioSet)
 
         if radio_set.pressed_button:
@@ -648,9 +648,181 @@ class EnvironmentScreen(Screen):
             else:
                 self.app.config["environment"] = "production"  # default
 
-            self.app.push_screen("review")
+            self.app.push_screen("features")
         else:
             self.notify("Please select an environment", severity="error")
+
+# ==========================================
+# Enhanced Features Screen
+# ==========================================
+
+class FeaturesScreen(Screen):
+    """Enhanced features configuration screen"""
+
+    CSS = """
+    FeaturesScreen {
+        align: center middle;
+    }
+
+    #features-container {
+        width: 90;
+        height: auto;
+        border: solid $accent;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $accent;
+        margin-bottom: 2;
+    }
+
+    .feature-section {
+        border: solid $primary-lighten-2;
+        padding: 1;
+        margin: 1 0;
+        background: $primary 10%;
+    }
+
+    .section-title {
+        color: $accent;
+        text-style: bold;
+        margin-bottom: 1;
+    }
+
+    .feature-description {
+        color: $text-muted;
+        margin-left: 2;
+        margin-bottom: 0;
+    }
+
+    Checkbox {
+        margin: 0 2;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with ScrollableContainer(id="features-container"):
+            yield Label("Enhanced Features Configuration", id="screen-title")
+            yield Static("Step 4 of 6", classes="step-indicator")
+
+            yield Static(
+                "📦 Select the enhanced features to install and configure.\n"
+                "💡 All features can be enabled/disabled later.\n",
+                classes="feature-intro"
+            )
+
+            # Industry-Specific Configuration
+            with Container(classes="feature-section"):
+                yield Label("🏭 Industry-Specific Configuration", classes="section-title")
+                yield Checkbox("Configure for NERC CIP Compliance (Energy Sector)", id="feat-nerc-cip")
+                yield Static("ICS/SCADA threat feeds, compliance settings, regulatory requirements", classes="feature-description")
+                yield Checkbox("Configure for Critical Infrastructure / Utilities Sector", id="feat-utilities")
+                yield Static("Water, power, gas sector threats and CISA alerts", classes="feature-description")
+
+            # Threat Intelligence Feeds
+            with Container(classes="feature-section"):
+                yield Label("🌐 Threat Intelligence Feeds", classes="section-title")
+                yield Checkbox("Enable Core Threat Intel Feeds", id="feat-threat-feeds", value=True)
+                yield Static("CIRCL, Abuse.ch, OpenPhish, Blocklist.de", classes="feature-description")
+                yield Checkbox("Enable ICS/OT-Specific Threat Feeds", id="feat-ics-feeds")
+                yield Static("Industrial control systems and operational technology threats", classes="feature-description")
+
+            # Security News & Alerts
+            with Container(classes="feature-section"):
+                yield Label("📰 Security News & Alerts", classes="section-title")
+                yield Checkbox("Populate Security News Dashboard", id="feat-news", value=True)
+                yield Static("Latest cybersecurity news from trusted sources", classes="feature-description")
+                yield Checkbox("Add NERC CIP News Feeds", id="feat-nerc-news")
+                yield Static("Energy sector security news and compliance updates", classes="feature-description")
+
+            # Automated Maintenance
+            with Container(classes="feature-section"):
+                yield Label("⚙️ Automated Maintenance & Updates", classes="section-title")
+                yield Checkbox("Setup Daily Maintenance Tasks", id="feat-daily-maintenance", value=True)
+                yield Static("Database optimization, cache clearing, log rotation", classes="feature-description")
+                yield Checkbox("Setup Weekly Maintenance Tasks", id="feat-weekly-maintenance", value=True)
+                yield Static("Feed updates, taxonomy updates, system cleanup", classes="feature-description")
+                yield Checkbox("Setup Automated Feed Fetching (Cron)", id="feat-feed-cron", value=True)
+                yield Static("Automatically fetch threat intel feeds daily", classes="feature-description")
+                yield Checkbox("Setup Automated News Updates (Cron)", id="feat-news-cron")
+                yield Static("Daily security news dashboard updates", classes="feature-description")
+                yield Checkbox("Setup Automated Backups", id="feat-backup-cron", value=True)
+                yield Static("Daily automated backups with 30-day retention", classes="feature-description")
+
+            # Advanced Configuration
+            with Container(classes="feature-section"):
+                yield Label("🔧 Advanced Configuration", classes="section-title")
+                yield Checkbox("Enable All Default Feeds (70+ feeds)", id="feat-enable-feeds")
+                yield Static("Activate all built-in MISP feed sources", classes="feature-description")
+                yield Checkbox("Configure MISP for Production Best Practices", id="feat-production-config", value=True)
+                yield Static("Security hardening, performance tuning, recommended settings", classes="feature-description")
+
+            with Horizontal(id="button-container"):
+                yield Button("← Back", id="btn-back", variant="default")
+                yield Button("Select All", id="btn-select-all", variant="default")
+                yield Button("Deselect All", id="btn-deselect-all", variant="default")
+                yield Button("Next →", id="btn-next", variant="primary")
+
+        yield Footer()
+
+    @on(Button.Pressed, "#btn-back")
+    def on_back(self):
+        """Go back to environment screen"""
+        self.app.pop_screen()
+
+    @on(Button.Pressed, "#btn-select-all")
+    def on_select_all(self):
+        """Select all feature checkboxes"""
+        for checkbox in self.query(Checkbox):
+            checkbox.value = True
+        self.notify("✓ All features selected", severity="information")
+
+    @on(Button.Pressed, "#btn-deselect-all")
+    def on_deselect_all(self):
+        """Deselect all feature checkboxes"""
+        for checkbox in self.query(Checkbox):
+            checkbox.value = False
+        self.notify("✓ All features deselected", severity="information")
+
+    @on(Button.Pressed, "#btn-next")
+    def on_next(self):
+        """Save feature selections and move to review screen"""
+        # Save all checkbox states to config
+        self.app.config["features"] = {
+            "nerc_cip": self.query_one("#feat-nerc-cip", Checkbox).value,
+            "utilities_sector": self.query_one("#feat-utilities", Checkbox).value,
+            "threat_feeds": self.query_one("#feat-threat-feeds", Checkbox).value,
+            "ics_feeds": self.query_one("#feat-ics-feeds", Checkbox).value,
+            "security_news": self.query_one("#feat-news", Checkbox).value,
+            "nerc_news": self.query_one("#feat-nerc-news", Checkbox).value,
+            "daily_maintenance": self.query_one("#feat-daily-maintenance", Checkbox).value,
+            "weekly_maintenance": self.query_one("#feat-weekly-maintenance", Checkbox).value,
+            "feed_cron": self.query_one("#feat-feed-cron", Checkbox).value,
+            "news_cron": self.query_one("#feat-news-cron", Checkbox).value,
+            "backup_cron": self.query_one("#feat-backup-cron", Checkbox).value,
+            "enable_all_feeds": self.query_one("#feat-enable-feeds", Checkbox).value,
+            "production_best_practices": self.query_one("#feat-production-config", Checkbox).value,
+        }
+
+        # Count selected features
+        selected_count = sum(1 for v in self.app.config["features"].values() if v)
+
+        self.notify(f"✓ {selected_count} features selected", severity="information")
+        self.app.push_screen("review")
 
 # ==========================================
 # Review & Confirm Screen
@@ -716,7 +888,7 @@ class ReviewScreen(Screen):
         yield Header()
         with ScrollableContainer(id="review-container"):
             yield Label("Review Configuration", id="screen-title")
-            yield Static("Step 4 of 5", classes="step-indicator")
+            yield Static("Step 5 of 6", classes="step-indicator")
 
             yield Static("Please review your configuration before installation:\n")
 
@@ -736,6 +908,34 @@ class ReviewScreen(Screen):
             with Container(classes="config-section"):
                 yield Label("Environment", classes="config-label")
                 yield Static(f"Type: {self.app.config.get('environment', 'N/A').title()}", classes="config-value")
+
+            # Show selected features
+            features = self.app.config.get('features', {})
+            selected_features = [k for k, v in features.items() if v]
+
+            with Container(classes="config-section"):
+                yield Label("Enhanced Features", classes="config-label")
+                if selected_features:
+                    feature_names = {
+                        'nerc_cip': 'NERC CIP Compliance',
+                        'utilities_sector': 'Utilities Sector Configuration',
+                        'threat_feeds': 'Core Threat Intel Feeds',
+                        'ics_feeds': 'ICS/OT Threat Feeds',
+                        'security_news': 'Security News Dashboard',
+                        'nerc_news': 'NERC CIP News Feeds',
+                        'daily_maintenance': 'Daily Maintenance',
+                        'weekly_maintenance': 'Weekly Maintenance',
+                        'feed_cron': 'Automated Feed Fetching',
+                        'news_cron': 'Automated News Updates',
+                        'backup_cron': 'Automated Backups',
+                        'enable_all_feeds': 'Enable All Default Feeds',
+                        'production_best_practices': 'Production Best Practices'
+                    }
+                    for feature_key in selected_features:
+                        feature_name = feature_names.get(feature_key, feature_key.replace('_', ' ').title())
+                        yield Static(f"✓ {feature_name}", classes="config-value")
+                else:
+                    yield Static("(No enhanced features selected)", classes="config-value")
 
             with Container(id="warning-box"):
                 yield Static(
@@ -818,7 +1018,8 @@ class ReviewScreen(Screen):
             "admin_password": self.app.config.get("admin_password"),
             "mysql_password": self.app.config.get("mysql_password"),
             "gpg_passphrase": self.app.config.get("gpg_passphrase"),
-            "environment": self.app.config.get("environment", "production")
+            "environment": self.app.config.get("environment", "production"),
+            "features": self.app.config.get("features", {})
         }
 
         with open(config_file, 'w') as f:
@@ -888,7 +1089,7 @@ class InstallScreen(Screen):
         yield Header()
         with Container(id="install-container"):
             yield Label("Installing MISP", id="screen-title")
-            yield Static("Step 5 of 5 - Please wait...", classes="step-indicator")
+            yield Static("Step 6 of 6 - Please wait...", classes="step-indicator")
 
             yield ProgressBar(total=100, show_eta=False, id="progress-bar")
             yield Static("Initializing installation...", id="status-text")
@@ -954,6 +1155,7 @@ class MISPInstallerApp(App):
         "network": NetworkScreen,
         "security": SecurityScreen,
         "environment": EnvironmentScreen,
+        "features": FeaturesScreen,
         "review": ReviewScreen,
         "install": InstallScreen
     }
