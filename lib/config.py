@@ -4,6 +4,8 @@ Configuration management for MISP installation
 
 import json
 import os
+import socket
+import subprocess
 from dataclasses import dataclass, asdict
 from enum import Enum
 from typing import Dict, Optional
@@ -13,6 +15,52 @@ try:
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
+
+
+def get_system_hostname() -> str:
+    """
+    Get the system's fully qualified domain name (FQDN).
+
+    Tries multiple methods to get the best hostname:
+    1. hostname -f (FQDN)
+    2. socket.getfqdn()
+    3. socket.gethostname()
+
+    Returns:
+        str: System hostname/FQDN
+    """
+    try:
+        # Try hostname -f command first (most reliable on Linux)
+        result = subprocess.run(['hostname', '-f'],
+                              capture_output=True,
+                              text=True,
+                              timeout=5)
+        if result.returncode == 0 and result.stdout.strip():
+            hostname = result.stdout.strip()
+            # Only return if it's a valid FQDN (contains a dot)
+            if '.' in hostname:
+                return hostname
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception):
+        pass
+
+    try:
+        # Try Python's socket.getfqdn()
+        hostname = socket.getfqdn()
+        if hostname and hostname != 'localhost' and '.' in hostname:
+            return hostname
+    except Exception:
+        pass
+
+    try:
+        # Fallback to socket.gethostname()
+        hostname = socket.gethostname()
+        if hostname and hostname != 'localhost':
+            return hostname
+    except Exception:
+        pass
+
+    # Ultimate fallback
+    return "misp.local"
 
 
 class Environment(Enum):
@@ -52,7 +100,7 @@ class PerformanceTuning:
 class MISPConfig:
     """MISP installation configuration"""
     server_ip: str = "192.168.20.193"
-    domain: str = "misp-dev.lan"
+    domain: str = ""  # Auto-detected if empty
     admin_email: str = "admin@yourcompany.com"
     admin_org: str = "tKQB Enterprises"
     admin_password: str = ""
@@ -64,6 +112,10 @@ class MISPConfig:
     performance: Optional[Dict] = None
 
     def __post_init__(self):
+        # Auto-detect hostname if not specified
+        if not self.domain:
+            self.domain = get_system_hostname()
+
         if not self.base_url:
             self.base_url = f"https://{self.domain}"
 

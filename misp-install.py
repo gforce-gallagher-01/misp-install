@@ -230,8 +230,15 @@ def get_user_input_interactive(logger) -> MISPConfig:
 
     print("Please provide installation details:\n")
 
+    # Import hostname detection
+    from lib.config import get_system_hostname
+
+    # Auto-detect system hostname
+    detected_hostname = get_system_hostname()
+    print(f"🔍 Detected system hostname: {Colors.success(detected_hostname)}\n")
+
     server_ip = input("Enter server IP address [192.168.20.193]: ") or "192.168.20.193"
-    domain = input("Enter FQDN for MISP [misp-dev.lan]: ") or "misp-dev.lan"
+    domain = input(f"Enter FQDN for MISP [{detected_hostname}]: ") or detected_hostname
     admin_email = input("Enter admin email [admin@yourcompany.com]: ") or "admin@yourcompany.com"
     admin_org = input("Enter organization name [tKQB Enterprises]: ") or "tKQB Enterprises"
 

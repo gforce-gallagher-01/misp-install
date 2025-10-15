@@ -1,12 +1,13 @@
-# MISP Complete Installation Tool v5.4
+# MISP Complete Installation Tool v5.5
 **tKQB Enterprises**
 
 A professional-grade Python installation script for MISP (Malware Information Sharing Platform) with enterprise features.
 
 ## 🚀 Features
 
+- ✅ **Automatic Hostname Detection** - Detects and uses system FQDN automatically
 - ✅ **Pre-flight System Checks** - Validates disk, RAM, CPU, ports, Docker
-- ✅ **Full Logging** - Detailed logs saved to `/var/log/misp-install/`
+- ✅ **Full Logging** - Detailed logs saved to `/opt/misp/logs/`
 - ✅ **Automatic Backups** - Backs up existing installation before cleanup
 - ✅ **Config File Support** - YAML/JSON configuration files
 - ✅ **Docker Group Activation** - Automatic docker group configuration
@@ -17,6 +18,7 @@ A professional-grade Python installation script for MISP (Malware Information Sh
 - ✅ **Port Conflict Detection** - Prevents installation conflicts
 - ✅ **Multi-Environment** - Dev/Staging/Production profiles
 - ✅ **Performance Tuning** - Auto-configures based on system resources
+- ✅ **API Key Generation** - Automatic API key for automation
 
 ## 📋 Requirements
 
