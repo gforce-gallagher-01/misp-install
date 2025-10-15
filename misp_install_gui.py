@@ -1477,8 +1477,8 @@ class UpdateProgressScreen(Screen):
                 # Get the directory where the GUI script is located
                 script_dir = Path(__file__).parent
 
-                # Build command based on options
-                cmd = ['sudo', 'python3', 'scripts/misp-update.py']
+                # Build command based on options (script uses sudo internally)
+                cmd = ['python3', 'scripts/misp-update.py', '--force']
 
                 # Run the update script from project root
                 process = subprocess.Popen(
@@ -1623,8 +1623,8 @@ class UninstallProgressScreen(Screen):
                 # Get the directory where the GUI script is located
                 script_dir = Path(__file__).parent
 
-                # Build command based on options
-                cmd = ['sudo', 'python3', 'scripts/uninstall-misp.py', '--force']
+                # Build command based on options (script uses sudo internally)
+                cmd = ['python3', 'scripts/uninstall-misp.py', '--force']
 
                 options = self.app.config.get("uninstall_options", {})
                 if not options.get("keep_logs", True):

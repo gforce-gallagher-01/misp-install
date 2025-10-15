@@ -16,6 +16,12 @@ import time
 from pathlib import Path
 from typing import List
 
+# Add parent directory to path for imports
+script_dir = Path(__file__).resolve().parent
+parent_dir = script_dir.parent
+if str(parent_dir) not in sys.path:
+    sys.path.insert(0, str(parent_dir))
+
 # Check Python version
 if sys.version_info < (3, 8):
     print("❌ Python 3.8 or higher required")
