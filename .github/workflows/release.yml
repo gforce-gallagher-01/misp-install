@@ -91,11 +91,15 @@ jobs:
       - name: Set up Python
         run: uv python install 3.11
 
+      - name: Create virtual environment
+        run: uv venv --python 3.11
+
       - name: Build package
         run: |
+          source .venv/bin/activate
           if [ -f "setup.py" ]; then
             echo "=== Building Python Package ==="
-            uv pip install --system build
+            uv pip install build
             python3 -m build
             echo "✅ Package built successfully"
             ls -lh dist/
