@@ -1,0 +1,142 @@
+name: NERC CIP Compliance Question
+description: Questions about NERC CIP compliance features
+title: "[NERC CIP] "
+labels: ["nerc-cip", "question"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is for questions related to NERC CIP compliance features of the MISP installation.
+
+        **Note**: This project helps configure MISP for NERC CIP compliance but is not a compliance consulting service.
+
+  - type: dropdown
+    id: standard
+    attributes:
+      label: NERC CIP Standard
+      description: Which NERC CIP standard does your question relate to?
+      options:
+        - CIP-003-R2 (Security Awareness Training)
+        - CIP-005-R2 (Electronic Access Points)
+        - CIP-007-R4 (Security Event Logging)
+        - CIP-008-R1 (Incident Response)
+        - CIP-010-R3 (Vulnerability Assessment)
+        - CIP-011-R1 (BCSI Protection)
+        - CIP-013-R1 (Supply Chain Security)
+        - CIP-015-R1 (Internal Network Monitoring)
+        - General NERC CIP Question
+        - Not Sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact-level
+    attributes:
+      label: BES Cyber System Impact Level
+      description: What is your BES Cyber System impact level?
+      options:
+        - Low Impact
+        - Medium Impact
+        - High Impact
+        - Not Applicable / Not Sure
+    validations:
+      required: false
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What is your NERC CIP related question?
+      placeholder: |
+        How do I configure MISP to meet CIP-007 logging requirements?
+        What evidence does MISP provide for CIP-008 audits?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What aspect of NERC CIP compliance?
+      options:
+        - Feed Configuration (ICS/SCADA feeds)
+        - Logging & Audit Evidence
+        - BCSI Protection (Data Classification)
+        - Incident Response Integration
+        - E-ISAC Integration
+        - Vulnerability Management
+        - Supply Chain Risk Management
+        - Internal Network Monitoring
+        - Documentation / Audit Evidence
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-setup
+    attributes:
+      label: Current Setup
+      description: Describe your current MISP configuration
+      placeholder: |
+        - MISP Version: 2.5.x
+        - Scripts Run: configure-misp-nerc-cip.py, enable-misp-feeds.py
+        - Feeds Enabled: 14 NERC CIP feeds
+        - Environment: Production / Development
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Use Case / Context
+      description: What are you trying to accomplish?
+      placeholder: |
+        We're preparing for a NERC CIP audit and need to demonstrate that MISP
+        provides evidence for CIP-008 incident response documentation...
+    validations:
+      required: false
+
+  - type: textarea
+    id: documentation-reviewed
+    attributes:
+      label: Documentation Reviewed
+      description: What documentation have you already reviewed?
+      placeholder: |
+        - [ ] docs/NERC_CIP_CONFIGURATION.md
+        - [ ] scripts/configure-misp-nerc-cip.py output
+        - [ ] NERC CIP standard text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: utilities-context
+    attributes:
+      label: Utilities Context
+      description: Check all that apply
+      options:
+        - label: Electric utility (solar generation)
+        - label: Electric utility (wind generation)
+        - label: Electric utility (battery storage)
+        - label: Electric utility (transmission)
+        - label: Electric utility (distribution)
+        - label: Registered Entity (RC, TOP, BA, etc.)
+        - label: Vendor/Supplier to electric utilities
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other relevant details
+      placeholder: Audit date, specific auditor questions, etc.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        **Disclaimer**: This project provides tools to configure MISP for NERC CIP compliance.
+        It does not constitute legal or compliance advice. Consult with your compliance team
+        and legal counsel for specific audit requirements.

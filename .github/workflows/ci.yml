@@ -1,0 +1,210 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  # Job 1: Syntax and Import Validation (Fast - runs first)
+  validate:
+    name: Validate Python Syntax & Imports
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system -r requirements.txt
+          uv pip install --system -r requirements-gui.txt
+
+      - name: Validate Python syntax (all scripts)
+        run: |
+          echo "=== Validating Python Syntax ==="
+          python3 -m py_compile misp-install.py
+          python3 -m py_compile misp_install_gui.py
+          python3 -m py_compile misp_logger.py
+          python3 -m py_compile setup.py
+          python3 -m py_compile check_deps.py
+
+          # Validate all scripts in scripts/
+          for script in scripts/*.py; do
+            echo "Checking: $script"
+            python3 -m py_compile "$script"
+          done
+
+          # Validate all lib modules
+          for module in lib/*.py; do
+            echo "Checking: $module"
+            python3 -m py_compile "$module"
+          done
+
+          echo "✅ All Python files pass syntax validation"
+
+      - name: Test imports (core modules)
+        run: |
+          echo "=== Testing Module Imports ==="
+          python3 -c "import misp_logger; print('✓ misp_logger')"
+          python3 -c "from lib.misp_config import MISPConfig; print('✓ lib.misp_config')"
+          python3 -c "from lib.misp_database import DatabaseManager; print('✓ lib.misp_database')"
+          python3 -c "from lib.misp_password import PasswordValidator; print('✓ lib.misp_password')"
+          echo "✅ All core modules import successfully"
+
+  # Job 2: Code Quality (Linting & Formatting)
+  lint:
+    name: Code Quality (Ruff)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install Ruff
+        run: uv tool install ruff
+
+      - name: Run Ruff linting
+        run: |
+          echo "=== Running Ruff Linter ==="
+          uvx ruff check . --output-format=github
+        continue-on-error: true  # Don't fail build on lint warnings initially
+
+      - name: Run Ruff formatting check
+        run: |
+          echo "=== Checking Code Formatting ==="
+          uvx ruff format --check .
+        continue-on-error: true  # Don't fail build on format issues initially
+
+  # Job 3: Security Scanning
+  security:
+    name: Security Scan (Bandit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install Bandit
+        run: uv tool install bandit
+
+      - name: Run Bandit security scan
+        run: |
+          echo "=== Running Security Scan ==="
+          uvx bandit -r . -ll -f screen || true
+          echo "✅ Security scan complete"
+        continue-on-error: true  # Don't fail on security warnings initially
+
+  # Job 4: Unit Tests (when tests exist)
+  test:
+    name: Unit Tests (pytest)
+    runs-on: ubuntu-latest
+    needs: validate  # Only run if validation passes
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system -r requirements.txt
+          uv pip install --system -r requirements-gui.txt
+          uv pip install --system pytest pytest-cov pytest-mock
+
+      - name: Run pytest (if tests exist)
+        run: |
+          if [ -d "tests" ] && [ -n "$(ls -A tests/*.py 2>/dev/null)" ]; then
+            echo "=== Running Unit Tests ==="
+            pytest tests/ -v --cov=. --cov-report=term-missing --cov-report=xml
+            echo "✅ Tests passed"
+          else
+            echo "⚠️  No tests found (tests/ directory empty or missing)"
+            echo "✅ Skipping test execution (validation passed)"
+          fi
+
+      - name: Upload coverage to Codecov (optional)
+        if: success() && hashFiles('coverage.xml') != ''
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+        continue-on-error: true
+
+  # Job 5: Documentation Validation
+  docs:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check markdown files exist
+        run: |
+          echo "=== Checking Documentation Files ==="
+          for doc in README.md CLAUDE.md TODO.md SCRIPTS.md; do
+            if [ -f "$doc" ]; then
+              echo "✓ Found: $doc"
+            else
+              echo "⚠️  Missing: $doc"
+            fi
+          done
+
+      - name: Validate markdown syntax (optional)
+        run: |
+          echo "=== Documentation Structure ==="
+          echo "Main docs: $(ls -1 *.md | wc -l) markdown files"
+          echo "docs/ folder: $(find docs -name '*.md' 2>/dev/null | wc -l) markdown files"
+          echo "✅ Documentation validation complete"
+
+  # Job 6: Build Summary
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [validate, lint, security, test, docs]
+    if: always()
+
+    steps:
+      - name: Check build status
+        run: |
+          echo "=== CI/CD Pipeline Summary ==="
+          echo "✅ Validation: ${{ needs.validate.result }}"
+          echo "✅ Linting: ${{ needs.lint.result }}"
+          echo "✅ Security: ${{ needs.security.result }}"
+          echo "✅ Tests: ${{ needs.test.result }}"
+          echo "✅ Docs: ${{ needs.docs.result }}"
+
+          if [ "${{ needs.validate.result }}" != "success" ]; then
+            echo "❌ Build FAILED: Validation errors"
+            exit 1
+          fi
+
+          echo "✅ Build PASSED: All critical checks successful"

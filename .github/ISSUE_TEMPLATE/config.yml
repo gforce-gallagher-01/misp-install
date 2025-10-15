@@ -1,0 +1,14 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/yourusername/misp-install/blob/main/README.md
+    about: Check the main documentation for usage instructions
+  - name: NERC CIP Guide
+    url: https://github.com/yourusername/misp-install/blob/main/docs/NERC_CIP_CONFIGURATION.md
+    about: Comprehensive NERC CIP compliance configuration guide
+  - name: Scripts Documentation
+    url: https://github.com/yourusername/misp-install/blob/main/SCRIPTS.md
+    about: Complete reference for all automation scripts
+  - name: Known Issues
+    url: https://github.com/yourusername/misp-install/blob/main/KNOWN-ISSUES.md
+    about: Known issues and workarounds

@@ -1,0 +1,147 @@
+name: Bug Report
+description: Report a bug or issue with MISP installation
+title: "[BUG] "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please provide as much detail as possible to help us resolve the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: The installation fails at Phase 7 with...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: script
+    attributes:
+      label: Which script is affected?
+      description: Select the script where the bug occurs
+      options:
+        - misp-install.py (Main installer)
+        - misp_install_gui.py (GUI installer)
+        - scripts/backup-misp.py
+        - scripts/misp-restore.py
+        - scripts/misp-update.py
+        - scripts/uninstall-misp.py
+        - scripts/configure-misp-ready.py
+        - scripts/configure-misp-nerc-cip.py
+        - scripts/enable-misp-feeds.py
+        - scripts/check-misp-feeds.py
+        - Other (please specify in description)
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the bug
+      placeholder: |
+        1. Run 'python3 misp-install.py --config config.json'
+        2. Wait for Phase 7 to start
+        3. Error occurs with message...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: The installation should complete Phase 7 and move to Phase 8...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: The installation failed with error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Messages / Logs
+      description: Copy and paste relevant error messages or log output
+      placeholder: |
+        Paste error messages here, or attach log files from /opt/misp/logs/
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Please provide your environment information
+      value: |
+        - **OS**: Ubuntu 22.04 / 24.04 / other
+        - **Python Version**: 3.x.x
+        - **MISP Installer Version**: 5.4 / other
+        - **Installation Mode**: Interactive / Non-interactive / GUI
+        - **Docker Version**: (run `docker --version`)
+        - **Docker Compose Version**: (run `docker compose version`)
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration (Optional)
+      description: Share your config file (REMOVE ALL PASSWORDS!)
+      placeholder: |
+        {
+          "server_ip": "192.168.1.100",
+          "domain": "misp.local",
+          "environment": "production"
+        }
+      render: json
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical (Installation fails completely)
+        - High (Major feature broken)
+        - Medium (Feature partially working)
+        - Low (Minor issue or cosmetic)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: additional-info
+    attributes:
+      label: Additional Context
+      description: Check all that apply
+      options:
+        - label: This is a fresh installation (no previous MISP)
+        - label: This is an upgrade/update
+        - label: This issue is reproducible
+        - label: I have checked existing issues for duplicates
+        - label: I have reviewed KNOWN-ISSUES.md
+        - label: I can provide additional logs if needed
+
+  - type: textarea
+    id: additional-details
+    attributes:
+      label: Additional Details
+      description: Any other context about the problem
+      placeholder: This started happening after...
+    validations:
+      required: false

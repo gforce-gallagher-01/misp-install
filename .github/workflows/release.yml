@@ -1,0 +1,112 @@
+name: Release Automation
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags (e.g., v5.4.0, v5.4.1)
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: write  # Required to create releases
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Get full history for changelog
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="manual-$(date +%Y%m%d-%H%M%S)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+
+          # Try to extract changelog from CHANGELOG.md or TODO.md
+          if [ -f "CHANGELOG.md" ]; then
+            echo "Using CHANGELOG.md"
+            # Extract section for this version (basic approach)
+            CHANGELOG_CONTENT="See CHANGELOG.md for details"
+          elif [ -f "docs/testing_and_updates/CHANGELOG.md" ]; then
+            echo "Using docs/testing_and_updates/CHANGELOG.md"
+            CHANGELOG_CONTENT="See docs/testing_and_updates/CHANGELOG.md for details"
+          else
+            CHANGELOG_CONTENT="Release $VERSION"
+          fi
+
+          # Save to file for GitHub release
+          echo "$CHANGELOG_CONTENT" > /tmp/changelog.txt
+          echo "changelog_file=/tmp/changelog.txt" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body_path: ${{ steps.changelog.outputs.changelog_file }}
+          draft: false
+          prerelease: false
+          files: |
+            misp-install.py
+            misp_install_gui.py
+            install-gui.sh
+            requirements.txt
+            requirements-gui.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release summary
+        run: |
+          echo "=== Release Created ==="
+          echo "Version: ${{ steps.get_version.outputs.version }}"
+          echo "Tag: ${{ github.ref }}"
+          echo "✅ Release published to GitHub"
+
+  publish-package:
+    name: Build Python Package (Optional)
+    runs-on: ubuntu-latest
+    needs: create-release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Build package
+        run: |
+          if [ -f "setup.py" ]; then
+            echo "=== Building Python Package ==="
+            uv pip install --system build
+            python3 -m build
+            echo "✅ Package built successfully"
+            ls -lh dist/
+          else
+            echo "⚠️  No setup.py found, skipping package build"
+          fi
+
+      - name: Upload artifacts
+        if: hashFiles('dist/*') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package
+          path: dist/*
+          retention-days: 30

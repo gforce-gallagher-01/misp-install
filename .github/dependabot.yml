@@ -1,0 +1,72 @@
+# Dependabot configuration for automated dependency updates
+# See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Python dependencies (pip/uv)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "yourusername"  # Replace with actual GitHub username
+    assignees:
+      - "yourusername"  # Replace with actual GitHub username
+    labels:
+      - "dependencies"
+      - "python"
+      - "automated"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Group updates for related packages
+    groups:
+      testing:
+        patterns:
+          - "pytest*"
+        update-types:
+          - "minor"
+          - "patch"
+      linting:
+        patterns:
+          - "ruff"
+          - "mypy"
+          - "black"
+        update-types:
+          - "minor"
+          - "patch"
+      gui:
+        patterns:
+          - "textual*"
+          - "pyperclip"
+        update-types:
+          - "minor"
+          - "patch"
+    # Ignore specific updates if needed
+    ignore:
+      # Example: ignore major version updates for stability
+      # - dependency-name: "pyyaml"
+      #   update-types: ["version-update:semver-major"]
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "10:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "yourusername"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    commit-message:
+      prefix: "ci"
+      include: "scope"

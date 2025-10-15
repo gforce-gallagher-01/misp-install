@@ -1,0 +1,141 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[FEATURE] "
+labels: ["enhancement", "feature-request"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide detailed information about your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What use case does it address?
+      placeholder: Currently, users have to manually... This is problematic because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe how you envision this feature working
+      placeholder: |
+        Add a new flag --auto-configure that would:
+        1. Automatically detect system resources
+        2. Configure performance settings
+        3. Enable recommended feeds
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What area does this feature affect?
+      options:
+        - Installation / Setup
+        - Backup / Restore
+        - Configuration
+        - Security / Compliance
+        - NERC CIP Compliance
+        - Feed Management
+        - GUI Installer
+        - Documentation
+        - Testing / CI/CD
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical (Blocking production deployment)
+        - High (Significant workflow improvement)
+        - Medium (Nice to have)
+        - Low (Future consideration)
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: I could manually configure this by..., but that requires...
+    validations:
+      required: false
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case / Context
+      description: Describe your specific use case or scenario
+      placeholder: |
+        We're deploying MISP at 50+ electric utility substations for NERC CIP compliance.
+        Each site needs identical configuration but different IP addresses...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Feature Scope
+      description: Check all that apply
+      options:
+        - label: This would help NERC CIP compliance
+        - label: This would improve security
+        - label: This would reduce installation time
+        - label: This would improve automation
+        - label: This would improve usability
+        - label: This is needed for enterprise deployment
+        - label: This would help with testing/validation
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How would you know this feature is working correctly?
+      placeholder: |
+        - [ ] Script accepts --auto-configure flag
+        - [ ] System resources are detected automatically
+        - [ ] Configuration is validated before applying
+        - [ ] Dry-run mode shows what would be configured
+    validations:
+      required: false
+
+  - type: textarea
+    id: implementation-notes
+    attributes:
+      label: Implementation Notes (Optional)
+      description: Technical suggestions for how to implement this
+      placeholder: Could use Python's psutil library to detect system resources...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information about the feature request
+      placeholder: Screenshots, links to similar features, industry standards, etc.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to help implement this feature?
+      options:
+        - label: I would like to implement this feature myself
+        - label: I can help test this feature
+        - label: I can provide feedback during development
+        - label: I can help with documentation
