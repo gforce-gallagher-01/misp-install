@@ -2,7 +2,7 @@
 """
 MISP GUI Installer
 tKQB Enterprises Edition
-Version: 1.0
+Version: 2.0
 
 Modern graphical installer using Python Textual framework.
 Provides an intuitive multi-step wizard interface that runs in terminal (TUI) or web browser.
@@ -201,7 +201,7 @@ class WelcomeScreen(Screen):
         yield Header()
         with Container(id="welcome-container"):
             yield Label("MISP Installation Wizard", id="title")
-            yield Label("tKQB Enterprises Edition v1.0", id="subtitle")
+            yield Label("tKQB Enterprises Edition v2.0", id="subtitle")
 
             yield Static("Welcome to the MISP GUI Installer!\n", classes="intro")
             yield Static(
@@ -1258,7 +1258,7 @@ Examples:
 
     parser.add_argument('--load', metavar='FILE', help='Load configuration from file')
     parser.add_argument('--save-only', action='store_true', help='Save configuration without installing')
-    parser.add_argument('--version', action='version', version='MISP GUI Installer v1.0')
+    parser.add_argument('--version', action='version', version='MISP GUI Installer v2.0')
 
     args = parser.parse_args()
 

@@ -121,9 +121,9 @@ if pipx list 2>/dev/null | grep -q "misp-installer-gui"; then
     print_success "Old version removed"
 fi
 
-# Install from current directory (fresh install)
+# Install from current directory with GUI dependencies (fresh install)
 echo "Installing misp-installer-gui from current directory..."
-if pipx install .; then
+if pipx install ".[gui]"; then
     print_success "MISP GUI Installer installed"
 else
     print_error "Installation failed"
