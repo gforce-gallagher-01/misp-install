@@ -287,20 +287,30 @@ python3 scripts/uninstall-misp.py --force
 **Purpose**: Automatically populate MISP News from RSS feeds (utilities sector focus)
 
 **Features**:
-- Fetches articles from 4 RSS feeds (CISA ICS, SecurityWeek, Bleeping Computer, Industrial Cyber)
-- Filters content for utilities/energy sector relevance
+- Fetches articles from 9 RSS feeds across 3 categories
+- Filters content for utilities/energy sector and security relevance
 - Markdown-formatted news entries with clickable links
 - HTML cleanup from RSS summaries
 - Duplicate detection (prevents re-adding same articles)
 - Configurable time range and article limits
 - Dry-run mode for preview
 
-**RSS Feed Sources** (5 feeds):
+**RSS Feed Sources** (9 feeds in 3 categories):
+
+**Utilities Sector & ICS/SCADA News (3 feeds)**:
 1. CISA ICS Advisories - https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml
-2. Utility Dive Electric Utilities - https://www.utilitydive.com/feeds/news/
-3. SecurityWeek ICS/SCADA News - https://www.securityweek.com/category/ics-ot-security/feed/
-4. Bleeping Computer Critical Infrastructure - https://www.bleepingcomputer.com/feed/tag/critical-infrastructure/
-5. Industrial Cyber News - https://industrialcyber.co/feed/
+2. Utility Dive - https://www.utilitydive.com/feeds/news/
+3. Industrial Cyber - https://industrialcyber.co/feed/
+
+**Vendor Security Advisories (5 feeds)**:
+4. Cisco Security Advisories - https://tools.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml
+5. Microsoft Security Updates - https://api.msrc.microsoft.com/update-guide/rss
+6. Fortinet PSIRT - https://www.fortiguard.com/rss/ir.xml
+7. Palo Alto Networks Security - https://security.paloaltonetworks.com/rss.xml
+8. Ubuntu Security Notices - https://ubuntu.com/security/notices/rss.xml
+
+**Zero-Day Vulnerabilities (1 feed)**:
+9. Zero Day Initiative - https://www.zerodayinitiative.com/rss/published/
 
 **Usage**:
 ```bash
@@ -336,7 +346,10 @@ bash scripts/setup-news-cron.sh
   - Horizontal rule separator
   - Source attribution: `*Source: Feed Name*`
 
-**Filtering Keywords**: Energy, utility, electric, power, grid, solar, wind, SCADA, ICS, OT, NERC CIP, critical infrastructure
+**Filtering Keywords**:
+- Utilities: Energy, utility, electric, power, grid, solar, wind, SCADA, ICS, OT, NERC CIP, critical infrastructure
+- Vendors: Cisco, Fortinet, FortiGate, Palo Alto, PAN-OS, Microsoft, Windows, Ubuntu, Linux
+- Security: Zero-day, vulnerability, CVE, security advisory, patch, firewall, VPN, router, switch, authentication, RCE
 
 **Log Output**: `/opt/misp/logs/populate-misp-news-TIMESTAMP.log`
 
