@@ -27,6 +27,7 @@ import argparse
 import subprocess
 from pathlib import Path
 from datetime import datetime
+import os
 
 # Check Python version
 if sys.version_info < (3, 8):
@@ -74,6 +75,36 @@ except ImportError:
     print("")
     import time
     time.sleep(3)
+
+# ==========================================
+# Helper Functions
+# ==========================================
+
+def check_misp_installed() -> bool:
+    """Check if MISP is already installed"""
+    misp_dir = Path("/opt/misp")
+    docker_compose = misp_dir / "docker-compose.yml"
+    env_file = misp_dir / ".env"
+
+    # Check if key files exist
+    if not misp_dir.exists():
+        return False
+
+    if not docker_compose.exists() or not env_file.exists():
+        return False
+
+    # Check if containers are running
+    try:
+        result = subprocess.run(
+            ['sudo', 'docker', 'compose', 'ps', '-q'],
+            cwd=str(misp_dir),
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return result.returncode == 0 and len(result.stdout.strip()) > 0
+    except:
+        return False
 
 # ==========================================
 # Custom Validators
@@ -181,6 +212,13 @@ class WelcomeScreen(Screen):
         margin-bottom: 2;
     }
 
+    .status-box {
+        border: solid $success;
+        padding: 1;
+        margin: 1 0;
+        background: $success 20%;
+    }
+
     .prereq-item {
         margin-left: 2;
         margin-bottom: 1;
@@ -203,23 +241,37 @@ class WelcomeScreen(Screen):
             yield Label("MISP Installation Wizard", id="title")
             yield Label("tKQB Enterprises Edition v2.0", id="subtitle")
 
-            yield Static("Welcome to the MISP GUI Installer!\n", classes="intro")
-            yield Static(
-                "This wizard will guide you through installing MISP "
-                "(Malware Information Sharing Platform) on your server.\n",
-                classes="intro"
-            )
+            # Check if MISP is installed
+            misp_installed = check_misp_installed()
 
-            yield Label("Prerequisites:", classes="prereq-header")
-            yield Static("✓ Ubuntu 22.04 LTS or 24.04 LTS", classes="prereq-item")
-            yield Static("✓ 8GB+ RAM recommended", classes="prereq-item")
-            yield Static("✓ 50GB+ free disk space", classes="prereq-item")
-            yield Static("✓ sudo privileges", classes="prereq-item")
-            yield Static("✓ Internet connection", classes="prereq-item")
+            if misp_installed:
+                with Container(classes="status-box"):
+                    yield Static("✓ MISP is currently installed and running", id="install-status")
 
-            with Horizontal(id="button-container"):
-                yield Button("Continue", id="btn-continue", variant="primary")
-                yield Button("Exit", id="btn-exit", variant="default")
+                yield Static("\nWhat would you like to do?\n", classes="intro")
+
+                with Horizontal(id="button-container"):
+                    yield Button("🔄 Update MISP", id="btn-update", variant="primary")
+                    yield Button("🗑️  Uninstall MISP", id="btn-uninstall", variant="error")
+                    yield Button("Exit", id="btn-exit", variant="default")
+            else:
+                yield Static("Welcome to the MISP GUI Installer!\n", classes="intro")
+                yield Static(
+                    "This wizard will guide you through installing MISP "
+                    "(Malware Information Sharing Platform) on your server.\n",
+                    classes="intro"
+                )
+
+                yield Label("Prerequisites:", classes="prereq-header")
+                yield Static("✓ Ubuntu 22.04 LTS or 24.04 LTS", classes="prereq-item")
+                yield Static("✓ 8GB+ RAM recommended", classes="prereq-item")
+                yield Static("✓ 50GB+ free disk space", classes="prereq-item")
+                yield Static("✓ sudo privileges", classes="prereq-item")
+                yield Static("✓ Internet connection", classes="prereq-item")
+
+                with Horizontal(id="button-container"):
+                    yield Button("Install MISP", id="btn-continue", variant="primary")
+                    yield Button("Exit", id="btn-exit", variant="default")
 
         yield Footer()
 
@@ -227,6 +279,16 @@ class WelcomeScreen(Screen):
     def on_continue(self):
         """Move to network configuration screen"""
         self.app.push_screen("network")
+
+    @on(Button.Pressed, "#btn-update")
+    def on_update(self):
+        """Move to update screen"""
+        self.app.push_screen("update")
+
+    @on(Button.Pressed, "#btn-uninstall")
+    def on_uninstall(self):
+        """Move to uninstall screen"""
+        self.app.push_screen("uninstall")
 
     @on(Button.Pressed, "#btn-exit")
     def on_exit(self):
@@ -1031,6 +1093,206 @@ class ReviewScreen(Screen):
         return str(config_file)
 
 # ==========================================
+# Update MISP Screen
+# ==========================================
+
+class UpdateScreen(Screen):
+    """Update MISP screen"""
+
+    CSS = """
+    UpdateScreen {
+        align: center middle;
+    }
+
+    #update-container {
+        width: 80;
+        height: auto;
+        border: solid $accent;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $accent;
+        margin-bottom: 2;
+    }
+
+    .update-option {
+        margin: 1 0;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with ScrollableContainer(id="update-container"):
+            yield Label("Update MISP", id="screen-title")
+
+            yield Static(
+                "Select which components to update:\n",
+                classes="intro"
+            )
+
+            yield Checkbox("Update MISP Core", id="update-core", value=True)
+            yield Static("Updates MISP application to latest version", classes="update-option")
+
+            yield Checkbox("Update Docker Containers", id="update-containers", value=True)
+            yield Static("Pulls latest Docker images", classes="update-option")
+
+            yield Checkbox("Update Feeds", id="update-feeds", value=True)
+            yield Static("Fetches latest threat intelligence feeds", classes="update-option")
+
+            yield Checkbox("Update Taxonomies & Galaxies", id="update-taxonomies", value=True)
+            yield Static("Updates MISP taxonomies and galaxy clusters", classes="update-option")
+
+            yield Checkbox("Update System Packages", id="update-system")
+            yield Static("Updates underlying system packages (apt update/upgrade)", classes="update-option")
+
+            with Horizontal(id="button-container"):
+                yield Button("← Back", id="btn-back", variant="default")
+                yield Button("Start Update", id="btn-update", variant="primary")
+
+        yield Footer()
+
+    @on(Button.Pressed, "#btn-back")
+    def on_back(self):
+        """Go back to welcome screen"""
+        self.app.pop_screen()
+
+    @on(Button.Pressed, "#btn-update")
+    def on_update(self):
+        """Start update process"""
+        # Collect selected options
+        update_options = {
+            "core": self.query_one("#update-core", Checkbox).value,
+            "containers": self.query_one("#update-containers", Checkbox).value,
+            "feeds": self.query_one("#update-feeds", Checkbox).value,
+            "taxonomies": self.query_one("#update-taxonomies", Checkbox).value,
+            "system": self.query_one("#update-system", Checkbox).value,
+        }
+
+        self.app.config["update_options"] = update_options
+        self.notify("Update functionality will be implemented", severity="information")
+        # TODO: Implement actual update by calling scripts/misp-update.py
+
+# ==========================================
+# Uninstall MISP Screen
+# ==========================================
+
+class UninstallScreen(Screen):
+    """Uninstall MISP screen"""
+
+    CSS = """
+    UninstallScreen {
+        align: center middle;
+    }
+
+    #uninstall-container {
+        width: 80;
+        height: auto;
+        border: solid $error;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $error;
+        margin-bottom: 2;
+    }
+
+    .warning-box {
+        border: solid $warning;
+        padding: 1;
+        margin: 2 0;
+        background: $warning 20%;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with ScrollableContainer(id="uninstall-container"):
+            yield Label("Uninstall MISP", id="screen-title")
+
+            with Container(classes="warning-box"):
+                yield Static(
+                    "⚠️  WARNING: This will remove MISP from your system!\n\n"
+                    "The following will be removed:\n"
+                    "• Docker containers\n"
+                    "• MISP configuration files\n"
+                    "• Databases and data\n\n"
+                    "Your backups in ~/misp-backups will be preserved.",
+                    classes="warning-text"
+                )
+
+            yield Static("\nUninstall options:\n")
+
+            yield Checkbox("Keep backups", id="keep-backups", value=True)
+            yield Static("Preserve ~/misp-backups directory", classes="option-desc")
+
+            yield Checkbox("Keep logs", id="keep-logs", value=True)
+            yield Static("Preserve /opt/misp/logs directory", classes="option-desc")
+
+            yield Checkbox("Remove Docker volumes", id="remove-volumes")
+            yield Static("Remove Docker volumes (WARNING: deletes all data)", classes="option-desc")
+
+            yield Static("\n")
+            yield Checkbox("I understand and want to uninstall MISP", id="confirm-uninstall")
+
+            with Horizontal(id="button-container"):
+                yield Button("← Cancel", id="btn-cancel", variant="default")
+                yield Button("Uninstall MISP", id="btn-uninstall", variant="error")
+
+        yield Footer()
+
+    @on(Button.Pressed, "#btn-cancel")
+    def on_cancel(self):
+        """Cancel and go back"""
+        self.app.pop_screen()
+
+    @on(Button.Pressed, "#btn-uninstall")
+    def on_uninstall(self):
+        """Confirm and uninstall"""
+        confirm = self.query_one("#confirm-uninstall", Checkbox).value
+
+        if not confirm:
+            self.notify("Please check the confirmation box to proceed", severity="error")
+            return
+
+        # Collect options
+        uninstall_options = {
+            "keep_backups": self.query_one("#keep-backups", Checkbox).value,
+            "keep_logs": self.query_one("#keep-logs", Checkbox).value,
+            "remove_volumes": self.query_one("#remove-volumes", Checkbox).value,
+        }
+
+        self.app.config["uninstall_options"] = uninstall_options
+        self.notify("Uninstall functionality will be implemented", severity="information")
+        # TODO: Implement actual uninstall by calling scripts/uninstall-misp.py
+
+# ==========================================
 # Installation Progress Screen
 # ==========================================
 
@@ -1157,7 +1419,9 @@ class MISPInstallerApp(App):
         "environment": EnvironmentScreen,
         "features": FeaturesScreen,
         "review": ReviewScreen,
-        "install": InstallScreen
+        "install": InstallScreen,
+        "update": UpdateScreen,
+        "uninstall": UninstallScreen
     }
 
     BINDINGS = [
