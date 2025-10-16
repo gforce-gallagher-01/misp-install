@@ -1,7 +1,7 @@
 # MISP Installation Tool - TODO List
 
-**Version:** 5.5
-**Last Updated:** 2025-10-14
+**Version:** 5.6
+**Last Updated:** 2025-10-16
 
 This file tracks active development priorities. For completed features, see [CHANGELOG.md](docs/CHANGELOG.md). For long-term vision, see [ROADMAP.md](docs/ROADMAP.md).
 
@@ -15,12 +15,97 @@ This file tracks active development priorities. For completed features, see [CHA
 
 ---
 
-## High Priority (v5.6 - Next Release)
+## High Priority (v5.7 - Next Release)
+
+### Custom MISP Dashboards for Utilities Sector
+**Status:** Planned
+**Priority:** High
+**Target Version:** v5.7
+**Estimated Effort:** 40-50 hours
+
+**Description:**
+Develop comprehensive custom dashboards and widgets specifically designed for utilities sector threat intelligence monitoring, focusing on ICS/SCADA/OT environments.
+
+**Key Components:**
+
+#### 1. Utilities Sector Overview Dashboard
+**Effort:** 12-15 hours
+- Real-time threat activity heat map (energy sector focus)
+- ICS/SCADA specific threat indicators
+- Critical infrastructure sector breakdown
+- Top targeted ICS protocols (Modbus, DNP3, IEC 61850)
+- Geographic threat distribution for utilities
+- NERC CIP compliance monitoring widget
+
+#### 2. ICS/OT Threat Intelligence Dashboard
+**Effort:** 10-12 hours
+- MITRE ATT&CK for ICS techniques trending
+- ICS vulnerability feed aggregation widget
+- SCADA-specific IOC monitoring
+- OT protocol anomaly detection
+- Industrial malware family tracking (TRITON, INDUSTROYER, etc.)
+- Asset type targeting analysis
+
+#### 3. Utilities Sector Feed Dashboard
+**Effort:** 8-10 hours
+- ICS-CERT advisory feed visualization
+- E-ISAC alert monitoring
+- DHS CISA utilities sector alerts
+- Vendor security bulletins (Siemens, Schneider, ABB, Rockwell)
+- Zero-day tracking for ICS vendors
+- CVE scoring specific to utilities
+
+#### 4. Organizational Contribution Dashboard (Utilities)
+**Effort:** 5-6 hours
+- Utilities ISAC member contribution rankings
+- Sector-specific sharing metrics
+- Regional utilities cooperation heat map
+- Energy sector organization participation
+- Monthly contribution trends by subsector (generation, transmission, distribution)
+
+#### 5. Threat Actor Dashboard (Utilities Focus)
+**Effort:** 5-6 hours
+- APT groups targeting utilities (Dragonfly, XENOTIME, APT33, Sandworm)
+- Nation-state attribution timeline
+- Campaign tracking against energy infrastructure
+- TTPs specific to utilities sector
+- Historical incident timeline
+
+**Technical Implementation:**
+1. Create custom widget collection in `/var/www/MISP/app/View/Elements/dashboard/Widgets/`
+2. Develop utilities-specific data aggregation modules
+3. Integrate with ICS taxonomy and MITRE ATT&CK for ICS
+4. Create sector filtering logic (organization metadata)
+5. Implement real-time ZMQ feed processing for ICS events
+6. Design responsive layouts for SOC environments
+
+**Deliverables:**
+- `/scripts/create-utilities-dashboards.py` - Dashboard setup automation
+- `/config/dashboards/utilities-sector-default.json` - Default dashboard config
+- `/docs/UTILITIES_DASHBOARDS.md` - User guide with screenshots
+- Custom widget collection for ICS/OT monitoring
+- Example queries and filters for utilities sector
+
+**Dependencies:**
+- MISP Dashboard (separate installation - misp-dashboard)
+- Phase 11.8 (Utilities Sector configuration) completed
+- ICS taxonomy enabled
+- MITRE ATT&CK for ICS Galaxy enabled
+- Utilities sector feeds configured
+
+**Success Metrics:**
+- 5+ custom dashboards deployed
+- 15+ utilities-specific widgets created
+- Real-time ICS threat visibility
+- Reduced mean time to detect (MTTD) for utilities threats
+- Enhanced situational awareness for SOC teams
+
+---
 
 ### Splunk Cloud Integration
 **Status:** Planned
 **Priority:** High
-**Target Version:** v5.6
+**Target Version:** v5.7
 **Estimated Effort:** 20-30 hours
 
 **Description:**
@@ -45,7 +130,7 @@ Integrate MISP with Splunk Cloud for real-time threat intelligence sharing and a
 ### Security Onion Integration
 **Status:** Planned
 **Priority:** High
-**Target Version:** v5.6
+**Target Version:** v5.7
 **Estimated Effort:** 15-20 hours
 
 **Description:**
@@ -69,7 +154,7 @@ Integrate MISP with Security Onion for bidirectional threat intelligence sharing
 ### Azure Key Vault Integration
 **Status:** Planned
 **Priority:** High
-**Target Version:** v5.6
+**Target Version:** v5.7
 **Estimated Effort:** 10-15 hours
 
 **Description:**
@@ -91,12 +176,44 @@ Implement Azure Key Vault for secure secrets management in Azure environments, e
 
 ---
 
-## Medium Priority (v5.7+)
+## Medium Priority (v5.8+)
+
+### MISP-Dashboard Automated Installation
+**Status:** Planned
+**Priority:** Medium
+**Target Version:** v5.8
+**Estimated Effort:** 12-15 hours
+
+**Description:**
+Automate installation and configuration of MISP-Dashboard (separate component) for real-time threat intelligence visualization.
+
+**Key Tasks:**
+1. Clone MISP-dashboard repository
+2. Install Python dependencies (redis, zmq)
+3. Configure ZMQ feeds from MISP instance
+4. Setup Redis for data storage
+5. Configure web server (Flask development or production)
+6. Create systemd service for dashboard
+7. Configure default dashboards
+8. Import utilities sector custom widgets
+
+**Deliverables:**
+- `scripts/install-misp-dashboard.sh` - Automated installer
+- `scripts/misp-dashboard.service` - Systemd service file
+- `docs/MISP_DASHBOARD.md` - Installation guide
+- Default configuration with utilities widgets
+
+**Integration:**
+- Add as Phase 12 (optional) in main installer
+- Configuration option: `install_dashboard: true/false`
+- Integrate with utilities sector dashboards (v5.7)
+
+---
 
 ### Email Notification Support
 **Status:** Planned
 **Priority:** Medium
-**Target Version:** v5.7
+**Target Version:** v5.8
 **Estimated Effort:** 8-10 hours
 
 **Features:**
@@ -115,7 +232,7 @@ Implement Azure Key Vault for secure secrets management in Azure environments, e
 ### Slack/Teams Webhook Integration
 **Status:** Planned
 **Priority:** Medium
-**Target Version:** v5.7
+**Target Version:** v5.8
 **Estimated Effort:** 6-8 hours
 
 **Features:**
@@ -174,7 +291,31 @@ Extend beyond Azure to support AWS and GCP deployments with cloud-native feature
 
 ---
 
-## Recently Completed (v5.5 - October 2025)
+## Recently Completed (v5.6 - October 2025)
+
+✅ **v5.6 Advanced Features Release** - Install everything by default with opt-out exclusions
+  - Phase 11.8: Utilities Sector Threat Intelligence (ICS/SCADA/MITRE ATT&CK for ICS)
+  - Phase 11.9: Automated Maintenance (daily/weekly cron jobs)
+  - Phase 11.10: Security News Feeds (ICS-CERT, CISA, Industrial Cyber)
+  - Exclusion list system (14 features across 4 categories)
+  - Feature registry in `lib/features.py`
+  - 4 example configurations in `config/examples/`
+  - 100% backward compatible
+
+✅ **Systemd Service for Boot Management** - Automatic MISP startup on Ubuntu 24.04
+  - Automatic boot startup with graceful shutdown
+  - Health monitoring (5 containers)
+  - Restart on failure with security hardening
+  - Installation script: `scripts/setup-misp-systemd.sh`
+  - Complete documentation: `docs/SYSTEMD_SERVICE.md`
+
+✅ **Critical Bug Fixes**
+  - MySQL password escaping in news population script
+  - Phase module environment variable handling
+
+---
+
+## Completed (v5.5 - October 2025)
 
 ✅ **Code Refactoring - Phases 1-9** - Eliminated duplicate code across codebase
   - Phase 1: Centralized Colors class in `lib/colors.py` (242 lines eliminated)
@@ -202,12 +343,14 @@ Extend beyond Azure to support AWS and GCP deployments with cloud-native feature
 
 ## Version Planning
 
-### v5.6 (Next - Q1 2026)
+### v5.7 (Next - Q4 2025 / Q1 2026)
+- Custom utilities sector dashboards (5+ dashboards, 15+ widgets)
 - Splunk Cloud integration
 - Security Onion integration
 - Azure Key Vault secrets management
 
-### v5.7 (Q2 2026)
+### v5.8 (Q1-Q2 2026)
+- MISP-Dashboard automated installation
 - Email notifications
 - Slack/Teams webhooks
 
@@ -233,5 +376,5 @@ Found a bug or have a feature request?
 
 ---
 
-**Last Updated:** 2025-10-14
+**Last Updated:** 2025-10-16
 **Maintainer:** tKQB Enterprises
