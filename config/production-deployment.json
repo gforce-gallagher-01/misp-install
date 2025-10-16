@@ -1,0 +1,11 @@
+{
+  "server_ip": "192.168.20.54",
+  "domain": "misp.local",
+  "admin_email": "admin@tkqb.local",
+  "admin_org": "tKQB Enterprises",
+  "admin_password": "MISPadmin2025!@#",
+  "mysql_password": "MySQL$ecure2025!",
+  "gpg_passphrase": "GPG$ecurePass2025!",
+  "encryption_key": "",
+  "environment": "production"
+}

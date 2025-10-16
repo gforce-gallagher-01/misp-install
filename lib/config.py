@@ -6,9 +6,9 @@ import json
 import os
 import socket
 import subprocess
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 try:
     import yaml
@@ -110,6 +110,7 @@ class MISPConfig:
     environment: str = Environment.PROD.value
     base_url: str = ""
     performance: Optional[Dict] = None
+    exclude_features: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         # Auto-detect hostname if not specified
@@ -121,6 +122,60 @@ class MISPConfig:
 
         if self.performance is None:
             self.performance = asdict(PerformanceTuning())
+
+        # Initialize exclusion list if None
+        if self.exclude_features is None:
+            self.exclude_features = []
+
+    def is_feature_excluded(self, feature_id: str) -> bool:
+        """Check if a feature should be excluded
+
+        Args:
+            feature_id: Feature identifier (e.g., 'api-key', 'threat-feeds')
+
+        Returns:
+            True if feature is excluded, False otherwise
+        """
+        from lib.features import FEATURE_CATEGORIES, validate_feature_id, validate_category
+
+        # Check direct feature exclusion
+        if feature_id in self.exclude_features:
+            return True
+
+        # Check category exclusion (format: "category:category-name")
+        feature_category = FEATURE_CATEGORIES.get(feature_id)
+        if feature_category:
+            category_exclusion = f"category:{feature_category}"
+            if category_exclusion in self.exclude_features:
+                return True
+
+        return False
+
+    def get_excluded_features(self) -> List[str]:
+        """Get list of excluded features with validation
+
+        Returns:
+            List of excluded feature IDs with warnings for invalid entries
+        """
+        from lib.features import validate_feature_id, validate_category, get_category_features
+
+        excluded = []
+        for entry in self.exclude_features:
+            if entry.startswith('category:'):
+                # Category exclusion
+                category = entry.split(':', 1)[1]
+                if validate_category(category):
+                    excluded.extend(get_category_features(category))
+                else:
+                    print(f"⚠️  Warning: Invalid category '{category}' in exclusion list")
+            else:
+                # Individual feature exclusion
+                if validate_feature_id(entry):
+                    excluded.append(entry)
+                else:
+                    print(f"⚠️  Warning: Invalid feature '{entry}' in exclusion list")
+
+        return list(set(excluded))  # Remove duplicates
 
     def to_dict(self) -> Dict:
         """Convert config to dictionary"""

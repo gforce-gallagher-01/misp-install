@@ -6,6 +6,7 @@ import os
 from phases.base_phase import BasePhase
 from lib.colors import Colors
 from lib.user_manager import MISP_USER
+from lib.config import get_system_hostname
 
 
 class Phase07SSL(BasePhase):
@@ -32,7 +33,11 @@ class Phase07SSL(BasePhase):
 
     def _generate_certificate(self):
         """Generate self-signed SSL certificate"""
-        self.logger.info(f"[7.2] Generating self-signed certificate for {self.config.domain}...")
+        # ALWAYS use auto-detected hostname
+        detected_hostname = get_system_hostname()
+
+        self.logger.info(f"[7.2] Generating self-signed certificate for {detected_hostname}...")
+        self.logger.info(f"Using detected hostname: {detected_hostname}")
 
         ssl_dir = self.misp_dir / "ssl"
 
@@ -45,8 +50,8 @@ class Phase07SSL(BasePhase):
             '-newkey', 'rsa:4096',
             '-keyout', temp_key,
             '-out', temp_cert,
-            '-subj', f"/C=US/ST=New York/L=New York/O={self.config.admin_org}/OU=IT/CN={self.config.domain}",
-            '-addext', f"subjectAltName=DNS:{self.config.domain},DNS:*.{self.config.domain},IP:{self.config.server_ip}"
+            '-subj', f"/C=US/ST=New York/L=New York/O={self.config.admin_org}/OU=IT/CN={detected_hostname}",
+            '-addext', f"subjectAltName=DNS:{detected_hostname},DNS:*.{detected_hostname},IP:{self.config.server_ip}"
         ])
 
         # Move certificates to ssl directory (as root, then chown to misp-owner)

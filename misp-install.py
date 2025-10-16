@@ -2,7 +2,7 @@
 """
 MISP Complete Installation & Management Tool
 tKQB Enterprises
-Version: 5.5 (Modular Architecture)
+Version: 5.6 (Advanced Features Release)
 
 Features:
 - Modular architecture with phase-based execution
@@ -59,6 +59,9 @@ from phases import (
     Phase11Initialization,
     Phase11_5APIKey,
     Phase11_7ThreatFeeds,
+    Phase11_8UtilitiesSector,
+    Phase11_9AutomatedMaintenance,
+    Phase11_10SecurityNews,
     Phase12PostInstall,
 )
 
@@ -102,6 +105,9 @@ class MISPInstaller:
             (11, "Initialization", Phase11Initialization),
             (11.5, "API Key", Phase11_5APIKey),
             (11.7, "Threat Feeds", Phase11_7ThreatFeeds),
+            (11.8, "Utilities Sector", Phase11_8UtilitiesSector),
+            (11.9, "Automated Maintenance", Phase11_9AutomatedMaintenance),
+            (11.10, "Security News", Phase11_10SecurityNews),
             (12, "Post-Install", Phase12PostInstall),
         ]
 

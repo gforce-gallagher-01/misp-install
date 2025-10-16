@@ -1,0 +1,15 @@
+{
+  "server_ip": "192.168.1.100",
+  "domain": "misp.local",
+  "admin_email": "admin@company.com",
+  "admin_org": "My Company",
+  "admin_password": "ChangeMe123!@#",
+  "mysql_password": "ChangeMe456!@#",
+  "gpg_passphrase": "ChangeMe789!@#",
+  "encryption_key": "",
+  "environment": "production",
+
+  "exclude_features": [
+    "category:automation"
+  ]
+}

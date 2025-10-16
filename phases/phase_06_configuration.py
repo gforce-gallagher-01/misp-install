@@ -5,7 +5,7 @@ Phase 6: Create configuration files
 import os
 from phases.base_phase import BasePhase
 from lib.colors import Colors
-from lib.config import PerformanceTuning
+from lib.config import PerformanceTuning, get_system_hostname
 from lib.user_manager import MISP_USER
 
 
@@ -43,6 +43,12 @@ class Phase06Configuration(BasePhase):
         except Exception:
             pass
 
+        # ALWAYS use auto-detected hostname for consistency
+        detected_hostname = get_system_hostname()
+        base_url = f"https://{detected_hostname}"
+
+        self.logger.info(f"Using detected hostname: {detected_hostname}")
+
         env_content = f"""##
 # Build-time variables
 ##
@@ -61,7 +67,7 @@ PYPI_SUPERVISOR_VERSION="==4.2.5"
 ##
 
 # CRITICAL: {self.config.admin_org} Settings
-BASE_URL={self.config.base_url}
+BASE_URL={base_url}
 ADMIN_EMAIL={self.config.admin_email}
 ADMIN_ORG={self.config.admin_org}
 ADMIN_PASSWORD={self.config.admin_password}
