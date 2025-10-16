@@ -9,21 +9,8 @@ import subprocess
 import logging
 from pathlib import Path
 from typing import Tuple
-from dataclasses import dataclass
 from lib.colors import Colors
-
-
-@dataclass
-class SystemRequirements:
-    """System requirements for MISP installation"""
-    min_disk_gb: int = 20
-    min_ram_gb: int = 4
-    min_cpu_cores: int = 2
-    required_ports: list = None
-
-    def __post_init__(self):
-        if self.required_ports is None:
-            self.required_ports = [80, 443]
+from lib.config import SystemRequirements
 
 
 class SystemChecker:
