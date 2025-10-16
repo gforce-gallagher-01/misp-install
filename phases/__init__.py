@@ -19,6 +19,7 @@ from phases.phase_11_7_threat_feeds import Phase11_7ThreatFeeds
 from phases.phase_11_8_utilities_sector import Phase11_8UtilitiesSector
 from phases.phase_11_9_automated_maintenance import Phase11_9AutomatedMaintenance
 from phases.phase_11_10_security_news import Phase11_10SecurityNews
+from phases.phase_11_11_utilities_dashboards import Phase11_11UtilitiesDashboards
 from phases.phase_12_post_install import Phase12PostInstall
 
 __all__ = [
@@ -39,5 +40,6 @@ __all__ = [
     'Phase11_8UtilitiesSector',
     'Phase11_9AutomatedMaintenance',
     'Phase11_10SecurityNews',
+    'Phase11_11UtilitiesDashboards',
     'Phase12PostInstall',
 ]

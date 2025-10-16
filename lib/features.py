@@ -12,6 +12,7 @@ FEATURE_CATEGORIES = {
     'api-key': 'threat-intelligence',
     'threat-feeds': 'threat-intelligence',
     'utilities-sector': 'threat-intelligence',
+    'utilities-dashboards': 'threat-intelligence',
     'nerc-cip': 'threat-intelligence',
     'mitre-attack-ics': 'threat-intelligence',
 
@@ -36,6 +37,7 @@ FEATURE_DESCRIPTIONS = {
     'api-key': 'API key generation for automation scripts',
     'threat-feeds': 'Built-in threat intelligence feeds',
     'utilities-sector': 'ICS/SCADA/Utilities sector threat intelligence',
+    'utilities-dashboards': 'Custom MISP dashboards for utilities sector (25 widgets)',
     'nerc-cip': 'NERC CIP compliance features',
     'mitre-attack-ics': 'MITRE ATT&CK for ICS framework',
     'automated-maintenance': 'Daily and weekly maintenance cron jobs',

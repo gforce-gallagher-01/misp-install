@@ -1,0 +1,11 @@
+{
+  "server_ip": "192.168.20.54",
+  "domain": "misp-test.lan",
+  "admin_email": "admin@test.local",
+  "admin_org": "Test Organization",
+  "admin_password": "l5YwelW47j9@nGh4",
+  "mysql_password": "bxbMZbnB@UUM1tX7",
+  "gpg_passphrase": "KX!qL6EKONwLy1YBdmal",
+  "environment": "development",
+  "exclude_features": []
+}

@@ -1,9 +1,11 @@
-# MISP Installation Tool - Optional Python Dependencies
+# MISP Installation Tool - Python Dependencies
 # Install with: pip3 install -r requirements.txt
 
 # YAML configuration file support (optional)
 pyyaml>=6.0
 
-# Note: The script will work without these packages,
-# but YAML config file support will be disabled.
-# You can still use JSON config files without any dependencies.
+# MISP REST API access (required for Phase 11.11 dashboards)
+requests>=2.28.0
+
+# Note: YAML support is optional - you can still use JSON config files.
+# However, 'requests' is required for dashboard configuration in Phase 11.11.
