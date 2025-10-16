@@ -89,13 +89,38 @@ This collection provides 5 specialized widgets for the **Utilities Sector Overvi
 
 ## Installation
 
-### Prerequisites
-- MISP 2.4.x installed
-- Phase 11.8 (Utilities Sector configuration) completed
-- ICS taxonomy enabled
-- MITRE ATT&CK for ICS Galaxy enabled
+### Quick Start (Recommended)
 
-### Installation Steps
+**One-command installation for Docker-based MISP:**
+
+```bash
+cd /home/gallagher/misp-install/misp-install
+sudo bash scripts/install-utilities-dashboard.sh
+```
+
+This will:
+1. ✅ Install the widget to MISP container
+2. ✅ Configure your dashboard automatically
+3. ✅ Backup existing dashboard
+4. ✅ Add 4 widgets (including Utilities Sector Heat Map)
+
+**Then refresh your browser** and go to Dashboard!
+
+### Manual Installation
+
+#### For Docker-based MISP:
+
+```bash
+cd widgets/utilities-sector
+sudo bash install-widget-docker.sh
+```
+
+Then configure dashboard:
+```bash
+python3 configure-dashboard.py --api-key YOUR_API_KEY --misp-url https://your-misp-url
+```
+
+#### For Traditional MISP Installation:
 
 1. **Copy widget files to MISP:**
    ```bash
@@ -105,8 +130,8 @@ This collection provides 5 specialized widgets for the **Utilities Sector Overvi
 
 2. **Clear MISP cache:**
    ```bash
-   sudo -u www-data /var/www/MISP/app/Console/cake Admin setSetting "MISP.background_jobs" true
-   sudo -u www-data /var/www/MISP/app/Console/cake Admin clearCache
+   sudo rm -rf /var/www/MISP/app/tmp/cache/models/*
+   sudo rm -rf /var/www/MISP/app/tmp/cache/persistent/*
    ```
 
 3. **Restart web server:**
@@ -116,20 +141,12 @@ This collection provides 5 specialized widgets for the **Utilities Sector Overvi
    sudo systemctl restart nginx
    ```
 
-4. **Add widgets to dashboard:**
-   - Navigate to MISP → Dashboard
-   - Click "Add Widget"
-   - Select from "Custom" category
-   - Configure parameters
-   - Save layout
-
-### Automated Installation
-
-Use the provided setup script:
-
-```bash
-sudo python3 scripts/install-utilities-dashboard.py
-```
+### Prerequisites
+- MISP 2.4.x installed (Docker or traditional)
+- Phase 11.8 (Utilities Sector configuration) completed (optional)
+- ICS taxonomy enabled (optional but recommended)
+- MITRE ATT&CK for ICS Galaxy enabled (optional but recommended)
+- Python 3.6+ with `requests` module
 
 ## Widget Configuration Examples
 
@@ -160,24 +177,70 @@ sudo python3 scripts/install-utilities-dashboard.py
 }
 ```
 
-## Dashboard Layout Recommendations
+## Dashboard Layout
 
-### Recommended Grid Layout (12 columns)
+### Current Layout (User-Optimized)
+
+The automated installer configures this optimized 2-column layout:
 
 ```
-┌──────────────────────────────────────────────────────┐
-│  UtilitiesSectorStatsWidget (12 cols × 2 rows)      │
-├──────────────────────────────────────────────────────┤
-│  UtilitiesThreatHeatMapWidget                        │
-│  (6 cols × 4 rows)                                   │
-│                                    ICSProtocolsTarget│
-│                                    Widget            │
-│                                    (6 cols × 4 rows) │
-├──────────────────────────────────────────────────────┤
-│  CriticalInfrastructureBreakdown │ NERCCIPCompliance│
-│  Widget (6 cols × 4 rows)        │ Widget           │
-│                                   │ (6 cols × 4 rows)│
-└──────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│ Event      │  Utilities Threat Heat Map               │
+│ Stream     │  (World Map)                             │
+│ (2×5)      │                                          │
+│            │  (6×9)                                   │
+│────────────│                                          │
+│ Trending   │                                          │
+│ Attributes │                                          │
+│ (2×2)      │                                          │
+│────────────│                                          │
+│ Trending   │                                          │
+│ Tags       │                                          │
+│ (2×6)      │                                          │
+│            │                                          │
+│            │                                          │
+└────────────────────────────────────────────────────────┘
+
+Left column (narrow):  Recent activity and trending indicators
+Right column (wide):   Large heat map visualization
+```
+
+**Position coordinates:**
+- Event Stream: x=1, y=0, width=2, height=5
+- Trending Attributes: x=1, y=5, width=2, height=2
+- Trending Tags: x=1, y=7, width=2, height=6
+- Utilities Heat Map: x=3, y=0, width=6, height=9
+
+### Full Utilities Dashboard (5 Widgets) - User-Optimized
+
+Production layout with all 5 utilities sector widgets:
+
+```
+┌────────────────────────────────────────────────┐
+│ Stats │ ICS Protocols Targeted                │
+│ (2×3) │ (6×3)                                 │
+├────────────────────────────────────────────────┤
+│ Infrastructure  │ NERC CIP Compliance         │
+│ Breakdown (6×5) │ (6×5)                       │
+├────────────────────────────────────────────────┤
+│ Utilities Threat Heat Map                     │
+│ (Full Width - 12×9)                           │
+│                                               │
+└────────────────────────────────────────────────┘
+```
+
+**Position coordinates:**
+- Stats: x=0, y=0, width=2, height=3
+- ICS Protocols: x=2, y=0, width=6, height=3
+- Infrastructure Breakdown: x=0, y=3, width=6, height=5
+- NERC CIP Compliance: x=6, y=3, width=6, height=5
+- Threat Heat Map: x=0, y=8, width=12, height=9
+
+**Installation:**
+```bash
+cd /home/gallagher/misp-install/misp-install/widgets/utilities-sector
+sudo bash install-all-widgets.sh
+python3 configure-dashboard-full.py --api-key YOUR_KEY --misp-url https://your-misp
 ```
 
 ## Data Sources
