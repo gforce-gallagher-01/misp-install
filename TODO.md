@@ -46,30 +46,61 @@ Develop comprehensive custom dashboards and widgets specifically designed for ut
 - Industrial malware family tracking (TRITON, INDUSTROYER, etc.)
 - Asset type targeting analysis
 
-#### 3. Utilities Sector Feed Dashboard
-**Effort:** 8-10 hours
-- ICS-CERT advisory feed visualization
-- E-ISAC alert monitoring
-- DHS CISA utilities sector alerts
-- Vendor security bulletins (Siemens, Schneider, ABB, Rockwell)
-- Zero-day tracking for ICS vendors
-- CVE scoring specific to utilities
+#### 3. Utilities Sector Feed Dashboard ✅ COMPLETED
+**Effort:** 8-10 hours (Completed: 2025-10-16)
+- ✅ ICS-CERT advisory feed visualization
+- ✅ E-ISAC alert monitoring (via CISA Utilities Alerts)
+- ✅ DHS CISA utilities sector alerts
+- ✅ Vendor security bulletins (Siemens, Schneider, ABB, Rockwell, 12 vendors total)
+- ✅ Zero-day tracking for ICS vendors
+- ✅ CVE scoring specific to utilities
+- ✅ Feed health monitoring (10 critical feeds)
 
-#### 4. Organizational Contribution Dashboard (Utilities)
-**Effort:** 5-6 hours
-- Utilities ISAC member contribution rankings
-- Sector-specific sharing metrics
-- Regional utilities cooperation heat map
-- Energy sector organization participation
-- Monthly contribution trends by subsector (generation, transmission, distribution)
+**Deliverables:**
+- `widgets/utilities-feed-dashboard/ICSCERTAdvisoryWidget.php` - ICS-CERT advisories
+- `widgets/utilities-feed-dashboard/CISAUtilitiesAlertsWidget.php` - CISA alerts
+- `widgets/utilities-feed-dashboard/VendorSecurityBulletinsWidget.php` - 12 vendor tracking
+- `widgets/utilities-feed-dashboard/ICSZeroDayTrackerWidget.php` - Zero-day CVE tracking
+- `widgets/utilities-feed-dashboard/FeedHealthMonitorWidget.php` - 10 feed health monitoring
+- `widgets/utilities-feed-dashboard/README.md` - Complete documentation
+- `widgets/utilities-feed-dashboard/install-feed-widgets.sh` - Installation script
+- `scripts/configure-all-dashboards.py` - Updated master script (now 20 widgets)
 
-#### 5. Threat Actor Dashboard (Utilities Focus)
-**Effort:** 5-6 hours
-- APT groups targeting utilities (Dragonfly, XENOTIME, APT33, Sandworm)
-- Nation-state attribution timeline
-- Campaign tracking against energy infrastructure
-- TTPs specific to utilities sector
-- Historical incident timeline
+#### 4. Organizational Contribution Dashboard (Utilities) ✅ COMPLETED
+**Effort:** 5-6 hours (Completed: 2025-10-16)
+- ✅ Utilities ISAC member contribution rankings (top 15 organizations)
+- ✅ Sector-specific sharing metrics (5 key metrics with period comparison)
+- ✅ Regional utilities cooperation heat map (geographic visualization)
+- ✅ Energy sector organization participation (unique org tracking)
+- ✅ Monthly contribution trends by subsector (12-month trends, 10 subsectors)
+
+**Deliverables:**
+- `widgets/organizational-dashboard/ISACContributionRankingsWidget.php` - Top contributors
+- `widgets/organizational-dashboard/SectorSharingMetricsWidget.php` - Key metrics dashboard
+- `widgets/organizational-dashboard/RegionalCooperationHeatMapWidget.php` - Geographic cooperation
+- `widgets/organizational-dashboard/SubsectorContributionWidget.php` - 10 subsector breakdown
+- `widgets/organizational-dashboard/MonthlyContributionTrendWidget.php` - 12-month trends
+- `widgets/organizational-dashboard/README.md` - Complete documentation
+- `widgets/organizational-dashboard/install-organizational-widgets.sh` - Installation script
+- `scripts/configure-all-dashboards.py` - Updated master script (now 25 widgets)
+
+#### 5. Threat Actor Dashboard (Utilities Focus) ✅ COMPLETED
+**Effort:** 5-6 hours (Completed: 2025-10-16)
+- ✅ APT groups targeting utilities (Dragonfly, XENOTIME, APT33, Sandworm)
+- ✅ Nation-state attribution timeline
+- ✅ Campaign tracking against energy infrastructure
+- ✅ TTPs specific to utilities sector
+- ✅ Historical incident timeline
+
+**Deliverables:**
+- `widgets/threat-actor-dashboard/APTGroupsUtilitiesWidget.php` - Tracks 12 APT groups
+- `widgets/threat-actor-dashboard/CampaignTrackingWidget.php` - Active campaigns
+- `widgets/threat-actor-dashboard/NationStateAttributionWidget.php` - Attribution bar chart
+- `widgets/threat-actor-dashboard/TTPsUtilitiesWidget.php` - 15 ICS-specific TTPs
+- `widgets/threat-actor-dashboard/HistoricalIncidentsWidget.php` - Incident timeline
+- `widgets/threat-actor-dashboard/README.md` - Complete documentation
+- `widgets/threat-actor-dashboard/install-threat-actor-widgets.sh` - Installation script
+- `scripts/configure-all-dashboards.py` - Updated master script (now 15 widgets)
 
 **Technical Implementation:**
 1. Create custom widget collection in `/var/www/MISP/app/View/Elements/dashboard/Widgets/`
@@ -92,6 +123,12 @@ Develop comprehensive custom dashboards and widgets specifically designed for ut
 - ICS taxonomy enabled
 - MITRE ATT&CK for ICS Galaxy enabled
 - Utilities sector feeds configured
+- PHP 8.3+ CLI (for widget development/testing)
+
+**Note:** PHP Apache module may be installed as dependency but should be disabled to prevent port conflicts with MISP:
+```bash
+sudo systemctl stop apache2 && sudo systemctl disable apache2
+```
 
 **Success Metrics:**
 - 5+ custom dashboards deployed
@@ -292,6 +329,32 @@ Extend beyond Azure to support AWS and GCP deployments with cloud-native feature
 ---
 
 ## Recently Completed (v5.6 - October 2025)
+
+✅ **ALL UTILITIES SECTOR DASHBOARDS COMPLETED!** (2025-10-16) - 25 total widgets across 5 dashboards
+
+✅ **Organizational Contribution Dashboard** (2025-10-16) - 5 widgets for ISAC tracking
+  - ISACContributionRankingsWidget: Top contributing organizations
+  - SectorSharingMetricsWidget: Key metrics with period comparison
+  - RegionalCooperationHeatMapWidget: Geographic cooperation visualization
+  - SubsectorContributionWidget: 10 subsector breakdown
+  - MonthlyContributionTrendWidget: 12-month trend analysis
+  - Master dashboard script updated (25 total widgets)
+
+✅ **Utilities Feed Dashboard** (2025-10-16) - 5 widgets for feed monitoring
+  - ICSCERTAdvisoryWidget: ICS-CERT advisories with severity/CVE tracking
+  - CISAUtilitiesAlertsWidget: CISA alerts for utilities sector
+  - VendorSecurityBulletinsWidget: 12 ICS vendor bulletins tracking
+  - ICSZeroDayTrackerWidget: Zero-day CVE tracking with CVSS scoring
+  - FeedHealthMonitorWidget: 10 critical feed health monitoring
+  - Master dashboard script updated (20 total widgets)
+
+✅ **Threat Actor Dashboard** (2025-10-16) - 5 widgets for APT/nation-state tracking
+  - APTGroupsUtilitiesWidget: 12 APT groups targeting utilities
+  - CampaignTrackingWidget: Active campaign monitoring
+  - NationStateAttributionWidget: Nation-state attribution analysis
+  - TTPsUtilitiesWidget: 15 ICS-specific TTPs
+  - HistoricalIncidentsWidget: Major ICS incident timeline
+  - Master dashboard script updated (15 total widgets)
 
 ✅ **v5.6 Advanced Features Release** - Install everything by default with opt-out exclusions
   - Phase 11.8: Utilities Sector Threat Intelligence (ICS/SCADA/MITRE ATT&CK for ICS)

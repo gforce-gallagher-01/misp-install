@@ -1,0 +1,80 @@
+{
+  "UserSetting": {
+    "id": "1",
+    "setting": "dashboard",
+    "value": [
+      {
+        "widget": "UtilitiesSectorStatsWidget",
+        "config": {
+          "show_24h": true,
+          "show_7d": true,
+          "show_30d": true
+        },
+        "position": {
+          "x": "0",
+          "y": "0",
+          "width": "2",
+          "height": "3"
+        }
+      },
+      {
+        "widget": "UtilitiesThreatHeatMapWidget",
+        "config": {
+          "timeframe": "7d",
+          "limit": "1000",
+          "sector_tag": "ics:sector"
+        },
+        "position": {
+          "x": "0",
+          "y": "8",
+          "width": "12",
+          "height": "9"
+        }
+      },
+      {
+        "widget": "ICSProtocolsTargetedWidget",
+        "config": {
+          "timeframe": "7d",
+          "limit": "10",
+          "sector_filter": ""
+        },
+        "position": {
+          "x": "2",
+          "y": "0",
+          "width": "6",
+          "height": "3"
+        }
+      },
+      {
+        "widget": "CriticalInfrastructureBreakdownWidget",
+        "config": {
+          "timeframe": "7d",
+          "breakdown_by": "subsector",
+          "limit": "10"
+        },
+        "position": {
+          "x": "0",
+          "y": "3",
+          "width": "6",
+          "height": "5"
+        }
+      },
+      {
+        "widget": "NERCCIPComplianceWidget",
+        "config": {
+          "timeframe": "7d",
+          "cip_standards": [],
+          "limit": "10"
+        },
+        "position": {
+          "x": "6",
+          "y": "3",
+          "width": "6",
+          "height": "5"
+        }
+      }
+    ],
+    "user_id": "1",
+    "timestamp": "1760633696"
+  }
+}

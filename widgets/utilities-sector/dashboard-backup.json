@@ -1,0 +1,62 @@
+{
+  "UserSetting": {
+    "id": "1",
+    "setting": "dashboard",
+    "value": [
+      {
+        "widget": "UtilitiesThreatHeatMapWidget",
+        "config": {
+          "timeframe": "7d",
+          "limit": "1000",
+          "sector_tag": "ics:sector"
+        },
+        "position": {
+          "x": "3",
+          "y": "0",
+          "width": "6",
+          "height": "9"
+        }
+      },
+      {
+        "widget": "TrendingTagsWidget",
+        "config": {
+          "limit": "10",
+          "days": "7"
+        },
+        "position": {
+          "x": "1",
+          "y": "7",
+          "width": "2",
+          "height": "6"
+        }
+      },
+      {
+        "widget": "TrendingAttributesWidget",
+        "config": {
+          "limit": "10",
+          "days": "7"
+        },
+        "position": {
+          "x": "1",
+          "y": "5",
+          "width": "2",
+          "height": "2"
+        }
+      },
+      {
+        "widget": "EventStreamWidget",
+        "config": {
+          "limit": "5"
+        },
+        "position": {
+          "x": "1",
+          "y": "0",
+          "width": "2",
+          "height": "5"
+        }
+      }
+    ],
+    "user_id": "1",
+    "timestamp": "1760632690"
+  }
+}
