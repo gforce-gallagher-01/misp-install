@@ -1,0 +1,140 @@
+# MISP Systemd Service Unit for Ubuntu 24.04
+# This service manages the entire MISP Docker stack with security hardening
+#
+# Installation:
+#   sudo bash scripts/setup-misp-systemd.sh
+#   OR manually:
+#   sudo cp scripts/misp.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable misp.service
+#
+# Usage:
+#   sudo systemctl start misp      # Start MISP
+#   sudo systemctl stop misp       # Stop MISP
+#   sudo systemctl restart misp    # Restart MISP
+#   sudo systemctl status misp     # Check status
+#   sudo journalctl -u misp -f     # View logs
+#   sudo systemctl reload misp     # Update containers (pull & recreate)
+
+[Unit]
+Description=MISP (Malware Information Sharing Platform) Docker Stack
+Documentation=https://www.misp-project.org/
+Documentation=https://github.com/MISP/misp-docker
+Documentation=file:///opt/misp/README.md
+
+# Service dependencies
+Requires=docker.service
+After=docker.service network-online.target time-sync.target
+Wants=network-online.target
+
+# Ensure proper shutdown ordering
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# ==========================================
+# User and Group Configuration
+# ==========================================
+# misp-owner must be in the 'docker' group to run docker compose commands
+# Docker daemon (running as root) handles binding to privileged ports like 443
+User=misp-owner
+Group=docker
+SupplementaryGroups=misp-owner
+
+# ==========================================
+# Working Directory and Environment
+# ==========================================
+WorkingDirectory=/opt/misp
+Environment="COMPOSE_FILE=/opt/misp/docker-compose.yml"
+Environment="COMPOSE_PROJECT_NAME=misp"
+Environment="DOCKER_CLIENT_TIMEOUT=120"
+Environment="COMPOSE_HTTP_TIMEOUT=120"
+
+# ==========================================
+# Service Commands
+# ==========================================
+# Start: Bring up all containers with health check wait
+# Docker Compose automatically loads /opt/misp/.env when run from WorkingDirectory
+ExecStart=/usr/bin/docker compose up -d --wait --wait-timeout 300
+
+# Stop: Gracefully stop all containers with timeout
+ExecStop=/usr/bin/docker compose down --timeout 60
+
+# Reload: Pull latest images and recreate containers
+ExecReload=/bin/bash -c '/usr/bin/docker compose pull && /usr/bin/docker compose up -d --force-recreate --wait'
+
+# Post-start health verification
+ExecStartPost=/bin/bash -c 'sleep 15; cd /opt/misp && containers=$(/usr/bin/docker compose ps --filter "status=running" --format "{{.Service}}" | wc -l); if [ "$containers" -lt 3 ]; then echo "ERROR: Expected at least 3 containers running, found $containers"; exit 1; fi; echo "SUCCESS: $containers containers running"'
+
+# ==========================================
+# Restart and Timeout Configuration
+# ==========================================
+Restart=on-failure
+RestartSec=15s
+StartLimitInterval=600s
+StartLimitBurst=3
+
+# Timeouts (increased for Docker operations)
+TimeoutStartSec=600
+TimeoutStopSec=90
+TimeoutSec=660
+
+# ==========================================
+# Security Hardening (Ubuntu 24.04)
+# ==========================================
+
+# File System Protection
+# Note: Docker Compose needs broader filesystem access to manage containers
+ProtectSystem=no
+ProtectHome=no
+ReadWritePaths=/opt/misp
+PrivateTmp=yes
+
+# Process Protection
+NoNewPrivileges=yes
+
+# Misc Security
+UMask=0027
+
+# Note: Many security hardening options are disabled because Docker Compose
+# needs elevated privileges to manage containers (create namespaces, network config, etc.)
+# The Docker daemon itself runs as root and handles container isolation.
+# Additional hardening should be done at the Docker daemon level and container level.
+
+# ==========================================
+# Resource Limits
+# ==========================================
+# Prevent resource exhaustion
+LimitNOFILE=65536
+LimitNPROC=4096
+TasksMax=4096
+
+# Memory limits (adjust based on system resources)
+# MemoryMax=8G
+# MemoryHigh=7G
+
+# CPU limits (optional - uncomment to enable)
+# CPUQuota=400%
+
+# ==========================================
+# Logging Configuration
+# ==========================================
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=misp
+SyslogLevel=info
+
+# Log rate limiting
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=100
+
+# ==========================================
+# Watchdog Configuration (Optional)
+# ==========================================
+# Uncomment to enable automatic restart on hang
+# WatchdogSec=300
+
+[Install]
+WantedBy=multi-user.target
