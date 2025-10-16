@@ -6,6 +6,7 @@ from datetime import datetime
 from phases.base_phase import BasePhase
 from lib.colors import Colors
 from lib.user_manager import MISP_USER
+from lib.config import get_system_hostname
 
 
 class Phase09Passwords(BasePhase):
@@ -24,6 +25,12 @@ class Phase09Passwords(BasePhase):
         """Create PASSWORDS.txt with all credentials"""
         self.logger.info("[9.1] Creating secure password reference file...")
 
+        # ALWAYS use auto-detected hostname
+        detected_hostname = get_system_hostname()
+        base_url = f"https://{detected_hostname}"
+
+        self.logger.info(f"Using detected hostname: {detected_hostname}")
+
         # Get certificate expiry
         try:
             result = self.run_command([
@@ -41,7 +48,7 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 Environment: {self.config.environment}
 
 ADMIN WEB LOGIN:
-  URL:      {self.config.base_url}
+  URL:      {base_url}
   Email:    {self.config.admin_email}
   Password: {self.config.admin_password}
 
@@ -61,7 +68,7 @@ ENCRYPTION:
 
 SERVER:
   IP:   {self.config.server_ip}
-  FQDN: {self.config.domain}
+  FQDN: {detected_hostname}
 
 CERTIFICATE:
   Location: /opt/misp/ssl/cert.pem

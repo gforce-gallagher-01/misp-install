@@ -1,12 +1,14 @@
-# MISP Complete Installation Tool v5.4
+# MISP Complete Installation Tool v5.6
 **tKQB Enterprises**
 
 A professional-grade Python installation script for MISP (Malware Information Sharing Platform) with enterprise features.
 
 ## 🚀 Features
 
+### Core Installation
+- ✅ **Automatic Hostname Detection** - Detects and uses system FQDN automatically
 - ✅ **Pre-flight System Checks** - Validates disk, RAM, CPU, ports, Docker
-- ✅ **Full Logging** - Detailed logs saved to `/var/log/misp-install/`
+- ✅ **Full Logging** - Detailed logs saved to `/opt/misp/logs/`
 - ✅ **Automatic Backups** - Backs up existing installation before cleanup
 - ✅ **Config File Support** - YAML/JSON configuration files
 - ✅ **Docker Group Activation** - Automatic docker group configuration
@@ -17,6 +19,16 @@ A professional-grade Python installation script for MISP (Malware Information Sh
 - ✅ **Port Conflict Detection** - Prevents installation conflicts
 - ✅ **Multi-Environment** - Dev/Staging/Production profiles
 - ✅ **Performance Tuning** - Auto-configures based on system resources
+
+### Advanced Features (NEW in v5.6)
+- 🆕 **Install Everything by Default** - Full-featured deployment out of the box
+- 🆕 **Exclusion List System** - Opt-out of unwanted features
+- ✅ **API Key Generation** - Automatic API key for automation
+- ✅ **Threat Intelligence Feeds** - Built-in ICS/SCADA threat feeds
+- ✅ **Utilities Sector Config** - NERC CIP and ICS/OT intelligence
+- ✅ **Automated Maintenance** - Daily/weekly cron jobs
+- ✅ **Security News Feeds** - Automated security news population
+- ✅ **SIEM Integration Docs** - Splunk, Security Onion, generic SIEM
 
 ## 📋 Requirements
 
@@ -124,6 +136,92 @@ misp-install-gui
 ```
 
 See `docs/GUI_INSTALLER.md` for complete documentation.
+
+## 🎛️ Advanced Features & Exclusion List (NEW in v5.6)
+
+### Install Everything by Default
+
+**By default, v5.6 installs ALL advanced features:**
+- ✅ API key generation for automation
+- ✅ Built-in threat intelligence feeds
+- ✅ Utilities sector configuration (ICS/SCADA/NERC CIP)
+- ✅ Automated daily/weekly maintenance
+- ✅ Security news population
+- ✅ SIEM integration documentation
+
+**No configuration needed** - everything just works!
+
+### Opt-Out with Exclusion List
+
+Don't need certain features? Use the exclusion list to skip them:
+
+**Example 1: Full Installation (Default)**
+```json
+{
+  "server_ip": "192.168.20.54",
+  "domain": "",
+  "admin_email": "admin@company.com",
+  "admin_org": "My Company",
+  "admin_password": "SecurePass123!",
+  "mysql_password": "DBPass123!",
+  "gpg_passphrase": "GPGPass123!",
+  "environment": "production",
+  "exclude_features": []
+}
+```
+
+**Example 2: Exclude Specific Features**
+```json
+{
+  "exclude_features": [
+    "api-key",
+    "news-feeds",
+    "automated-backups"
+  ]
+}
+```
+
+**Example 3: Exclude Entire Categories**
+```json
+{
+  "exclude_features": [
+    "category:automation",
+    "category:compliance"
+  ]
+}
+```
+
+### Available Features
+
+**Threat Intelligence:**
+- `api-key` - API key generation for automation scripts
+- `threat-feeds` - Built-in threat intelligence feeds
+- `utilities-sector` - ICS/SCADA/Utilities sector threat intelligence
+- `nerc-cip` - NERC CIP compliance features
+- `mitre-attack-ics` - MITRE ATT&CK for ICS framework
+
+**Automation:**
+- `automated-maintenance` - Daily and weekly maintenance cron jobs
+- `automated-backups` - Scheduled backup cron job
+- `news-feeds` - Security news population
+
+**Integrations:**
+- `splunk-integration` - Splunk SIEM correlation rules (documentation)
+- `security-onion` - Security Onion integration (documentation)
+- `siem-correlation` - Generic SIEM correlation rules (documentation)
+
+**Compliance:**
+- `nerc-cip-taxonomies` - NERC CIP taxonomies
+- `dhs-ciip-sectors` - DHS Critical Infrastructure sectors
+- `ics-taxonomies` - ICS/OT taxonomies
+
+### List Available Features
+
+```bash
+python3 misp-install.py --list-features
+```
+
+For complete documentation, see: `EXCLUSION_LIST_DESIGN.md`
 
 ## 📝 Usage Examples
 

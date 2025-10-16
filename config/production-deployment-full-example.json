@@ -1,0 +1,16 @@
+{
+  "_comment": "MISP Installation Configuration - Full Example with Exclusions",
+  "_comment_exclusions": "List features to EXCLUDE from installation (all features installed by default)",
+
+  "server_ip": "192.168.20.54",
+  "domain": "",
+  "admin_email": "admin@tkqb.local",
+  "admin_org": "tKQB Enterprises",
+  "admin_password": "MISPadmin2025!@#",
+  "mysql_password": "MySQL$ecure2025!",
+  "gpg_passphrase": "GPG$ecurePass2025!",
+  "encryption_key": "",
+  "environment": "production",
+
+  "exclude_features": []
+}

@@ -1,0 +1,28 @@
+{
+  "_comment": "Custom Exclusions - Cherry-Pick Features",
+  "_description": "Example of excluding specific features while keeping others. Mix of feature and category exclusions.",
+
+  "server_ip": "192.168.20.54",
+  "domain": "",
+  "admin_email": "admin@company.com",
+  "admin_org": "My Company",
+  "admin_password": "ChangeMe123!@#",
+  "mysql_password": "ChangeMe456!@#",
+  "gpg_passphrase": "ChangeMe789!@#",
+  "encryption_key": "",
+  "environment": "production",
+
+  "exclude_features": [
+    "api-key",
+    "automated-backups",
+    "category:compliance",
+    "news-feeds"
+  ],
+
+  "_note": "This config will:",
+  "_note_1": "✓ Install threat feeds and utilities sector config",
+  "_note_2": "✓ Install automated maintenance (but not backups)",
+  "_note_3": "✗ Skip API key generation",
+  "_note_4": "✗ Skip all compliance features (NERC CIP, DHS, ICS taxonomies)",
+  "_note_5": "✗ Skip news feeds"
+}

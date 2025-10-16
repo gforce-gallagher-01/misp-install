@@ -1,0 +1,25 @@
+{
+  "server_ip": "192.168.20.54",
+  "domain": "misp-dev.lan",
+  "admin_email": "admin@test.local",
+  "admin_org": "Hell",
+  "admin_password": "l5YwelW47j9@nGh4",
+  "mysql_password": "bxbMZbnB@UUM1tX7",
+  "gpg_passphrase": "KX!qL6EKONwLy1YBdmal",
+  "environment": "development",
+  "features": {
+    "nerc_cip": true,
+    "utilities_sector": true,
+    "threat_feeds": true,
+    "ics_feeds": true,
+    "security_news": true,
+    "nerc_news": true,
+    "daily_maintenance": true,
+    "weekly_maintenance": true,
+    "feed_cron": true,
+    "news_cron": true,
+    "backup_cron": true,
+    "enable_all_feeds": true,
+    "production_best_practices": true
+  }
+}

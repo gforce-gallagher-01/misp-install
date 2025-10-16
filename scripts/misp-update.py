@@ -93,10 +93,11 @@ class VersionInfo:
 class MISPUpdateManager:
     """Manages MISP updates and upgrades"""
 
-    def __init__(self, skip_backup: bool = False, check_only: bool = False):
+    def __init__(self, skip_backup: bool = False, check_only: bool = False, force: bool = False):
         self.misp_dir = MISP_DIR
         self.skip_backup = skip_backup
         self.check_only = check_only
+        self.force = force
         self.backup_path: Optional[Path] = None
 
     def run_command(self, cmd: List[str], check: bool = True, capture_output: bool = False, cwd: Optional[Path] = None) -> subprocess.CompletedProcess:
@@ -401,10 +402,13 @@ class MISPUpdateManager:
         logger.info("  4. Verify services are healthy")
         logger.info(f"\nDowntime: ~2-5 minutes")
 
-        response = input("\nProceed with update? (type 'UPDATE' to confirm): ")
-        if response != 'UPDATE':
-            logger.info("Update cancelled")
-            return False
+        if not self.force:
+            response = input("\nProceed with update? (type 'UPDATE' to confirm): ")
+            if response != 'UPDATE':
+                logger.info("Update cancelled")
+                return False
+        else:
+            logger.info("--force flag set, proceeding without confirmation")
 
         # Create backup
         if not self.skip_backup:
@@ -490,6 +494,8 @@ Examples:
                         help='Only check for updates, do not apply')
     parser.add_argument('--skip-backup', action='store_true',
                         help='Skip backup before update (not recommended)')
+    parser.add_argument('--force', action='store_true',
+                        help='Skip confirmation prompts (for automation)')
     parser.add_argument('--version', action='version', version='MISP Update Tool v2.0')
 
     args = parser.parse_args()
@@ -503,7 +509,8 @@ Examples:
     # Create update manager
     updater = MISPUpdateManager(
         skip_backup=args.skip_backup,
-        check_only=args.check_only
+        check_only=args.check_only,
+        force=args.force
     )
 
     # Run update

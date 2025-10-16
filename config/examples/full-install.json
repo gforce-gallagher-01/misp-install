@@ -1,0 +1,16 @@
+{
+  "_comment": "Full Installation - All Features Enabled (Default)",
+  "_description": "This is the default behavior. All advanced features are installed.",
+
+  "server_ip": "192.168.20.54",
+  "domain": "",
+  "admin_email": "admin@company.com",
+  "admin_org": "My Company",
+  "admin_password": "ChangeMe123!@#",
+  "mysql_password": "ChangeMe456!@#",
+  "gpg_passphrase": "ChangeMe789!@#",
+  "encryption_key": "",
+  "environment": "production",
+
+  "exclude_features": []
+}

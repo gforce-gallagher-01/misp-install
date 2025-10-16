@@ -2,7 +2,7 @@
 """
 MISP GUI Installer
 tKQB Enterprises Edition
-Version: 1.0
+Version: 2.0
 
 Modern graphical installer using Python Textual framework.
 Provides an intuitive multi-step wizard interface that runs in terminal (TUI) or web browser.
@@ -27,6 +27,7 @@ import argparse
 import subprocess
 from pathlib import Path
 from datetime import datetime
+import os
 
 # Check Python version
 if sys.version_info < (3, 8):
@@ -74,6 +75,130 @@ except ImportError:
     print("")
     import time
     time.sleep(3)
+
+# ==========================================
+# Helper Functions
+# ==========================================
+
+def check_misp_installed() -> bool:
+    """Check if MISP is already installed"""
+    misp_dir = Path("/opt/misp")
+    docker_compose = misp_dir / "docker-compose.yml"
+    env_file = misp_dir / ".env"
+
+    # Check if key files exist
+    if not misp_dir.exists():
+        return False
+
+    if not docker_compose.exists() or not env_file.exists():
+        return False
+
+    # Check if containers are running
+    try:
+        result = subprocess.run(
+            ['sudo', 'docker', 'compose', 'ps', '-q'],
+            cwd=str(misp_dir),
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return result.returncode == 0 and len(result.stdout.strip()) > 0
+    except:
+        return False
+
+
+def verify_uninstall_complete() -> dict:
+    """Verify that MISP has been completely uninstalled
+
+    Returns:
+        dict: Health check results with status and details
+    """
+    health_checks = {
+        'misp_directory': False,
+        'docker_containers': False,
+        'docker_images': False,
+        'misp_user': False,
+        'all_clean': True
+    }
+
+    details = []
+
+    # Check 1: MISP directory should not exist
+    misp_dir = Path("/opt/misp")
+    if not misp_dir.exists():
+        health_checks['misp_directory'] = True
+        details.append("✓ MISP directory removed (/opt/misp)")
+    else:
+        health_checks['misp_directory'] = False
+        health_checks['all_clean'] = False
+        details.append("✗ MISP directory still exists (/opt/misp)")
+
+    # Check 2: No MISP Docker containers running
+    try:
+        result = subprocess.run(
+            ['sudo', 'docker', 'ps', '-a', '--filter', 'name=misp', '--format', '{{.Names}}'],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        containers = [c for c in result.stdout.strip().split('\n') if c]
+        if not containers:
+            health_checks['docker_containers'] = True
+            details.append("✓ No MISP Docker containers found")
+        else:
+            health_checks['docker_containers'] = False
+            health_checks['all_clean'] = False
+            details.append(f"✗ Found {len(containers)} MISP container(s) still present")
+            for container in containers[:3]:  # Show first 3
+                details.append(f"  - {container}")
+    except Exception as e:
+        details.append(f"⚠️  Could not check Docker containers: {e}")
+        health_checks['all_clean'] = False
+
+    # Check 3: No MISP Docker images
+    try:
+        result = subprocess.run(
+            ['sudo', 'docker', 'images', '--filter', 'reference=*misp*', '--format', '{{.Repository}}:{{.Tag}}'],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        images = [img for img in result.stdout.strip().split('\n') if img and img != '<none>:<none>']
+        if not images:
+            health_checks['docker_images'] = True
+            details.append("✓ No MISP Docker images found")
+        else:
+            health_checks['docker_images'] = False
+            health_checks['all_clean'] = False
+            details.append(f"⚠️  Found {len(images)} MISP image(s) still present")
+            for image in images[:3]:  # Show first 3
+                details.append(f"  - {image}")
+    except Exception as e:
+        details.append(f"⚠️  Could not check Docker images: {e}")
+
+    # Check 4: misp-owner user should not exist
+    try:
+        result = subprocess.run(
+            ['id', 'misp-owner'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode != 0:
+            health_checks['misp_user'] = True
+            details.append("✓ misp-owner user removed")
+        else:
+            health_checks['misp_user'] = False
+            health_checks['all_clean'] = False
+            details.append("✗ misp-owner user still exists")
+    except Exception as e:
+        details.append(f"⚠️  Could not check misp-owner user: {e}")
+        health_checks['all_clean'] = False
+
+    return {
+        'checks': health_checks,
+        'details': details
+    }
 
 # ==========================================
 # Custom Validators
@@ -181,6 +306,13 @@ class WelcomeScreen(Screen):
         margin-bottom: 2;
     }
 
+    .status-box {
+        border: solid $success;
+        padding: 1;
+        margin: 1 0;
+        background: $success 20%;
+    }
+
     .prereq-item {
         margin-left: 2;
         margin-bottom: 1;
@@ -201,25 +333,40 @@ class WelcomeScreen(Screen):
         yield Header()
         with Container(id="welcome-container"):
             yield Label("MISP Installation Wizard", id="title")
-            yield Label("tKQB Enterprises Edition v1.0", id="subtitle")
+            yield Label("tKQB Enterprises Edition v2.0", id="subtitle")
+            yield Static("💡 Tip: Press Ctrl+Q to quit at any time", classes="tip-text")
 
-            yield Static("Welcome to the MISP GUI Installer!\n", classes="intro")
-            yield Static(
-                "This wizard will guide you through installing MISP "
-                "(Malware Information Sharing Platform) on your server.\n",
-                classes="intro"
-            )
+            # Check if MISP is installed
+            misp_installed = check_misp_installed()
 
-            yield Label("Prerequisites:", classes="prereq-header")
-            yield Static("✓ Ubuntu 22.04 LTS or 24.04 LTS", classes="prereq-item")
-            yield Static("✓ 8GB+ RAM recommended", classes="prereq-item")
-            yield Static("✓ 50GB+ free disk space", classes="prereq-item")
-            yield Static("✓ sudo privileges", classes="prereq-item")
-            yield Static("✓ Internet connection", classes="prereq-item")
+            if misp_installed:
+                with Container(classes="status-box"):
+                    yield Static("✓ MISP is currently installed and running", id="install-status")
 
-            with Horizontal(id="button-container"):
-                yield Button("Continue", id="btn-continue", variant="primary")
-                yield Button("Exit", id="btn-exit", variant="default")
+                yield Static("\nWhat would you like to do?\n", classes="intro")
+
+                with Horizontal(id="button-container"):
+                    yield Button("🔄 Update MISP", id="btn-update", variant="primary")
+                    yield Button("🗑️  Uninstall MISP", id="btn-uninstall", variant="error")
+                    yield Button("Exit", id="btn-exit", variant="default")
+            else:
+                yield Static("Welcome to the MISP GUI Installer!\n", classes="intro")
+                yield Static(
+                    "This wizard will guide you through installing MISP "
+                    "(Malware Information Sharing Platform) on your server.\n",
+                    classes="intro"
+                )
+
+                yield Label("Prerequisites:", classes="prereq-header")
+                yield Static("✓ Ubuntu 22.04 LTS or 24.04 LTS", classes="prereq-item")
+                yield Static("✓ 8GB+ RAM recommended", classes="prereq-item")
+                yield Static("✓ 50GB+ free disk space", classes="prereq-item")
+                yield Static("✓ sudo privileges", classes="prereq-item")
+                yield Static("✓ Internet connection", classes="prereq-item")
+
+                with Horizontal(id="button-container"):
+                    yield Button("Install MISP", id="btn-continue", variant="primary")
+                    yield Button("Exit", id="btn-exit", variant="default")
 
         yield Footer()
 
@@ -227,6 +374,16 @@ class WelcomeScreen(Screen):
     def on_continue(self):
         """Move to network configuration screen"""
         self.app.push_screen("network")
+
+    @on(Button.Pressed, "#btn-update")
+    def on_update(self):
+        """Move to update screen"""
+        self.app.push_screen("update")
+
+    @on(Button.Pressed, "#btn-uninstall")
+    def on_uninstall(self):
+        """Move to uninstall screen"""
+        self.app.push_screen("uninstall")
 
     @on(Button.Pressed, "#btn-exit")
     def on_exit(self):
@@ -291,7 +448,7 @@ class NetworkScreen(Screen):
         with ScrollableContainer(id="network-container"):
             yield Label("Network Configuration", id="screen-title")
             yield Static("Step 1 of 5", classes="step-indicator")
-            yield Static("💡 Tip: Press Ctrl+V to paste from clipboard", classes="field-help")
+            yield Static("💡 Tip: Press Ctrl+V to paste from clipboard | Ctrl+Q to quit", classes="field-help")
 
             yield Label("Server IP Address:", classes="field-label")
             yield Static("The IP address of this server", classes="field-help")
@@ -448,7 +605,7 @@ class SecurityScreen(Screen):
         yield Header()
         with ScrollableContainer(id="security-container"):
             yield Label("Security Settings", id="screen-title")
-            yield Static("Step 2 of 5", classes="step-indicator")
+            yield Static("Step 2 of 5 | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield Static(
                 "⚠️  Strong passwords are required for security.\n"
@@ -602,7 +759,7 @@ class EnvironmentScreen(Screen):
         yield Header()
         with ScrollableContainer(id="environment-container"):
             yield Label("Environment Selection", id="screen-title")
-            yield Static("Step 3 of 5", classes="step-indicator")
+            yield Static("Step 3 of 5 | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield Static("Select the deployment environment:")
 
@@ -633,7 +790,7 @@ class EnvironmentScreen(Screen):
 
     @on(Button.Pressed, "#btn-next")
     def on_next(self):
-        """Move to review screen"""
+        """Move to features screen"""
         radio_set = self.query_one("#environment-radio", RadioSet)
 
         if radio_set.pressed_button:
@@ -648,9 +805,181 @@ class EnvironmentScreen(Screen):
             else:
                 self.app.config["environment"] = "production"  # default
 
-            self.app.push_screen("review")
+            self.app.push_screen("features")
         else:
             self.notify("Please select an environment", severity="error")
+
+# ==========================================
+# Enhanced Features Screen
+# ==========================================
+
+class FeaturesScreen(Screen):
+    """Enhanced features configuration screen"""
+
+    CSS = """
+    FeaturesScreen {
+        align: center middle;
+    }
+
+    #features-container {
+        width: 90;
+        height: auto;
+        border: solid $accent;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $accent;
+        margin-bottom: 2;
+    }
+
+    .feature-section {
+        border: solid $primary-lighten-2;
+        padding: 1;
+        margin: 1 0;
+        background: $primary 10%;
+    }
+
+    .section-title {
+        color: $accent;
+        text-style: bold;
+        margin-bottom: 1;
+    }
+
+    .feature-description {
+        color: $text-muted;
+        margin-left: 2;
+        margin-bottom: 0;
+    }
+
+    Checkbox {
+        margin: 0 2;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with ScrollableContainer(id="features-container"):
+            yield Label("Enhanced Features Configuration", id="screen-title")
+            yield Static("Step 4 of 6 | Press Ctrl+Q to quit", classes="step-indicator")
+
+            yield Static(
+                "📦 Select the enhanced features to install and configure.\n"
+                "💡 All features can be enabled/disabled later.\n",
+                classes="feature-intro"
+            )
+
+            # Industry-Specific Configuration
+            with Container(classes="feature-section"):
+                yield Label("🏭 Industry-Specific Configuration", classes="section-title")
+                yield Checkbox("Configure for NERC CIP Compliance (Energy Sector)", id="feat-nerc-cip")
+                yield Static("ICS/SCADA threat feeds, compliance settings, regulatory requirements", classes="feature-description")
+                yield Checkbox("Configure for Critical Infrastructure / Utilities Sector", id="feat-utilities")
+                yield Static("Water, power, gas sector threats and CISA alerts", classes="feature-description")
+
+            # Threat Intelligence Feeds
+            with Container(classes="feature-section"):
+                yield Label("🌐 Threat Intelligence Feeds", classes="section-title")
+                yield Checkbox("Enable Core Threat Intel Feeds", id="feat-threat-feeds", value=True)
+                yield Static("CIRCL, Abuse.ch, OpenPhish, Blocklist.de", classes="feature-description")
+                yield Checkbox("Enable ICS/OT-Specific Threat Feeds", id="feat-ics-feeds")
+                yield Static("Industrial control systems and operational technology threats", classes="feature-description")
+
+            # Security News & Alerts
+            with Container(classes="feature-section"):
+                yield Label("📰 Security News & Alerts", classes="section-title")
+                yield Checkbox("Populate Security News Dashboard", id="feat-news", value=True)
+                yield Static("Latest cybersecurity news from trusted sources", classes="feature-description")
+                yield Checkbox("Add NERC CIP News Feeds", id="feat-nerc-news")
+                yield Static("Energy sector security news and compliance updates", classes="feature-description")
+
+            # Automated Maintenance
+            with Container(classes="feature-section"):
+                yield Label("⚙️ Automated Maintenance & Updates", classes="section-title")
+                yield Checkbox("Setup Daily Maintenance Tasks", id="feat-daily-maintenance", value=True)
+                yield Static("Database optimization, cache clearing, log rotation", classes="feature-description")
+                yield Checkbox("Setup Weekly Maintenance Tasks", id="feat-weekly-maintenance", value=True)
+                yield Static("Feed updates, taxonomy updates, system cleanup", classes="feature-description")
+                yield Checkbox("Setup Automated Feed Fetching (Cron)", id="feat-feed-cron", value=True)
+                yield Static("Automatically fetch threat intel feeds daily", classes="feature-description")
+                yield Checkbox("Setup Automated News Updates (Cron)", id="feat-news-cron")
+                yield Static("Daily security news dashboard updates", classes="feature-description")
+                yield Checkbox("Setup Automated Backups", id="feat-backup-cron", value=True)
+                yield Static("Daily automated backups with 30-day retention", classes="feature-description")
+
+            # Advanced Configuration
+            with Container(classes="feature-section"):
+                yield Label("🔧 Advanced Configuration", classes="section-title")
+                yield Checkbox("Enable All Default Feeds (70+ feeds)", id="feat-enable-feeds")
+                yield Static("Activate all built-in MISP feed sources", classes="feature-description")
+                yield Checkbox("Configure MISP for Production Best Practices", id="feat-production-config", value=True)
+                yield Static("Security hardening, performance tuning, recommended settings", classes="feature-description")
+
+            with Horizontal(id="button-container"):
+                yield Button("← Back", id="btn-back", variant="default")
+                yield Button("Select All", id="btn-select-all", variant="default")
+                yield Button("Deselect All", id="btn-deselect-all", variant="default")
+                yield Button("Next →", id="btn-next", variant="primary")
+
+        yield Footer()
+
+    @on(Button.Pressed, "#btn-back")
+    def on_back(self):
+        """Go back to environment screen"""
+        self.app.pop_screen()
+
+    @on(Button.Pressed, "#btn-select-all")
+    def on_select_all(self):
+        """Select all feature checkboxes"""
+        for checkbox in self.query(Checkbox):
+            checkbox.value = True
+        self.notify("✓ All features selected", severity="information")
+
+    @on(Button.Pressed, "#btn-deselect-all")
+    def on_deselect_all(self):
+        """Deselect all feature checkboxes"""
+        for checkbox in self.query(Checkbox):
+            checkbox.value = False
+        self.notify("✓ All features deselected", severity="information")
+
+    @on(Button.Pressed, "#btn-next")
+    def on_next(self):
+        """Save feature selections and move to review screen"""
+        # Save all checkbox states to config
+        self.app.config["features"] = {
+            "nerc_cip": self.query_one("#feat-nerc-cip", Checkbox).value,
+            "utilities_sector": self.query_one("#feat-utilities", Checkbox).value,
+            "threat_feeds": self.query_one("#feat-threat-feeds", Checkbox).value,
+            "ics_feeds": self.query_one("#feat-ics-feeds", Checkbox).value,
+            "security_news": self.query_one("#feat-news", Checkbox).value,
+            "nerc_news": self.query_one("#feat-nerc-news", Checkbox).value,
+            "daily_maintenance": self.query_one("#feat-daily-maintenance", Checkbox).value,
+            "weekly_maintenance": self.query_one("#feat-weekly-maintenance", Checkbox).value,
+            "feed_cron": self.query_one("#feat-feed-cron", Checkbox).value,
+            "news_cron": self.query_one("#feat-news-cron", Checkbox).value,
+            "backup_cron": self.query_one("#feat-backup-cron", Checkbox).value,
+            "enable_all_feeds": self.query_one("#feat-enable-feeds", Checkbox).value,
+            "production_best_practices": self.query_one("#feat-production-config", Checkbox).value,
+        }
+
+        # Count selected features
+        selected_count = sum(1 for v in self.app.config["features"].values() if v)
+
+        self.notify(f"✓ {selected_count} features selected", severity="information")
+        self.app.push_screen("review")
 
 # ==========================================
 # Review & Confirm Screen
@@ -716,7 +1045,7 @@ class ReviewScreen(Screen):
         yield Header()
         with ScrollableContainer(id="review-container"):
             yield Label("Review Configuration", id="screen-title")
-            yield Static("Step 4 of 5", classes="step-indicator")
+            yield Static("Step 5 of 6 | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield Static("Please review your configuration before installation:\n")
 
@@ -736,6 +1065,34 @@ class ReviewScreen(Screen):
             with Container(classes="config-section"):
                 yield Label("Environment", classes="config-label")
                 yield Static(f"Type: {self.app.config.get('environment', 'N/A').title()}", classes="config-value")
+
+            # Show selected features
+            features = self.app.config.get('features', {})
+            selected_features = [k for k, v in features.items() if v]
+
+            with Container(classes="config-section"):
+                yield Label("Enhanced Features", classes="config-label")
+                if selected_features:
+                    feature_names = {
+                        'nerc_cip': 'NERC CIP Compliance',
+                        'utilities_sector': 'Utilities Sector Configuration',
+                        'threat_feeds': 'Core Threat Intel Feeds',
+                        'ics_feeds': 'ICS/OT Threat Feeds',
+                        'security_news': 'Security News Dashboard',
+                        'nerc_news': 'NERC CIP News Feeds',
+                        'daily_maintenance': 'Daily Maintenance',
+                        'weekly_maintenance': 'Weekly Maintenance',
+                        'feed_cron': 'Automated Feed Fetching',
+                        'news_cron': 'Automated News Updates',
+                        'backup_cron': 'Automated Backups',
+                        'enable_all_feeds': 'Enable All Default Feeds',
+                        'production_best_practices': 'Production Best Practices'
+                    }
+                    for feature_key in selected_features:
+                        feature_name = feature_names.get(feature_key, feature_key.replace('_', ' ').title())
+                        yield Static(f"✓ {feature_name}", classes="config-value")
+                else:
+                    yield Static("(No enhanced features selected)", classes="config-value")
 
             with Container(id="warning-box"):
                 yield Static(
@@ -818,7 +1175,8 @@ class ReviewScreen(Screen):
             "admin_password": self.app.config.get("admin_password"),
             "mysql_password": self.app.config.get("mysql_password"),
             "gpg_passphrase": self.app.config.get("gpg_passphrase"),
-            "environment": self.app.config.get("environment", "production")
+            "environment": self.app.config.get("environment", "production"),
+            "features": self.app.config.get("features", {})
         }
 
         with open(config_file, 'w') as f:
@@ -828,6 +1186,531 @@ class ReviewScreen(Screen):
         config_file.chmod(0o600)
 
         return str(config_file)
+
+# ==========================================
+# Update MISP Screen
+# ==========================================
+
+class UpdateScreen(Screen):
+    """Update MISP screen"""
+
+    CSS = """
+    UpdateScreen {
+        align: center middle;
+    }
+
+    #update-container {
+        width: 80;
+        height: auto;
+        border: solid $accent;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $accent;
+        margin-bottom: 2;
+    }
+
+    .update-option {
+        margin: 1 0;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with ScrollableContainer(id="update-container"):
+            yield Label("Update MISP", id="screen-title")
+            yield Static("Press Ctrl+Q to quit", classes="step-indicator")
+
+            yield Static(
+                "Select which components to update:\n",
+                classes="intro"
+            )
+
+            yield Checkbox("Update MISP Core", id="update-core", value=True)
+            yield Static("Updates MISP application to latest version", classes="update-option")
+
+            yield Checkbox("Update Docker Containers", id="update-containers", value=True)
+            yield Static("Pulls latest Docker images", classes="update-option")
+
+            yield Checkbox("Update Feeds", id="update-feeds", value=True)
+            yield Static("Fetches latest threat intelligence feeds", classes="update-option")
+
+            yield Checkbox("Update Taxonomies & Galaxies", id="update-taxonomies", value=True)
+            yield Static("Updates MISP taxonomies and galaxy clusters", classes="update-option")
+
+            yield Checkbox("Update System Packages", id="update-system")
+            yield Static("Updates underlying system packages (apt update/upgrade)", classes="update-option")
+
+            with Horizontal(id="button-container"):
+                yield Button("← Back", id="btn-back", variant="default")
+                yield Button("Start Update", id="btn-update", variant="primary")
+
+        yield Footer()
+
+    @on(Button.Pressed, "#btn-back")
+    def on_back(self):
+        """Go back to welcome screen"""
+        self.app.pop_screen()
+
+    @on(Button.Pressed, "#btn-update")
+    def on_update(self):
+        """Start update process"""
+        # Collect selected options
+        update_options = {
+            "core": self.query_one("#update-core", Checkbox).value,
+            "containers": self.query_one("#update-containers", Checkbox).value,
+            "feeds": self.query_one("#update-feeds", Checkbox).value,
+            "taxonomies": self.query_one("#update-taxonomies", Checkbox).value,
+            "system": self.query_one("#update-system", Checkbox).value,
+        }
+
+        self.app.config["update_options"] = update_options
+
+        # Confirm before starting
+        if not any(update_options.values()):
+            self.notify("Please select at least one update option", severity="error")
+            return
+
+        # Push to update progress screen
+        self.app.push_screen("update_progress")
+
+# ==========================================
+# Uninstall MISP Screen
+# ==========================================
+
+class UninstallScreen(Screen):
+    """Uninstall MISP screen"""
+
+    CSS = """
+    UninstallScreen {
+        align: center middle;
+    }
+
+    #uninstall-container {
+        width: 80;
+        height: auto;
+        border: solid $error;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $error;
+        margin-bottom: 2;
+    }
+
+    .warning-box {
+        border: solid $warning;
+        padding: 1;
+        margin: 2 0;
+        background: $warning 20%;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with ScrollableContainer(id="uninstall-container"):
+            yield Label("Uninstall MISP", id="screen-title")
+            yield Static("Press Ctrl+Q to quit", classes="step-indicator")
+
+            with Container(classes="warning-box"):
+                yield Static(
+                    "⚠️  WARNING: This will remove MISP from your system!\n\n"
+                    "The following will be removed:\n"
+                    "• Docker containers\n"
+                    "• MISP configuration files\n"
+                    "• Databases and data\n\n"
+                    "Your backups in ~/misp-backups will be preserved.",
+                    classes="warning-text"
+                )
+
+            yield Static("\nUninstall options:\n")
+
+            yield Checkbox("Keep backups", id="keep-backups", value=True)
+            yield Static("Preserve ~/misp-backups directory", classes="option-desc")
+
+            yield Checkbox("Keep logs", id="keep-logs", value=True)
+            yield Static("Preserve /opt/misp/logs directory", classes="option-desc")
+
+            yield Checkbox("Remove Docker volumes", id="remove-volumes")
+            yield Static("Remove Docker volumes (WARNING: deletes all data)", classes="option-desc")
+
+            yield Static("\n")
+            yield Checkbox("I understand and want to uninstall MISP", id="confirm-uninstall")
+
+            with Horizontal(id="button-container"):
+                yield Button("← Cancel", id="btn-cancel", variant="default")
+                yield Button("Uninstall MISP", id="btn-uninstall", variant="error")
+
+        yield Footer()
+
+    @on(Button.Pressed, "#btn-cancel")
+    def on_cancel(self):
+        """Cancel and go back"""
+        self.app.pop_screen()
+
+    @on(Button.Pressed, "#btn-uninstall")
+    def on_uninstall(self):
+        """Confirm and uninstall"""
+        confirm = self.query_one("#confirm-uninstall", Checkbox).value
+
+        if not confirm:
+            self.notify("Please check the confirmation box to proceed", severity="error")
+            return
+
+        # Collect options
+        uninstall_options = {
+            "keep_backups": self.query_one("#keep-backups", Checkbox).value,
+            "keep_logs": self.query_one("#keep-logs", Checkbox).value,
+            "remove_volumes": self.query_one("#remove-volumes", Checkbox).value,
+        }
+
+        self.app.config["uninstall_options"] = uninstall_options
+
+        # Push to uninstall progress screen
+        self.app.push_screen("uninstall_progress")
+
+# ==========================================
+# Update Progress Screen
+# ==========================================
+
+class UpdateProgressScreen(Screen):
+    """Update progress screen with live output"""
+
+    CSS = """
+    UpdateProgressScreen {
+        align: center middle;
+    }
+
+    #update-progress-container {
+        width: 90;
+        height: auto;
+        border: solid $accent;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $accent;
+        margin-bottom: 2;
+    }
+
+    #status-text {
+        text-align: center;
+        color: $text-muted;
+        margin: 1 0;
+    }
+
+    #log-container {
+        height: 25;
+        border: solid $primary;
+        padding: 1;
+        margin: 2 0;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with Container(id="update-progress-container"):
+            yield Label("Updating MISP", id="screen-title")
+            yield Static("Starting update process...", id="status-text")
+
+            yield Label("Update Log:", classes="log-header")
+            with ScrollableContainer(id="log-container"):
+                yield Static("", id="log-output")
+
+            with Horizontal(id="button-container"):
+                yield Button("Close", id="btn-close", variant="default", disabled=True)
+
+        yield Footer()
+
+    def on_mount(self):
+        """Start update when screen mounts"""
+        self.run_update()
+
+    def run_update(self):
+        """Execute misp-update.py script"""
+        import threading
+
+        def update_thread():
+            try:
+                self.update_status("Running MISP update script...")
+
+                # Get the directory where the GUI script is located
+                script_dir = Path(__file__).parent
+
+                # Build command based on options (script uses sudo internally)
+                cmd = ['python3', 'scripts/misp-update.py', '--force']
+
+                # Run the update script from project root
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    cwd=str(script_dir)
+                )
+
+                # Stream output
+                for line in process.stdout:
+                    self.append_log(line.rstrip())
+
+                process.wait()
+
+                if process.returncode == 0:
+                    self.update_status("✓ Update completed successfully!")
+                    self.append_log("\n✓ MISP has been updated successfully")
+                else:
+                    self.update_status("✗ Update failed")
+                    self.append_log(f"\n✗ Update failed with exit code {process.returncode}")
+
+            except Exception as e:
+                self.update_status("✗ Update error")
+                self.append_log(f"\n✗ Error: {str(e)}")
+
+            finally:
+                # Enable close button using Textual's thread-safe method
+                def enable_button():
+                    try:
+                        btn = self.query_one("#btn-close", Button)
+                        btn.disabled = False
+                    except:
+                        pass
+                self.call_from_thread(enable_button)
+
+        # Start update in background thread
+        thread = threading.Thread(target=update_thread, daemon=True)
+        thread.start()
+
+    def update_status(self, message: str):
+        """Update status text"""
+        try:
+            self.query_one("#status-text", Static).update(message)
+        except:
+            pass
+
+    def append_log(self, message: str):
+        """Append message to log output"""
+        try:
+            log_widget = self.query_one("#log-output", Static)
+            current = str(log_widget.renderable)
+            log_widget.update(current + "\n" + message if current else message)
+        except:
+            pass
+
+    @on(Button.Pressed, "#btn-close")
+    def on_close(self):
+        """Close and return to welcome"""
+        self.app.pop_screen()
+
+# ==========================================
+# Uninstall Progress Screen
+# ==========================================
+
+class UninstallProgressScreen(Screen):
+    """Uninstall progress screen with live output"""
+
+    CSS = """
+    UninstallProgressScreen {
+        align: center middle;
+    }
+
+    #uninstall-progress-container {
+        width: 90;
+        height: auto;
+        border: solid $error;
+        padding: 2;
+    }
+
+    #screen-title {
+        text-align: center;
+        text-style: bold;
+        color: $error;
+        margin-bottom: 2;
+    }
+
+    #status-text {
+        text-align: center;
+        color: $text-muted;
+        margin: 1 0;
+    }
+
+    #log-container {
+        height: 25;
+        border: solid $primary;
+        padding: 1;
+        margin: 2 0;
+    }
+
+    #button-container {
+        dock: bottom;
+        height: 3;
+        align: center middle;
+        margin-top: 2;
+    }
+
+    Button {
+        margin: 0 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        with Container(id="uninstall-progress-container"):
+            yield Label("Uninstalling MISP", id="screen-title")
+            yield Static("Starting uninstall process...", id="status-text")
+
+            yield Label("Uninstall Log:", classes="log-header")
+            with ScrollableContainer(id="log-container"):
+                yield Static("", id="log-output")
+
+            with Horizontal(id="button-container"):
+                yield Button("Close", id="btn-close", variant="default", disabled=True)
+
+        yield Footer()
+
+    def on_mount(self):
+        """Start uninstall when screen mounts"""
+        self.run_uninstall()
+
+    def run_uninstall(self):
+        """Execute uninstall-misp.py script"""
+        import threading
+
+        def uninstall_thread():
+            try:
+                self.update_status("Running MISP uninstall script...")
+
+                # Get the directory where the GUI script is located
+                script_dir = Path(__file__).parent
+
+                # Build command based on options (script uses sudo internally)
+                cmd = ['python3', 'scripts/uninstall-misp.py', '--force']
+
+                options = self.app.config.get("uninstall_options", {})
+                if not options.get("keep_logs", True):
+                    cmd.append('--remove-logs')
+
+                # Run the uninstall script from project root
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    cwd=str(script_dir)
+                )
+
+                # Stream output
+                for line in process.stdout:
+                    self.append_log(line.rstrip())
+
+                process.wait()
+
+                if process.returncode == 0:
+                    self.update_status("✓ Uninstall completed - Running health checks...")
+                    self.append_log("\n✓ MISP uninstall script completed")
+                    self.append_log("\n" + "=" * 50)
+                    self.append_log("Running post-uninstall health checks...")
+                    self.append_log("=" * 50)
+
+                    # Run health checks
+                    health_results = verify_uninstall_complete()
+
+                    self.append_log("")
+                    for detail in health_results['details']:
+                        self.append_log(detail)
+
+                    self.append_log("")
+                    self.append_log("=" * 50)
+                    if health_results['checks']['all_clean']:
+                        self.update_status("✓ Uninstall completed successfully - System is clean!")
+                        self.append_log("✓ All health checks passed - MISP fully removed")
+                    else:
+                        self.update_status("⚠️  Uninstall completed with warnings")
+                        self.append_log("⚠️  Some components may require manual cleanup")
+                    self.append_log("=" * 50)
+                else:
+                    self.update_status("✗ Uninstall failed")
+                    self.append_log(f"\n✗ Uninstall failed with exit code {process.returncode}")
+
+            except Exception as e:
+                self.update_status("✗ Uninstall error")
+                self.append_log(f"\n✗ Error: {str(e)}")
+
+            finally:
+                # Enable close button using Textual's thread-safe method
+                def enable_button():
+                    try:
+                        btn = self.query_one("#btn-close", Button)
+                        btn.disabled = False
+                    except:
+                        pass
+                self.call_from_thread(enable_button)
+
+        # Start uninstall in background thread
+        thread = threading.Thread(target=uninstall_thread, daemon=True)
+        thread.start()
+
+    def update_status(self, message: str):
+        """Update status text"""
+        try:
+            self.query_one("#status-text", Static).update(message)
+        except:
+            pass
+
+    def append_log(self, message: str):
+        """Append message to log output"""
+        try:
+            log_widget = self.query_one("#log-output", Static)
+            current = str(log_widget.renderable)
+            log_widget.update(current + "\n" + message if current else message)
+        except:
+            pass
+
+    @on(Button.Pressed, "#btn-close")
+    def on_close(self):
+        """Close and return to welcome"""
+        self.app.pop_screen()
 
 # ==========================================
 # Installation Progress Screen
@@ -888,7 +1771,7 @@ class InstallScreen(Screen):
         yield Header()
         with Container(id="install-container"):
             yield Label("Installing MISP", id="screen-title")
-            yield Static("Step 5 of 5 - Please wait...", classes="step-indicator")
+            yield Static("Step 6 of 6 - Please wait... | Press Ctrl+Q to quit", classes="step-indicator")
 
             yield ProgressBar(total=100, show_eta=False, id="progress-bar")
             yield Static("Initializing installation...", id="status-text")
@@ -954,8 +1837,13 @@ class MISPInstallerApp(App):
         "network": NetworkScreen,
         "security": SecurityScreen,
         "environment": EnvironmentScreen,
+        "features": FeaturesScreen,
         "review": ReviewScreen,
-        "install": InstallScreen
+        "install": InstallScreen,
+        "update": UpdateScreen,
+        "uninstall": UninstallScreen,
+        "update_progress": UpdateProgressScreen,
+        "uninstall_progress": UninstallProgressScreen
     }
 
     BINDINGS = [
@@ -1056,7 +1944,7 @@ Examples:
 
     parser.add_argument('--load', metavar='FILE', help='Load configuration from file')
     parser.add_argument('--save-only', action='store_true', help='Save configuration without installing')
-    parser.add_argument('--version', action='version', version='MISP GUI Installer v1.0')
+    parser.add_argument('--version', action='version', version='MISP GUI Installer v2.0')
 
     args = parser.parse_args()
 

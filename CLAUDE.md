@@ -7,9 +7,9 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 This is a professional-grade Python automation suite for deploying and managing MISP (Malware Information Sharing Platform) via Docker. The suite includes installation, backup, restore, update, and uninstallation tools with enterprise-grade features.
 
 **Organization**: tKQB Enterprises
-**Current Version**: 5.5 (STABLE - PRODUCTION READY)
-**Status**: v5.4 dedicated user architecture + v5.5 API integration
-**Last Updated**: 2025-10-14
+**Current Version**: 5.6 (STABLE - PRODUCTION READY)
+**Status**: v5.6 advanced features + exclusion list system
+**Last Updated**: 2025-10-15
 
 ## Quick Start
 
@@ -99,13 +99,13 @@ subprocess.run(['sudo', 'chown', 'misp-owner:misp-owner', '/opt/misp/.env'])
 os.unlink(temp_file)
 ```
 
-## Installation Phases (12 Total)
+## Installation Phases (15 Total)
 
 1. **Dependencies** - Install Docker, create misp-owner user, create logs directory
 2. **Docker Group** - Add misp-owner to docker group
-3. **Clone Repository** - Clone MISP-docker from GitHub
+3. **Backup** - Backup existing installation (if any)
 4. **Cleanup** - Remove previous installation (preserves logs)
-5. **Directory Setup** - Create /opt/misp with proper ownership
+5. **Clone Repository** - Clone MISP-docker from GitHub with proper ownership
    - **Phase 5.5**: Configure logs directory BEFORE Docker starts (critical!)
 6. **Configuration** - Generate .env with performance tuning
 7. **SSL Certificate** - Create self-signed cert
@@ -113,10 +113,16 @@ os.unlink(temp_file)
 9. **Password Reference** - Create PASSWORDS.txt
 10. **Docker Build** - Pull images and start containers (15-30 min)
 11. **Initialization** - Wait for MISP to be ready (5-10 min)
-    - **Phase 11.5**: Generate API key for automation (v5.5)
+    - **Phase 11.5**: Generate API key for automation (v5.6+)
+    - **Phase 11.7**: Add comprehensive threat intelligence feeds (v5.6+)
+    - **Phase 11.8**: Configure utilities sector threat intel (v5.6+) [excludable]
+    - **Phase 11.9**: Setup automated maintenance cron jobs (v5.6+) [excludable]
+    - **Phase 11.10**: Setup security news feeds (v5.6+) [excludable]
 12. **Post-Install** - Verify and display credentials
 
-**Total Time**: 30-50 minutes (first install), 10-15 minutes (subsequent)
+**Total Time**: 35-60 minutes (first install with all features), 10-15 minutes (subsequent)
+
+**Note**: Phases 11.8-11.10 can be excluded via `exclude_features` config option (see Exclusion List below)
 
 **See**: [INSTALLATION.md](docs/INSTALLATION.md) for detailed phase documentation
 
@@ -165,6 +171,42 @@ logger.info("Operation started",
 - ❌ Hardcoding values in multiple places
 - ❌ Reimplementing existing functionality
 - ❌ Duplicating validation logic
+
+### Adding New Advanced Features (v5.6+)
+
+**IMPORTANT:** When adding a new advanced feature phase, follow this pattern:
+
+```python
+from phases.base_phase import BasePhase
+from lib.colors import Colors
+
+class Phase11_8UtilitiesSector(BasePhase):
+    """Phase 11.8: Configure utilities sector threat intelligence"""
+
+    def run(self):
+        """Execute utilities sector configuration"""
+        # ALWAYS check exclusion list first
+        if self.config.is_feature_excluded('utilities-sector'):
+            self.logger.info("⏭️  Skipping utilities sector config (excluded)")
+            self.save_state(11.8, "Utilities Sector Skipped")
+            return
+
+        self.section_header("PHASE 11.8: UTILITIES SECTOR CONFIGURATION")
+
+        # ... your implementation ...
+
+        self.save_state(11.8, "Utilities Sector Configured")
+```
+
+**Steps:**
+1. Choose a feature ID from `lib/features.py` or add a new one
+2. Check `config.is_feature_excluded(feature_id)` at the start of `run()`
+3. If excluded: Log skip message, save state as "Skipped", return early
+4. If not excluded: Run normally
+5. Add feature to `FEATURE_CATEGORIES` and `FEATURE_DESCRIPTIONS` in `lib/features.py`
+6. Update phase sequence in `misp-install.py`
+7. Add example exclusion to `config/examples/`
+8. Update EXCLUSION_LIST_DESIGN.md
 
 ### Adding New Scripts
 
@@ -358,21 +400,55 @@ Supports JSON and YAML:
 - ✅ Automated backup/restore
 - ✅ Feed management scripts
 
-### v5.5 (Current)
+### v5.5
 - ✅ Automatic API key generation (Phase 11.5)
 - ✅ API helper module (misp_api.py)
 - ✅ API-based scripts (feeds, news, setup)
 - ✅ Complete setup orchestrator (misp-setup-complete.py)
 - ✅ Comprehensive API documentation (docs/API_USAGE.md)
+- ✅ Automatic hostname detection
+
+### v5.6 (Current - Advanced Features Release)
+- ✅ **Install Everything by Default** - Full-featured deployment out of the box
+- ✅ **Exclusion List System** - Opt-out of unwanted features (`exclude_features` config field)
+- ✅ **Feature Registry** - Centralized feature management (`lib/features.py`)
+- ✅ **14 Advanced Features** - Across 4 categories (threat intel, automation, integrations, compliance)
+- ✅ **Category-Based Exclusions** - Exclude entire feature categories with `category:name` syntax
+- ✅ **Backwards Compatible** - Old configs work without changes (defaults to installing everything)
+- ✅ **Test Suite** - Comprehensive exclusion logic testing (`test_exclusions.py`)
+- ✅ **Example Configs** - 4 example configs in `config/examples/`
+- ✅ **Documentation** - EXCLUSION_LIST_DESIGN.md with complete implementation guide
+- ✅ **Phase 11.8**: Utilities Sector threat intelligence (ICS/SCADA/MITRE ATT&CK for ICS)
+- ✅ **Phase 11.9**: Automated maintenance cron jobs (daily/weekly)
+- ✅ **Phase 11.10**: Security news feeds (ICS-CERT, CISA, Industrial Cyber)
+
+**Key Developer Notes for v5.6:**
+- All new advanced feature phases MUST check `config.is_feature_excluded(feature_id)` before running
+- Feature IDs defined in `lib/features.py` FEATURE_CATEGORIES dict
+- Invalid feature IDs log warning but don't fail installation
+- Use `--list-features` CLI command to see all available features
+
+**Advanced Features Installed by Default:**
+- 🛡️ **Utilities Sector**: ICS/SCADA taxonomies, MITRE ATT&CK for ICS, sector-specific feeds
+- 🤖 **Automated Maintenance**: Daily cleanup, weekly optimization, automatic feed updates
+- 📰 **Security News**: ICS-CERT advisories, CISA alerts, industry news (daily updates)
+
+**To exclude features**, add to config:
+```json
+{
+  "exclude_features": ["utilities-sector", "news-feeds"]
+}
+```
 
 ### Planned (v6.0)
-- ⏳ Splunk Cloud integration
-- ⏳ Security Onion integration
+- ⏳ Splunk Cloud integration (HEC forwarder)
+- ⏳ Security Onion integration (bidirectional sync)
 - ⏳ Azure Key Vault secrets management
 - ⏳ Let's Encrypt certificate support
 - ⏳ GUI post-installation setup integration
+- ⏳ NERC CIP automated configuration (Phase 11.6)
 
-**See**: [TODO.md](TODO.md) for complete roadmap
+**See**: [TODO.md](TODO.md) for complete roadmap and [EXCLUSION_LIST_DESIGN.md](EXCLUSION_LIST_DESIGN.md) for feature system
 
 ## Testing
 
@@ -443,8 +519,8 @@ groups misp-owner
 
 ---
 
-**Last Updated**: 2025-10-14
+**Last Updated**: 2025-10-15
 **Maintainer**: tKQB Enterprises
-**Version**: 5.5 (API Integration Release)
+**Version**: 5.6 (Advanced Features Release)
 
 **📚 For detailed information, see the comprehensive documentation in [docs/](docs/)**

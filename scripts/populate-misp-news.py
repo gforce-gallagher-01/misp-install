@@ -144,13 +144,13 @@ class MISPNewsPopulator:
     def get_admin_user_id(self) -> int:
         """Get admin user ID for associating news items"""
         try:
+            # Use bash -c with MYSQL_PASSWORD env var from container to avoid escaping issues
             result = subprocess.run(
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
-                 'mysql', '-umisp', f'-p{self.mysql_password}', 'misp', '-e',
-                 'SELECT id FROM users WHERE role_id = 1 LIMIT 1;'],
+                 'bash', '-c', 'mysql -umisp -p"$MYSQL_PASSWORD" misp -e "SELECT id FROM users WHERE role_id = 1 LIMIT 1;"'],
                 cwd=str(self.misp_dir),
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
                 text=True,
                 check=True
             )
@@ -276,13 +276,14 @@ class MISPNewsPopulator:
             # Escape single quotes in title for SQL
             safe_title = title.replace("'", "''")
 
+            # Use bash -c with MYSQL_PASSWORD env var from container to avoid escaping issues
+            query = f"SELECT COUNT(*) FROM news WHERE title = '{safe_title}' AND date_created = {date_created};"
             result = subprocess.run(
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
-                 'mysql', '-umisp', f'-p{self.mysql_password}', 'misp', '-e',
-                 f"SELECT COUNT(*) FROM news WHERE title = '{safe_title}' AND date_created = {date_created};"],
+                 'bash', '-c', f'mysql -umisp -p"$MYSQL_PASSWORD" misp -e "{query}"'],
                 cwd=str(self.misp_dir),
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
                 text=True,
                 check=True
             )
@@ -416,13 +417,14 @@ class MISPNewsPopulator:
                 print(f"  Feed: {article['feed_name']}")
                 return True
 
+            # Use bash -c with MYSQL_PASSWORD env var from container to avoid escaping issues
             result = subprocess.run(
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
-                 'mysql', '-umisp', f'-p{self.mysql_password}', 'misp', '-e',
-                 sql],
+                 'bash', '-c', 'mysql -umisp -p"$MYSQL_PASSWORD" misp'],
                 cwd=str(self.misp_dir),
+                input=sql,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
                 text=True,
                 check=True
             )
