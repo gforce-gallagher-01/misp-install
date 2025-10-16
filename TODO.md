@@ -92,6 +92,12 @@ Develop comprehensive custom dashboards and widgets specifically designed for ut
 - ICS taxonomy enabled
 - MITRE ATT&CK for ICS Galaxy enabled
 - Utilities sector feeds configured
+- PHP 8.3+ CLI (for widget development/testing)
+
+**Note:** PHP Apache module may be installed as dependency but should be disabled to prevent port conflicts with MISP:
+```bash
+sudo systemctl stop apache2 && sudo systemctl disable apache2
+```
 
 **Success Metrics:**
 - 5+ custom dashboards deployed
