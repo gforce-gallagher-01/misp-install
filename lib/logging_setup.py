@@ -43,7 +43,7 @@ def setup_logging() -> logging.Logger:
 
     # The centralized logger already has file + console handlers
     # Just inform user where logs are stored
-    logger.info(Colors.info(f"📝 JSON Logs: /opt/misp/logs/misp-install-{{timestamp}}.log"))
+    logger.info(Colors.info("📝 JSON Logs: /opt/misp/logs/misp-install-{timestamp}.log"))
 
     return logger
 
