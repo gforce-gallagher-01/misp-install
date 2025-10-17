@@ -133,6 +133,17 @@ show_missing = true
 target-version = "py38"
 line-length = 100
 indent-width = 4
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "env",
+    "__pycache__",
+    "build",
+    "dist",
+    "deprecated",  # Historical code kept for reference
+    "phases",
+]
 
 [tool.ruff.lint]
 select = [
