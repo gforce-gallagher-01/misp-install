@@ -46,7 +46,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from misp_logger import get_logger
 from lib.misp_api_helpers import get_api_key, get_misp_url, mask_api_key
-from event_templates import EVENT_TEMPLATES
+from event_templates import EVENT_TEMPLATES, ENHANCED_TAGS_BY_EVENT
 
 # Disable SSL warnings for self-signed certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -98,6 +98,16 @@ class UtilitiesSectorIntelligence:
         Returns:
             (success, event_id) tuple
         """
+        # Get event number
+        event_num = template.get("number")
+
+        # Start with template tags
+        all_tags = list(template["tags"])
+
+        # DRY: Merge enhanced MITRE ATT&CK and attack-target tags
+        if event_num in ENHANCED_TAGS_BY_EVENT:
+            all_tags.extend(ENHANCED_TAGS_BY_EVENT[event_num])
+
         # Use DRY helper for date
         event_data = {
             "Event": {
@@ -107,7 +117,7 @@ class UtilitiesSectorIntelligence:
                 "info": template["info"],
                 "date": self._get_recent_date(template["days_ago"]),
                 "published": False,
-                "Tag": template["tags"],
+                "Tag": all_tags,  # Use merged tags
                 "Galaxy": template.get("galaxies", []),
                 "Attribute": template["attributes"],
                 "Object": template.get("objects", [])

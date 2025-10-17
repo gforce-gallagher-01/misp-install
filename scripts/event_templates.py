@@ -513,3 +513,196 @@ EVENT_TEMPLATES = [
         ]
     }
 ]
+
+# DRY: Enhanced tags for MITRE ATT&CK for ICS and attack targets
+# These are merged with template tags during event creation
+ENHANCED_TAGS_BY_EVENT = {
+    3: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Inhibit Response Function"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="scada"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    4: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Inhibit Response Function"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="scada"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    5: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Inhibit Response Function"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="scada"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    6: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    7: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    8: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    9: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    10: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    11: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    12: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    13: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    14: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    15: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    16: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'ics:attack-target="water-treatment"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    17: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'ics:attack-target="water-treatment"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    18: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'ics:attack-target="water-treatment"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    19: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'ics:attack-target="water-treatment"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    20: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'ics:attack-target="water-treatment"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    21: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'ics:attack-target="critical-infrastructure"'},
+    ],
+    22: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'ics:attack-target="critical-infrastructure"'},
+    ],
+    23: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'ics:attack-target="critical-infrastructure"'},
+    ],
+    24: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
+        {'name': 'ics:attack-target="bulk-electric-system"'},
+    ],
+    25: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
+        {'name': 'ics:attack-target="bulk-electric-system"'},
+    ],
+    26: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Discovery"'},
+        {'name': 'ics:attack-target="control-network"'},
+    ],
+    27: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Inhibit Response Function"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="scada"'},
+        {'name': 'ics:attack-target="hmi"'},
+    ],
+    28: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    29: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
+        {'name': 'ics:attack-target="plc"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    30: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    31: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    32: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+    33: [
+        {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Command and Control"'},
+        {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
+        {'name': 'ics:attack-target="control-network"'},
+        {'name': 'ics:attack-target="scada"'},
+    ],
+}
