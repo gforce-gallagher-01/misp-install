@@ -107,14 +107,24 @@ class NationStateAttributionWidget
 
     private function extractNationState($event)
     {
-        if (empty($event['EventTag'])) {
+        // Get tags from either Tag or EventTag structure
+        $tags = array();
+        if (!empty($event['Tag'])) {
+            $tags = $event['Tag'];
+        } elseif (!empty($event['EventTag'])) {
+            $tags = $event['EventTag'];
+        }
+
+        if (empty($tags)) {
             return null;
         }
 
         // Look for country/nation-state indicators
-        foreach ($event['EventTag'] as $tagData) {
-            if (isset($tagData['Tag']['name'])) {
-                $tagName = strtolower($tagData['Tag']['name']);
+        foreach ($tags as $tagData) {
+            // Handle both Tag array (direct) and EventTag array (wrapped)
+            $tagName = isset($tagData['name']) ? $tagData['name'] : (isset($tagData['Tag']['name']) ? $tagData['Tag']['name'] : '');
+            if (!empty($tagName)) {
+                $tagName = strtolower($tagName);
 
                 // Check for country mentions
                 if (strpos($tagName, 'russia') !== false) return 'Russia';

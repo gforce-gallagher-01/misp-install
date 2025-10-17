@@ -102,11 +102,19 @@ class APTGroupsUtilitiesWidget
                 $searchText .= ' ' . strtolower($event['info']);
             }
 
-            if (!empty($event['EventTag'])) {
-                foreach ($event['EventTag'] as $tagData) {
-                    if (isset($tagData['Tag']['name'])) {
-                        $searchText .= ' ' . strtolower($tagData['Tag']['name']);
-                    }
+            // Check both Tag and EventTag structures
+            $tags = array();
+            if (!empty($event['Tag'])) {
+                $tags = $event['Tag'];
+            } elseif (!empty($event['EventTag'])) {
+                $tags = $event['EventTag'];
+            }
+
+            foreach ($tags as $tagData) {
+                // Handle both Tag array (direct) and EventTag array (wrapped)
+                $tagName = isset($tagData['name']) ? $tagData['name'] : (isset($tagData['Tag']['name']) ? $tagData['Tag']['name'] : '');
+                if (!empty($tagName)) {
+                    $searchText .= ' ' . strtolower($tagName);
                 }
             }
 
