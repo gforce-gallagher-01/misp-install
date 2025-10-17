@@ -75,7 +75,7 @@ class DatabaseManager:
             return None
 
         try:
-            with open(env_file, 'r') as f:
+            with open(env_file) as f:
                 for line in f:
                     if line.startswith('MYSQL_PASSWORD='):
                         self._mysql_password = line.split('=', 1)[1].strip()
@@ -313,7 +313,7 @@ class DatabaseManager:
                 bytes=int(size_mb * 1024 * 1024)
             )
 
-            with open(backup_file, 'r') as f:
+            with open(backup_file) as f:
                 result = subprocess.run(
                     ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
                      'mysql', '-umisp', f'-p{mysql_password}', 'misp'],

@@ -11,16 +11,15 @@ This module provides unified Docker operations including:
 - Health checks and waiting
 """
 
-import subprocess
-import logging
-import pwd
-import os
 import json
+import logging
+import os
+import pwd
+import subprocess
 import time
-from typing import Optional, List, Dict
-from pathlib import Path
+from typing import Dict, List, Optional
+
 from lib.colors import Colors
-from lib.user_manager import MISP_USER
 
 
 class DockerGroupManager:

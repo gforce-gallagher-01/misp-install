@@ -2,9 +2,10 @@
 Centralized logging setup for MISP installation
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
+
 from lib.colors import Colors
 
 
@@ -28,9 +29,9 @@ def setup_logging() -> logging.Logger:
     log_dir = Path("/opt/misp/logs")
 
     if not log_dir.exists():
-        print(f"❌ FATAL: /opt/misp/logs directory does not exist")
-        print(f"   Logging REQUIRES /opt/misp/logs - NO FALLBACK")
-        print(f"   This is a bug - the directory should be created before logging starts")
+        print("❌ FATAL: /opt/misp/logs directory does not exist")
+        print("   Logging REQUIRES /opt/misp/logs - NO FALLBACK")
+        print("   This is a bug - the directory should be created before logging starts")
         sys.exit(1)
 
     # Use centralized JSON logger for file logging
