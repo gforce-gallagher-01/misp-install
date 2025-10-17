@@ -76,7 +76,7 @@ class CriticalInfrastructureBreakdownWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('ics:'), // Any ICS-related tag
+            'tags' => array('ics:%'), // Any ICS-related tag
             'limit' => 5000,
             'includeEventTags' => 1
         );

@@ -347,6 +347,106 @@ class AdvancedFeaturesHealthCheck:
         )
 
     # ========================================================================
+    # ========================================================================
+    # ICS THREAT INTELLIGENCE DATA
+    # ========================================================================
+
+    def check_ics_threat_intel(self):
+        """Check for ICS/OT threat intelligence events"""
+        self.header("ICS/OT THREAT INTELLIGENCE DATA")
+
+        # Check 1: ICS-tagged events
+        self.check("ics_events", "ICS-tagged events exist")
+        try:
+            import requests
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+            api_key = get_api_key()
+            misp_url = os.environ.get('MISP_URL', 'https://misp-test.lan')
+            headers = {
+                'Authorization': api_key,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+
+            search_data = {
+                "returnFormat": "json",
+                "tags": ["ics:malware", "ics:attack-target"],
+                "limit": 1000
+            }
+            response = requests.post(f"{misp_url}/events/restSearch", headers=headers,
+                                   json=search_data, verify=False, timeout=30)
+
+            if response.status_code == 200:
+                data = response.json()
+                count = len(data.get('response', []))
+                if count > 0:
+                    self.pass_check(f"Found {count} ICS-tagged events")
+                else:
+                    self.fail_check("No ICS-tagged events found")
+            else:
+                self.fail_check(f"HTTP {response.status_code}")
+        except Exception as e:
+            self.fail_check(f"Error: {e}")
+
+        # Check 2: Energy sector events
+        self.check("energy_events", "Energy sector events exist")
+        try:
+            search_data = {
+                "returnFormat": "json",
+                "tags": ["dhs-ciip-sectors:energy"],
+                "limit": 1000
+            }
+            response = requests.post(f"{misp_url}/events/restSearch", headers=headers,
+                                   json=search_data, verify=False, timeout=30)
+
+            if response.status_code == 200:
+                data = response.json()
+                count = len(data.get('response', []))
+                if count > 0:
+                    self.pass_check(f"Found {count} energy sector events")
+                else:
+                    self.fail_check("No energy sector events found")
+            else:
+                self.fail_check(f"HTTP {response.status_code}")
+        except Exception as e:
+            self.fail_check(f"Error: {e}")
+
+        # Check 3: Verify sample ICS events have attributes
+        self.check("ics_event_attributes", "ICS events contain threat intelligence attributes")
+        try:
+            # Get the ICS events we found earlier
+            search_data = {
+                "returnFormat": "json",
+                "tags": ["ics:malware"],
+                "limit": 10
+            }
+            response = requests.post(f"{misp_url}/events/restSearch", headers=headers,
+                                   json=search_data, verify=False, timeout=30)
+
+            if response.status_code == 200:
+                data = response.json()
+                events = data.get('response', [])
+                if len(events) > 0:
+                    # Check first event for attributes
+                    event = events[0].get('Event', {})
+                    attr_count = len(event.get('Attribute', []))
+                    obj_count = len(event.get('Object', []))
+                    tag_count = len(event.get('Tag', []))
+
+                    if attr_count > 0 or obj_count > 0:
+                        self.pass_check(f"Event {event.get('id')}: {attr_count} attributes, {obj_count} objects, {tag_count} tags")
+                    else:
+                        self.fail_check("ICS events found but no attributes/objects")
+                else:
+                    self.fail_check("No ICS malware events found")
+            else:
+                self.fail_check(f"HTTP {response.status_code}")
+        except Exception as e:
+            self.fail_check(f"Error: {e}")
+
+    # ========================================================================
     # MAIN EXECUTION
     # ========================================================================
 
@@ -371,6 +471,7 @@ class AdvancedFeaturesHealthCheck:
         self.check_automated_maintenance()
         self.check_security_news()
         self.check_utilities_dashboards()
+        self.check_ics_threat_intel()
 
         # Summary
         self.header("HEALTH CHECK SUMMARY")

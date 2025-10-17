@@ -46,6 +46,9 @@ class Phase11_11UtilitiesDashboards(BasePhase):
             # Step 2: Install all 25 widgets
             self._install_all_widgets()
 
+            # Step 2.5: Apply wildcard fixes to widget queries
+            self._apply_widget_fixes()
+
             # Step 3: Configure dashboards via API
             self._configure_dashboards(api_key)
 
@@ -140,6 +143,73 @@ class Phase11_11UtilitiesDashboards(BasePhase):
             self.logger.info(f"✓ {widget_dir} widgets installed")
 
         self.logger.info("✓ All 25 widgets installed successfully")
+
+    def _apply_widget_fixes(self):
+        """
+        Apply critical fixes to widget query syntax.
+
+        Fix: Change 'ics:' to 'ics:%' wildcard for proper tag matching.
+        MISP requires explicit wildcard syntax - 'ics:' is treated as literal
+        tag name, not prefix match. See DASHBOARD_WIDGET_FIXES.md for details.
+        """
+        self.logger.info("Applying widget query fixes...")
+
+        widget_dir = "/var/www/MISP/app/Lib/Dashboard/Custom"
+
+        # List of all utilities sector widgets requiring wildcard fix
+        widgets_to_fix = [
+            "UtilitiesSectorStatsWidget.php",
+            "ISACContributionRankingsWidget.php",
+            "NationStateAttributionWidget.php",
+            "ICSVulnerabilityFeedWidget.php",
+            "RegionalCooperationHeatMapWidget.php",
+            "CriticalInfrastructureBreakdownWidget.php",
+            "IndustrialMalwareWidget.php",
+            "NERCCIPComplianceWidget.php",
+            "SCADAIOCMonitorWidget.php",
+            "TTPsUtilitiesWidget.php",
+            "AssetTargetingAnalysisWidget.php",
+            "SectorSharingMetricsWidget.php",
+            "VendorSecurityBulletinsWidget.php",
+            "HistoricalIncidentsWidget.php",
+            "CampaignTrackingWidget.php",
+            "ICSZeroDayTrackerWidget.php",
+            "MonthlyContributionTrendWidget.php",
+            "APTGroupsUtilitiesWidget.php"
+        ]
+
+        fixed_count = 0
+        failed_count = 0
+
+        for widget in widgets_to_fix:
+            widget_path = f"{widget_dir}/{widget}"
+
+            try:
+                # Fix 'ics:' to 'ics:%' wildcard
+                result = subprocess.run(
+                    ['sudo', 'docker', 'exec', 'misp-misp-core-1',
+                     'sed', '-i', "s/'ics:'/'ics:%'/g", widget_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+
+                if result.returncode == 0:
+                    fixed_count += 1
+                    self.logger.debug(f"✓ Fixed wildcard in {widget}")
+                else:
+                    failed_count += 1
+                    self.logger.warning(f"⚠ Could not fix {widget}: {result.stderr}")
+
+            except Exception as e:
+                failed_count += 1
+                self.logger.warning(f"⚠ Error fixing {widget}: {e}")
+
+        if fixed_count > 0:
+            self.logger.info(f"✓ Applied wildcard fixes to {fixed_count}/{len(widgets_to_fix)} widgets")
+
+        if failed_count > 0:
+            self.logger.warning(f"⚠ {failed_count} widgets could not be fixed (may already be correct)")
 
     def _configure_dashboards(self, api_key):
         """Configure all dashboards via MISP API"""
