@@ -193,7 +193,7 @@ def get_misp_url(env_file: Optional[str] = None) -> str:
                         misp_url = line.split('=', 1)[1].strip()
                         if misp_url:
                             return misp_url.rstrip('/')
-        except:
+        except Exception:
             pass
 
     return DEFAULT_MISP_URL

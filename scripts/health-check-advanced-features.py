@@ -15,10 +15,10 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from lib.colors import Colors
-from lib.cron_helpers import has_cron_job, list_cron_jobs
-from lib.docker_helpers import is_container_running
-from lib.misp_api_helpers import get_api_key, mask_api_key
+from lib.colors import Colors  # noqa: E402
+from lib.cron_helpers import has_cron_job, list_cron_jobs  # noqa: E402
+from lib.docker_helpers import is_container_running  # noqa: E402
+from lib.misp_api_helpers import get_api_key, mask_api_key  # noqa: E402
 
 
 class AdvancedFeaturesHealthCheck:

@@ -143,7 +143,7 @@ class MISPUpdateManager:
             logger.warning(f"Could not get version for {service}: {e}")
             return None
 
-    def get_latest_version(self, image: str) -> Optional[str]:
+    def get_latest_version(self, _image: str) -> Optional[str]:
         """Get latest available version from Docker Hub (simplified for 'latest' tag)"""
         # For docker images using 'latest' tag, we can't easily determine if updates are available
         # The update process will pull the latest image regardless

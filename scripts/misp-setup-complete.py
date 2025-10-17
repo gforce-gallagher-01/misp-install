@@ -71,7 +71,7 @@ from misp_logger import get_logger
 
 # Try to import YAML support
 try:
-    import yaml
+    import yaml  # noqa: F401
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False

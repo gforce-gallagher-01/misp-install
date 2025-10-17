@@ -68,7 +68,7 @@ try:
 except ImportError:
     # Fallback if logger not available
     import logging
-    def get_logger(name, sourcetype):
+    def get_logger(name, _sourcetype):
         logging.basicConfig(level=logging.INFO, format='%(message)s')
         return logging.getLogger(name)
 

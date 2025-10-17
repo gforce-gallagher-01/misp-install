@@ -236,7 +236,7 @@ class MISPBackup:
             result = self.docker.compose_ps(self.config.MISP_DIR)
             # Filter out warning messages (lines starting with "time=")
             container_status = '\n'.join(line for line in result.stdout.split('\n') if not line.startswith('time='))
-        except:
+        except Exception:
             container_status = "Could not get container status"
 
         # Get disk usage
@@ -248,7 +248,7 @@ class MISPBackup:
                 timeout=5
             )
             disk_usage = result.stdout.split('\n')[1] if result.returncode == 0 else "Unknown"
-        except:
+        except Exception:
             disk_usage = "Unknown"
 
         # Calculate backup size

@@ -94,7 +94,7 @@ class MISPConfigVerifier:
                 if line.strip():
                     try:
                         containers.append(json.loads(line))
-                    except:
+                    except Exception:
                         continue
 
             critical_containers = ['misp-core', 'misp-modules', 'db', 'redis']

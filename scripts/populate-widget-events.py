@@ -31,7 +31,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib.colors import Colors
+from lib.colors import Colors  # noqa: E402
 
 
 def get_misp_config():
@@ -45,7 +45,7 @@ def get_misp_config():
                     if line.startswith('MISP_API_KEY='):
                         api_key = line.split('=', 1)[1].strip()
                         break
-        except:
+        except Exception:
             pass
 
     if not api_key:
@@ -62,7 +62,7 @@ def get_misp_config():
                     base_url = line.split('=', 1)[1].strip()
                     misp_url = f"https://{base_url}"
                     break
-    except:
+    except Exception:
         pass
 
     return misp_url, api_key

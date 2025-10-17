@@ -87,7 +87,7 @@ class MISPFeedFetcher:
             'skipped': 0
         }
 
-    def log(self, message: str, level: str = "info"):
+    def log(self, message: str, _level: str = "info"):
         """Log message (respects quiet mode)"""
         if not self.quiet:
             print(message)

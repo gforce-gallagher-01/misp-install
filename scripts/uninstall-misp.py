@@ -25,8 +25,8 @@ if str(parent_dir) not in sys.path:
 
 # Import centralized logger
 # Import centralized Colors class
-from lib.colors import Colors
-from misp_logger import get_logger
+from lib.colors import Colors  # noqa: E402
+from misp_logger import get_logger  # noqa: E402
 
 # ==========================================
 # Configuration
@@ -217,7 +217,7 @@ class MISPUninstall:
                 try:
                     shutil.rmtree(self.config.MISP_DIR, ignore_errors=True)
                     self.log("MISP directory removed (fallback)", "success")
-                except:
+                except Exception:
                     self.log("Some files may require manual removal", "warning")
 
         except Exception as e:

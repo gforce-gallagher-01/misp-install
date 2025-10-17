@@ -175,7 +175,7 @@ class MISPReadyConfig:
                 if result.returncode == 0:
                     self.logger.success("MISP is ready!", event_type="configure", action="wait_ready")
                     return True
-            except:
+            except Exception:
                 pass
 
             if i % 10 == 0:

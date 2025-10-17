@@ -33,16 +33,16 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "scripts"))
 
 # Import library modules
-from lib.colors import Colors
-from lib.config import Environment, MISPConfig
-from lib.logging_setup import setup_logging
-from lib.state_manager import StateManager
-from lib.system_checker import SystemChecker
-from lib.user_manager import MISP_USER, ensure_misp_user_exists, get_current_username
-from lib.validators import PasswordValidator
+from lib.colors import Colors  # noqa: E402
+from lib.config import Environment, MISPConfig  # noqa: E402
+from lib.logging_setup import setup_logging  # noqa: E402
+from lib.state_manager import StateManager  # noqa: E402
+from lib.system_checker import SystemChecker  # noqa: E402
+from lib.user_manager import MISP_USER, ensure_misp_user_exists, get_current_username  # noqa: E402
+from lib.validators import PasswordValidator  # noqa: E402
 
 # Import phase modules
-from phases import (
+from phases import (  # noqa: E402
     Phase01Dependencies,
     Phase02DockerGroup,
     Phase03Backup,
@@ -65,7 +65,7 @@ from phases import (
 
 # Try to import yaml for config file support
 try:
-    import yaml
+    import yaml  # noqa: F401
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False

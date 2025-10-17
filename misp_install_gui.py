@@ -35,8 +35,7 @@ from pathlib import Path
 try:
     from textual import on
     from textual.app import App, ComposeResult
-    from textual.containers import Container, Horizontal, ScrollableContainer, Vertical
-    from textual.events import Paste
+    from textual.containers import Container, Horizontal, ScrollableContainer
     from textual.screen import Screen
     from textual.validation import ValidationResult, Validator
     from textual.widgets import (
@@ -49,7 +48,6 @@ try:
         ProgressBar,
         RadioButton,
         RadioSet,
-        Select,
         Static,
     )
 except ImportError:
@@ -110,7 +108,7 @@ def check_misp_installed() -> bool:
             timeout=5
         )
         return result.returncode == 0 and len(result.stdout.strip()) > 0
-    except:
+    except Exception:
         return False
 
 
@@ -1520,7 +1518,7 @@ class UpdateProgressScreen(Screen):
                     try:
                         btn = self.query_one("#btn-close", Button)
                         btn.disabled = False
-                    except:
+                    except Exception:
                         pass
                 self.call_from_thread(enable_button)
 
@@ -1539,7 +1537,7 @@ class UpdateProgressScreen(Screen):
             log_widget = self.query_one("#log-output", Static)
             current = str(log_widget.renderable)
             log_widget.update(current + "\n" + message if current else message)
-        except:
+        except Exception:
             pass
 
     @on(Button.Pressed, "#btn-close")
@@ -1688,7 +1686,7 @@ class UninstallProgressScreen(Screen):
                     try:
                         btn = self.query_one("#btn-close", Button)
                         btn.disabled = False
-                    except:
+                    except Exception:
                         pass
                 self.call_from_thread(enable_button)
 
@@ -1707,7 +1705,7 @@ class UninstallProgressScreen(Screen):
             log_widget = self.query_one("#log-output", Static)
             current = str(log_widget.renderable)
             log_widget.update(current + "\n" + message if current else message)
-        except:
+        except Exception:
             pass
 
     @on(Button.Pressed, "#btn-close")

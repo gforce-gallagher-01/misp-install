@@ -99,7 +99,7 @@ except Exception as e:
 
 # Step 4: Verify cache file exists
 print("[4] Verifying cache file creation...")
-import subprocess
+import subprocess  # noqa: E402
 
 try:
     result = subprocess.run(
