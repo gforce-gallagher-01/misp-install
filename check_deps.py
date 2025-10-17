@@ -12,8 +12,8 @@ all_good = True
 
 # Check Python version
 print(f"Python version: {sys.version}")
-if sys.version_info < (3, 8):
-    print("✗ Python 3.8+ required")
+if sys.version_info < (3, 10):
+    print("✗ Python 3.10+ required")
     all_good = False
 else:
     print("✓ Python version OK")
@@ -34,10 +34,10 @@ try:
     # Test clipboard
     try:
         test = pyperclip.paste()
-        print(f"  ✓ Clipboard access works")
+        print("  ✓ Clipboard access works")
     except Exception as e:
         print(f"  ✗ Clipboard access failed: {e}")
-        print(f"  → On Linux, install: sudo apt install xclip")
+        print("  → On Linux, install: sudo apt install xclip")
         all_good = False
 
 except ImportError:

@@ -10,13 +10,13 @@ This module provides unified backup/restore operations including:
 - Backup listing and management
 """
 
-import shutil
-import subprocess
-import sys
 import logging
-from pathlib import Path
+import shutil
+import sys
 from datetime import datetime
-from typing import Optional, List
+from pathlib import Path
+from typing import Optional
+
 from lib.colors import Colors
 
 # Add parent directory for database_manager import
@@ -24,8 +24,8 @@ _parent_dir = Path(__file__).parent.parent
 if str(_parent_dir) not in sys.path:
     sys.path.insert(0, str(_parent_dir))
 
-from lib.database_manager import DatabaseManager
-from lib.docker_manager import DockerCommandRunner
+from lib.database_manager import DatabaseManager  # noqa: E402
+from lib.docker_manager import DockerCommandRunner  # noqa: E402
 
 
 class BackupManager:

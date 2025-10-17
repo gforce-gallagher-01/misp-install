@@ -4,7 +4,7 @@ Centralized functions for Docker container operations (DRY refactoring)
 """
 
 import subprocess
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 
 def is_container_running(container_name: str = 'misp-misp-core-1',

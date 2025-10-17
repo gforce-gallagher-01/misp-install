@@ -3,7 +3,6 @@ MISP Cron Management Helper Functions
 Centralized functions for cron job operations (DRY refactoring)
 """
 
-import os
 import subprocess
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -239,7 +238,7 @@ def validate_cron_schedule(schedule: str) -> Tuple[bool, str]:
     field_names = ['minute', 'hour', 'day', 'month', 'weekday']
     ranges = [(0, 59), (0, 23), (1, 31), (1, 12), (0, 7)]
 
-    for i, (part, name, (min_val, max_val)) in enumerate(zip(parts, field_names, ranges)):
+    for part, name, (min_val, max_val) in zip(parts, field_names, ranges):
         # Skip wildcards and complex expressions
         if part in ['*', '*/1', '*/5', '*/10', '*/15', '*/30']:
             continue
@@ -371,7 +370,7 @@ if __name__ == "__main__":
     print("\n5. Current Crontab:")
     success, crontab = get_current_crontab()
     if success:
-        lines = [l for l in crontab.split('\n') if l.strip()]
+        lines = [line for line in crontab.split('\n') if line.strip()]
         print(f"   Total lines: {len(lines)}")
     else:
         print(f"   Failed: {crontab}")
