@@ -62,6 +62,7 @@ from phases import (
     Phase11_8UtilitiesSector,
     Phase11_9AutomatedMaintenance,
     Phase11_10SecurityNews,
+    Phase11_11UtilitiesDashboards,
     Phase12PostInstall,
 )
 
@@ -108,6 +109,7 @@ class MISPInstaller:
             (11.8, "Utilities Sector", Phase11_8UtilitiesSector),
             (11.9, "Automated Maintenance", Phase11_9AutomatedMaintenance),
             (11.10, "Security News", Phase11_10SecurityNews),
+            (11.11, "Utilities Dashboards", Phase11_11UtilitiesDashboards),
             (12, "Post-Install", Phase12PostInstall),
         ]
 

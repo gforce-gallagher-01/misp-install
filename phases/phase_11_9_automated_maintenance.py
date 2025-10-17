@@ -62,9 +62,13 @@ class Phase11_9AutomatedMaintenance(BasePhase):
         # Set environment variable for API key
         os.environ['MISP_API_KEY'] = api_key
 
-        result = self.run_command([
-            'bash', str(script_path)
-        ], timeout=120, check=False)
+        # Pipe 'y' to script to auto-confirm (non-interactive mode)
+        result = self.run_command(
+            f'echo "y" | bash {script_path}',
+            timeout=120,
+            check=False,
+            shell=True
+        )
 
         if result.returncode == 0:
             self.logger.info(Colors.success("✓ Automated maintenance cron jobs configured"))
