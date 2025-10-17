@@ -20,7 +20,7 @@ class HistoricalIncidentsWidget
     public $width = 6;
     public $height = 5;
     public $params = array(
-        'timeframe' => 'Time window (1y, 5y, 10y, all)',
+        'timeframe' => 'Time window (365d, 1825d, 3650d, all)',
         'limit' => 'Max incidents to show (default: 15)',
         'sector_filter' => 'Filter by sector (utilities, manufacturing, all)'
     );
@@ -29,7 +29,7 @@ class HistoricalIncidentsWidget
     public $autoRefreshDelay = 600; // 10 minutes
     public $placeholder =
 '{
-    "timeframe": "10y",
+    "timeframe": "3650d",
     "limit": "15",
     "sector_filter": "utilities"
 }';
@@ -53,7 +53,7 @@ class HistoricalIncidentsWidget
 
     public function handler($user, $options = array())
     {
-        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '10y';
+        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '3650d';
         $limit = !empty($options['limit']) ? intval($options['limit']) : 15;
         $sectorFilter = !empty($options['sector_filter']) ? $options['sector_filter'] : 'utilities';
 

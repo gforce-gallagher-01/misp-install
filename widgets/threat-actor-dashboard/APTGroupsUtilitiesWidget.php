@@ -20,7 +20,7 @@ class APTGroupsUtilitiesWidget
     public $width = 6;
     public $height = 5;
     public $params = array(
-        'timeframe' => 'Time window (7d, 30d, 90d, 1y, all)',
+        'timeframe' => 'Time window (7d, 30d, 90d, 365d, all)',
         'limit' => 'Max groups to display (default: 15)'
     );
     public $description = 'APT groups observed targeting utilities and energy infrastructure';
@@ -28,7 +28,7 @@ class APTGroupsUtilitiesWidget
     public $autoRefreshDelay = 300; // 5 minutes
     public $placeholder =
 '{
-    "timeframe": "1y",
+    "timeframe": "365d",
     "limit": "15"
 }';
 
@@ -54,7 +54,7 @@ class APTGroupsUtilitiesWidget
 
     public function handler($user, $options = array())
     {
-        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '1y';
+        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '365d';
         $limit = !empty($options['limit']) ? intval($options['limit']) : 15;
 
         /** @var Event $Event */
@@ -62,7 +62,7 @@ class APTGroupsUtilitiesWidget
 
         $filters = array(
             'published' => 1,
-            'tags' => array('misp-galaxy:threat-actor', 'ics:%'),
+            'tags' => array('misp-galaxy:threat-actor=%'),
             'limit' => 5000,
             'includeEventTags' => 1
         );

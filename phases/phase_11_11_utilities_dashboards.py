@@ -46,7 +46,10 @@ class Phase11_11UtilitiesDashboards(BasePhase):
             # Step 2: Install all 25 widgets
             self._install_all_widgets()
 
-            # Step 2.5: Apply wildcard fixes to widget queries
+            # Step 2.5: Remove abstract base classes (prevent instantiation errors)
+            self._remove_abstract_classes()
+
+            # Step 2.6: Apply wildcard fixes to widget queries
             self._apply_widget_fixes()
 
             # Step 3: Configure dashboards via API
@@ -143,6 +146,71 @@ class Phase11_11UtilitiesDashboards(BasePhase):
             self.logger.info(f"✓ {widget_dir} widgets installed")
 
         self.logger.info("✓ All 25 widgets installed successfully")
+
+    def _remove_abstract_classes(self):
+        """
+        Remove abstract base classes from Custom widget directory.
+
+        CRITICAL FIX: MISP's dashboard loader scans all .php files in the Custom
+        directory and attempts to instantiate them. Abstract classes cannot be
+        instantiated in PHP, causing errors like:
+
+        "Error: Cannot instantiate abstract class BaseUtilitiesWidget"
+
+        This breaks the entire "Add Widget" functionality. Abstract base classes
+        should not be in the Custom directory - only concrete widget classes.
+
+        See: widgets/DASHBOARD_WIDGET_FIXES.md for full explanation.
+        """
+        self.logger.info("Removing abstract base classes from Custom directory...")
+
+        widget_dir = "/var/www/MISP/app/Lib/Dashboard/Custom"
+
+        # List of abstract base classes that should not be instantiated
+        abstract_classes = [
+            "BaseUtilitiesWidget.php",
+            "BaseWidget.php",
+            "AbstractWidget.php"
+        ]
+
+        removed_count = 0
+
+        for abstract_class in abstract_classes:
+            class_path = f"{widget_dir}/{abstract_class}"
+
+            try:
+                # Check if file exists
+                check_result = subprocess.run(
+                    ['sudo', 'docker', 'exec', 'misp-misp-core-1',
+                     'test', '-f', class_path],
+                    capture_output=True,
+                    timeout=5
+                )
+
+                if check_result.returncode == 0:  # File exists
+                    # Remove the abstract class
+                    result = subprocess.run(
+                        ['sudo', 'docker', 'exec', 'misp-misp-core-1',
+                         'rm', class_path],
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                    )
+
+                    if result.returncode == 0:
+                        removed_count += 1
+                        self.logger.info(f"✓ Removed abstract class: {abstract_class}")
+                    else:
+                        self.logger.warning(f"⚠ Could not remove {abstract_class}: {result.stderr}")
+
+            except Exception as e:
+                self.logger.warning(f"⚠ Error checking/removing {abstract_class}: {e}")
+
+        if removed_count > 0:
+            self.logger.info(f"✓ Removed {removed_count} abstract base class(es)")
+            self.logger.info("✓ Dashboard 'Add Widget' functionality preserved")
+        else:
+            self.logger.debug("No abstract classes found (already clean)")
 
     def _apply_widget_fixes(self):
         """

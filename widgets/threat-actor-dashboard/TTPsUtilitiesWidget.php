@@ -20,7 +20,7 @@ class TTPsUtilitiesWidget
     public $width = 6;
     public $height = 5;
     public $params = array(
-        'timeframe' => 'Time window (30d, 90d, 1y, all)',
+        'timeframe' => 'Time window (30d, 90d, 365d, all)',
         'limit' => 'Max TTPs to display (default: 15)'
     );
     public $description = 'Tactics, Techniques, and Procedures observed in utilities sector attacks';
@@ -28,7 +28,7 @@ class TTPsUtilitiesWidget
     public $autoRefreshDelay = 300;
     public $placeholder =
 '{
-    "timeframe": "1y",
+    "timeframe": "365d",
     "limit": "15"
 }';
 
@@ -53,7 +53,7 @@ class TTPsUtilitiesWidget
 
     public function handler($user, $options = array())
     {
-        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '1y';
+        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '365d';
         $limit = !empty($options['limit']) ? intval($options['limit']) : 15;
 
         /** @var Event $Event */

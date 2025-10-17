@@ -19,7 +19,7 @@ class NationStateAttributionWidget
     public $width = 6;
     public $height = 5;
     public $params = array(
-        'timeframe' => 'Time window (30d, 90d, 1y, all)',
+        'timeframe' => 'Time window (30d, 90d, 365d, all)',
         'limit' => 'Max countries to display (default: 10)'
     );
     public $description = 'Nation-state attribution for ICS/utilities targeting';
@@ -27,7 +27,7 @@ class NationStateAttributionWidget
     public $autoRefreshDelay = 300;
     public $placeholder =
 '{
-    "timeframe": "1y",
+    "timeframe": "365d",
     "limit": "10"
 }';
 
@@ -42,7 +42,7 @@ class NationStateAttributionWidget
 
     public function handler($user, $options = array())
     {
-        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '1y';
+        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '365d';
         $limit = !empty($options['limit']) ? intval($options['limit']) : 10;
 
         /** @var Event $Event */
@@ -50,7 +50,7 @@ class NationStateAttributionWidget
 
         $filters = array(
             'published' => 1,
-            'tags' => array('misp-galaxy:threat-actor', 'ics:%'),
+            'tags' => array('misp-galaxy:threat-actor=%'),
             'limit' => 5000,
             'includeEventTags' => 1
         );

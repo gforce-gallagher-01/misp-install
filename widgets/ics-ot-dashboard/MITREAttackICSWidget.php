@@ -21,7 +21,7 @@ class MITREAttackICSWidget
     public $width = 6;
     public $height = 5;
     public $params = array(
-        'timeframe' => 'Time window for analysis (1d, 7d, 30d, 90d)',
+        'timeframe' => 'Time window for analysis (7d, 30d, 90d, 365d)',
         'limit' => 'Maximum techniques to display (default: 15)',
         'tactic_filter' => 'Filter by tactic (optional, e.g., "initial-access", "execution")'
     );
@@ -30,7 +30,7 @@ class MITREAttackICSWidget
     public $autoRefreshDelay = 60; // 1 minute
     public $placeholder =
 '{
-    "timeframe": "7d",
+    "timeframe": "30d",
     "limit": "15",
     "tactic_filter": ""
 }';
@@ -46,7 +46,7 @@ class MITREAttackICSWidget
     public function handler($user, $options = array())
     {
         // Parse parameters with defaults
-        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '7d';
+        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '30d';
         $limit = !empty($options['limit']) ? intval($options['limit']) : 15;
         $tacticFilter = !empty($options['tactic_filter']) ? $options['tactic_filter'] : '';
 

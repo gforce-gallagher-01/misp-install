@@ -20,26 +20,26 @@ class UtilitiesThreatHeatMapWidget
     public $width = 6;
     public $height = 4;
     public $params = array(
-        'timeframe' => 'Time window for analysis (1d, 7d, 30d, 90d)',
+        'timeframe' => 'Time window for analysis (7d, 30d, 90d, 365d)',
         'limit' => 'Maximum events to analyze (default: 1000)',
-        'sector_tag' => 'Sector tag filter (default: ics:sector)'
+        'sector_tag' => 'Sector tag filter (default: ics:%)'
     );
     public $description = 'Geographic heat map showing threat activity targeting utilities sector infrastructure';
     public $cacheLifetime = 300; // 5 minutes
     public $autoRefreshDelay = 60; // 1 minute
     public $placeholder =
 '{
-    "timeframe": "7d",
+    "timeframe": "30d",
     "limit": "1000",
-    "sector_tag": "ics:sector"
+    "sector_tag": "ics:%"
 }';
 
     public function handler($user, $options = array())
     {
         // Parse parameters with defaults
-        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '7d';
+        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '30d';
         $limit = !empty($options['limit']) ? intval($options['limit']) : 1000;
-        $sectorTag = !empty($options['sector_tag']) ? $options['sector_tag'] : 'ics:sector';
+        $sectorTag = !empty($options['sector_tag']) ? $options['sector_tag'] : 'ics:%';
 
         /** @var Event $Event */
         $Event = ClassRegistry::init('Event');
