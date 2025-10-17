@@ -1,11 +1,15 @@
 # Ruff ignore patterns
 # Historical/deprecated code kept for reference only
+# Phase modules are older code being refactored
 
 # Deprecated scripts directory
 deprecated/
 
-# Phase modules directory
+# Phase modules directory (being refactored in v6.0)
 phases/
+
+# Test directory (has different linting standards)
+tests/
 
 # Standard Python ignores
 __pycache__/
