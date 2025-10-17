@@ -193,14 +193,14 @@ class MISPConfig:
         """Load config from YAML file"""
         if not HAS_YAML:
             raise ImportError("PyYAML required for YAML config files")
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             data = yaml.safe_load(f)
         return cls.from_dict(data)
 
     @classmethod
     def from_json(cls, filepath: str) -> 'MISPConfig':
         """Load config from JSON file"""
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             data = json.load(f)
         return cls.from_dict(data)
 

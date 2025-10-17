@@ -24,8 +24,8 @@ _parent_dir = Path(__file__).parent.parent
 if str(_parent_dir) not in sys.path:
     sys.path.insert(0, str(_parent_dir))
 
-from lib.database_manager import DatabaseManager
-from lib.docker_manager import DockerCommandRunner
+from lib.database_manager import DatabaseManager  # noqa: E402
+from lib.docker_manager import DockerCommandRunner  # noqa: E402
 
 
 class BackupManager:

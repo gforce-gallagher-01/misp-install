@@ -32,14 +32,14 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 
 # Add scripts directory to path for imports
 _script_dir = Path(__file__).parent.parent / "scripts"
 if str(_script_dir) not in sys.path:
     sys.path.insert(0, str(_script_dir))
 
-from misp_logger import get_logger
+from misp_logger import get_logger  # noqa: E402
 
 
 class DatabaseManager:
