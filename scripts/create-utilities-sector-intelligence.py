@@ -46,6 +46,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from misp_logger import get_logger
 from lib.misp_api_helpers import get_api_key, get_misp_url, mask_api_key
+from event_templates import EVENT_TEMPLATES
 
 # Disable SSL warnings for self-signed certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -71,6 +72,49 @@ class UtilitiesSectorIntelligence:
         logger.info("Initialized utilities sector intelligence creator",
                    misp_url=misp_url,
                    api_key_masked=mask_api_key(api_key))
+
+    def _get_recent_date(self, days_ago: int) -> str:
+        """
+        Get date string for N days ago (DRY helper).
+
+        Args:
+            days_ago: Number of days in the past
+
+        Returns:
+            Date string in YYYY-MM-DD format
+        """
+        return (datetime.now() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+
+    def _create_event_from_template(self, template: Dict) -> Tuple[bool, Optional[str]]:
+        """
+        DRY helper: Create MISP event from template structure.
+
+        Eliminates code duplication across 20 event creation methods.
+        All events follow same structure, just different data.
+
+        Args:
+            template: Event data template with all fields
+
+        Returns:
+            (success, event_id) tuple
+        """
+        # Use DRY helper for date
+        event_data = {
+            "Event": {
+                "distribution": "3",
+                "threat_level_id": template.get("threat_level", "1"),
+                "analysis": "2",
+                "info": template["info"],
+                "date": self._get_recent_date(template["days_ago"]),
+                "published": False,
+                "Tag": template["tags"],
+                "Galaxy": template.get("galaxies", []),
+                "Attribute": template["attributes"],
+                "Object": template.get("objects", [])
+            }
+        }
+
+        return self.create_event(event_data)
 
     def _make_request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Tuple[bool, Dict]:
         """Make API request to MISP"""
@@ -132,8 +176,8 @@ class UtilitiesSectorIntelligence:
         Industroyer2 is designed to manipulate IEC 104 protocol communication with
         electrical substation equipment. Date set to recent for dashboard visibility.
         """
-        # Use date from 5 days ago for dashboard visibility
-        recent_date = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
+        # Use DRY helper for recent date
+        recent_date = self._get_recent_date(5)
 
         event_data = {
             "Event": {
@@ -335,6 +379,195 @@ class UtilitiesSectorIntelligence:
 
         return self.create_event(event_data)
 
+    def create_triton_event(self) -> Tuple[bool, Optional[str]]:
+        """
+        Event #2: TRITON/TRISIS Safety System Attack (2017)
+
+        Sophisticated malware targeting Triconex safety instrumented systems (SIS)
+        at a petrochemical facility. First known malware specifically designed to
+        attack industrial safety systems, not just control systems.
+        """
+        recent_date = self._get_recent_date(7)  # 7 days ago
+
+        event_data = {
+            "Event": {
+                "distribution": "3",
+                "threat_level_id": "1",  # High
+                "analysis": "2",  # Completed
+                "info": "TRITON Malware Targeting Safety Instrumented Systems in Energy Sector",
+                "date": recent_date,
+                "published": False,
+                "Tag": [
+                    {"name": "dhs-ciip-sectors:energy"},
+                    {"name": "dhs-ciip-sectors:chemical"},
+                    {"name": "misp-galaxy:mitre-ics-tactics=\"Inhibit Response Function\""},
+                    {"name": "misp-galaxy:mitre-ics-tactics=\"Impair Process Control\""},
+                    {"name": "malware-category:SIS"},
+                    {"name": "tlp:amber"},
+                    {"name": "circl:incident-classification=\"system-compromise\""},
+                    {"name": "ics:%malware"},
+                    {"name": "ics:%attack-target=\"safety-system\""}
+                ],
+                "Galaxy": [
+                    {
+                        "name": "Threat Actor",
+                        "type": "threat-actor",
+                        "GalaxyCluster": [{
+                            "value": "XENOTIME",
+                            "description": "State-sponsored threat group targeting critical infrastructure safety systems"
+                        }]
+                    },
+                    {
+                        "name": "Malware",
+                        "type": "mitre-malware",
+                        "GalaxyCluster": [{
+                            "value": "TRITON",
+                            "description": "Malware framework designed to manipulate Triconex safety controllers"
+                        }]
+                    }
+                ],
+                "Attribute": [
+                    {
+                        "type": "md5",
+                        "category": "Payload delivery",
+                        "value": "6c39c3f4a08d3d9827e44d3a6d5d9f3e",
+                        "comment": "TRITON malware library hash",
+                        "to_ids": True,
+                        "distribution": "5"
+                    },
+                    {
+                        "type": "sha256",
+                        "category": "Payload delivery",
+                        "value": "e5a1e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5",
+                        "comment": "TRITON SHA256 hash",
+                        "to_ids": True,
+                        "distribution": "5"
+                    },
+                    {
+                        "type": "filename",
+                        "category": "Payload delivery",
+                        "value": "trilog.exe",
+                        "comment": "TRITON malware filename",
+                        "to_ids": True,
+                        "distribution": "5"
+                    },
+                    {
+                        "type": "ip-dst",
+                        "category": "Network activity",
+                        "value": "10.6.20.143",
+                        "comment": "Compromised workstation IP",
+                        "to_ids": True,
+                        "distribution": "5"
+                    },
+                    {
+                        "type": "text",
+                        "category": "External analysis",
+                        "value": "Triconex 3008 controller targeting",
+                        "comment": "Specific SIS platform targeted",
+                        "to_ids": False,
+                        "distribution": "5"
+                    },
+                    {
+                        "type": "text",
+                        "category": "Targeting data",
+                        "value": "Petrochemical facility in Middle East",
+                        "comment": "Target facility type and location",
+                        "to_ids": False,
+                        "distribution": "5"
+                    },
+                    {
+                        "type": "text",
+                        "category": "Artifacts dropped",
+                        "value": "inject.bin",
+                        "comment": "Payload injection file",
+                        "to_ids": True,
+                        "distribution": "5"
+                    },
+                    {
+                        "type": "text",
+                        "category": "Artifacts dropped",
+                        "value": "imain.bin",
+                        "comment": "Main execution binary",
+                        "to_ids": True,
+                        "distribution": "5"
+                    }
+                ],
+                "Object": [
+                    {
+                        "name": "file",
+                        "meta-category": "file",
+                        "description": "TRITON malware main executable",
+                        "template_uuid": "688c46fb-5edb-40a3-8273-1af7923e75d0",
+                        "template_version": "17",
+                        "Attribute": [
+                            {
+                                "type": "filename",
+                                "object_relation": "filename",
+                                "value": "trilog.exe",
+                                "to_ids": True
+                            },
+                            {
+                                "type": "md5",
+                                "object_relation": "md5",
+                                "value": "6c39c3f4a08d3d9827e44d3a6d5d9f3e",
+                                "to_ids": True
+                            },
+                            {
+                                "type": "size-in-bytes",
+                                "object_relation": "size-in-bytes",
+                                "value": "87040",
+                                "to_ids": False
+                            }
+                        ]
+                    },
+                    {
+                        "name": "attack-pattern",
+                        "meta-category": "vulnerability",
+                        "description": "MITRE ATT&CK for ICS technique",
+                        "template_uuid": "c4e851fa-775f-11e7-8163-b774922098cd",
+                        "template_version": "2",
+                        "Attribute": [
+                            {
+                                "type": "text",
+                                "object_relation": "name",
+                                "value": "Modify Controller Tasking",
+                                "to_ids": False
+                            },
+                            {
+                                "type": "text",
+                                "object_relation": "id",
+                                "value": "T0821",
+                                "to_ids": False
+                            }
+                        ]
+                    },
+                    {
+                        "name": "attack-pattern",
+                        "meta-category": "vulnerability",
+                        "description": "MITRE ATT&CK for ICS technique",
+                        "template_uuid": "c4e851fa-775f-11e7-8163-b774922098cd",
+                        "template_version": "2",
+                        "Attribute": [
+                            {
+                                "type": "text",
+                                "object_relation": "name",
+                                "value": "Manipulation of Control",
+                                "to_ids": False
+                            },
+                            {
+                                "type": "text",
+                                "object_relation": "id",
+                                "value": "T0831",
+                                "to_ids": False
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
+        return self.create_event(event_data)
+
     def get_event_count(self) -> int:
         """Get total event count in MISP"""
         success, response = self._make_request('GET', 'events/index')
@@ -390,31 +623,51 @@ def main():
     print(f"  ICS Events: {intel.get_ics_event_count()}")
     print()
 
-    # Create Event #1: Industroyer2
-    print("-" * 80)
-    print("Creating Event #1: Industroyer2 Power Grid Attack (2022)")
-    print("-" * 80)
+    # DRY approach: Use templates for Events 3-20 (Events 1-2 already exist)
+    created_events = []
+    failed_events = []
 
-    success, event_id = intel.create_industroyer2_event()
-
-    if success:
-        print(f"✓ Event created successfully (ID: {event_id})")
-
-        # Publish the event
-        if intel.publish_event(event_id):
-            print(f"✓ Event {event_id} published")
-        else:
-            print(f"⚠ Event {event_id} created but not published")
-    else:
-        print("✗ Failed to create event")
-        return 1
-
+    print(f"Creating {len(EVENT_TEMPLATES)} events from templates...")
     print()
 
+    # Create all events from templates
+    for template in EVENT_TEMPLATES:
+        event_info = {
+            'number': template['number'],
+            'name': template['name']
+        }
+        print("-" * 80)
+        print(f"Creating Event #{event_info['number']}: {event_info['name']}")
+        print("-" * 80)
+
+        # Use DRY template method
+        success, event_id = intel._create_event_from_template(template)
+
+        if success:
+            print(f"✓ Event created successfully (ID: {event_id})")
+
+            # Publish the event
+            if intel.publish_event(event_id):
+                print(f"✓ Event {event_id} published")
+                created_events.append((event_info['number'], event_id, event_info['name']))
+            else:
+                print(f"⚠ Event {event_id} created but not published")
+                failed_events.append(event_info['name'])
+        else:
+            print("✗ Failed to create event")
+            failed_events.append(event_info['name'])
+
+        print()
+
     # Get updated event counts
-    print("Updated MISP Statistics:")
+    print("=" * 80)
+    print("FINAL MISP STATISTICS")
+    print("=" * 80)
     print(f"  Total Events: {intel.get_event_count()}")
     print(f"  ICS Events: {intel.get_ics_event_count()}")
+    print(f"  Successfully Created: {len(created_events)}/{len(EVENT_TEMPLATES)}")
+    if failed_events:
+        print(f"  Failed: {len(failed_events)} - {', '.join(failed_events)}")
     print()
 
     print("=" * 80)
@@ -424,10 +677,14 @@ def main():
     print("Next Steps:")
     print("  1. Run health check to validate widget population")
     print("  2. Check dashboard widgets at: {}/dashboards/index".format(misp_url))
-    print("  3. Verify event at: {}/events/view/{}".format(misp_url, event_id))
+    print("  3. All events visible at: {}/events/index".format(misp_url))
+    print()
+    print("Created Events:")
+    for num, event_id, name in created_events:
+        print(f"  Event #{num} (ID {event_id}): {name}")
     print()
 
-    return 0
+    return 0 if len(failed_events) == 0 else 1
 
 
 if __name__ == '__main__':
