@@ -9,6 +9,8 @@ import os
 import subprocess
 from phases.base_phase import BasePhase
 from lib.colors import Colors
+from lib.misp_api_helpers import get_api_key, get_misp_url
+from lib.docker_helpers import is_container_running
 
 
 class Phase11_11UtilitiesDashboards(BasePhase):
@@ -56,43 +58,16 @@ class Phase11_11UtilitiesDashboards(BasePhase):
             raise
 
     def _check_misp_ready(self):
-        """Check if MISP container is running and accessible"""
+        """Check if MISP container is running and accessible using centralized helper"""
         try:
-            result = subprocess.run(
-                ['sudo', 'docker', 'ps', '--format', '{{.Names}}'],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            return 'misp-misp-core-1' in result.stdout
+            return is_container_running('misp-misp-core-1')
         except Exception as e:
             self.logger.error(f"Failed to check MISP status: {e}")
             return False
 
     def _get_api_key(self):
-        """Get MISP API key from environment or .env file"""
-        # Try environment variable first
-        api_key = os.environ.get('MISP_API_KEY')
-        if api_key:
-            return api_key
-
-        # Try reading from .env file
-        env_file = '/opt/misp/.env'
-        if os.path.exists(env_file):
-            try:
-                result = subprocess.run(
-                    ['sudo', 'grep', 'MISP_API_KEY=', env_file],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
-                if result.returncode == 0 and result.stdout:
-                    api_key = result.stdout.split('=', 1)[1].strip()
-                    return api_key
-            except Exception as e:
-                self.logger.warning(f"Could not read API key from .env: {e}")
-
-        return None
+        """Get MISP API key using centralized helper"""
+        return get_api_key(env_file='/opt/misp/.env')
 
     def _install_base_files(self):
         """Install DRY base widget files"""

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from phases.base_phase import BasePhase
 from lib.colors import Colors
+from lib.misp_api_helpers import get_api_key
 
 
 class Phase11_9AutomatedMaintenance(BasePhase):
@@ -47,13 +48,8 @@ class Phase11_9AutomatedMaintenance(BasePhase):
             self.logger.info("Continuing installation...")
 
     def _get_api_key(self) -> str:
-        """Get API key from .env file"""
-        try:
-            result = self.run_command(['sudo', 'grep', 'MISP_API_KEY=', str(self.misp_dir / ".env")])
-            api_key = result.stdout.strip().split('=')[1] if '=' in result.stdout else None
-            return api_key
-        except:
-            return None
+        """Get API key from .env file using centralized helper"""
+        return get_api_key(env_file=str(self.misp_dir / ".env"))
 
     def _setup_maintenance_cron(self, api_key: str):
         """Setup maintenance cron jobs using setup-misp-maintenance-cron.sh script"""
