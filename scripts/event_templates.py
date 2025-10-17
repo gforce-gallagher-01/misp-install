@@ -523,6 +523,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="scada"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="CHERNOVITE"'},
     ],
     4: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
@@ -530,6 +531,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="scada"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="Dragonfly"'},
     ],
     5: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
@@ -537,6 +539,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="scada"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="Sandworm Team"'},
     ],
     6: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -544,6 +547,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
     7: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -551,6 +555,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="Dragonfly"'},
     ],
     8: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -558,6 +563,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="XENOTIME"'},
     ],
     9: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -565,6 +571,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="Sandworm Team"'},
     ],
     10: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -572,91 +579,108 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="MERCURY"'},
     ],
     11: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
     12: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="Dragonfly"'},
     ],
     13: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="Sandworm Team"'},
     ],
     14: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
     15: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="Dragonfly"'},
     ],
     16: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
         {'name': 'ics:attack-target="water-treatment"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="MERCURY"'},
     ],
     17: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
         {'name': 'ics:attack-target="water-treatment"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="Sandworm Team"'},
     ],
     18: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
         {'name': 'ics:attack-target="water-treatment"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
     19: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
         {'name': 'ics:attack-target="water-treatment"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="Dragonfly"'},
     ],
     20: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
         {'name': 'ics:attack-target="water-treatment"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
     21: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'ics:attack-target="critical-infrastructure"'},
+        {'name': 'misp-galaxy:threat-actor="Volt Typhoon"'},
     ],
     22: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'ics:attack-target="critical-infrastructure"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
     23: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'ics:attack-target="critical-infrastructure"'},
+        {'name': 'misp-galaxy:threat-actor="LockBit"'},
     ],
     24: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
         {'name': 'ics:attack-target="bulk-electric-system"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
     25: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impact"'},
         {'name': 'ics:attack-target="bulk-electric-system"'},
+        {'name': 'misp-galaxy:threat-actor="Dragonfly"'},
     ],
     26: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Discovery"'},
         {'name': 'ics:attack-target="control-network"'},
+        {'name': 'misp-galaxy:threat-actor="Volt Typhoon"'},
     ],
     27: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Impair Process Control"'},
@@ -664,18 +688,21 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="scada"'},
         {'name': 'ics:attack-target="hmi"'},
+        {'name': 'misp-galaxy:threat-actor="CHERNOVITE"'},
     ],
     28: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="Sandworm Team"'},
     ],
     29: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Initial Access"'},
         {'name': 'misp-galaxy:mitre-ics-tactics="Exploit Public-Facing Application"'},
         {'name': 'ics:attack-target="plc"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
     30: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -683,6 +710,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="Dragonfly"'},
     ],
     31: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -690,6 +718,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="MERCURY"'},
     ],
     32: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -697,6 +726,7 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="Volt Typhoon"'},
     ],
     33: [
         {'name': 'misp-galaxy:mitre-ics-tactics="Collection"'},
@@ -704,5 +734,6 @@ ENHANCED_TAGS_BY_EVENT = {
         {'name': 'misp-galaxy:mitre-ics-tactics="Lateral Movement"'},
         {'name': 'ics:attack-target="control-network"'},
         {'name': 'ics:attack-target="scada"'},
+        {'name': 'misp-galaxy:threat-actor="APT 33"'},
     ],
 }
