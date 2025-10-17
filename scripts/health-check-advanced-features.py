@@ -36,7 +36,7 @@ class AdvancedFeaturesHealthCheck:
         print(Colors.info(text.center(80)))
         print(f"{Colors.info('='*80)}\n")
 
-    def check(self, name, description):
+    def check(self, _name, description):
         """Print check name"""
         self.total_checks += 1
         print(f"{Colors.info('[')} {description:65s} {Colors.info(']')} ", end='', flush=True)

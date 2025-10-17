@@ -220,11 +220,11 @@ class MISPInstaller:
 """)
 
 
-def get_user_input_interactive(logger) -> MISPConfig:
+def get_user_input_interactive(_logger) -> MISPConfig:
     """Get configuration from user interactively
 
     Args:
-        logger: Logger instance
+        _logger: Logger instance (unused, kept for API compatibility)
 
     Returns:
         MISPConfig object
