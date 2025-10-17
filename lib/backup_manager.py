@@ -10,13 +10,13 @@ This module provides unified backup/restore operations including:
 - Backup listing and management
 """
 
-import shutil
-import subprocess
-import sys
 import logging
-from pathlib import Path
+import shutil
+import sys
 from datetime import datetime
-from typing import Optional, List
+from pathlib import Path
+from typing import Optional
+
 from lib.colors import Colors
 
 # Add parent directory for database_manager import

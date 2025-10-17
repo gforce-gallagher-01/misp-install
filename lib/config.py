@@ -6,9 +6,9 @@ import json
 import os
 import socket
 import subprocess
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
 try:
     import yaml
@@ -136,7 +136,7 @@ class MISPConfig:
         Returns:
             True if feature is excluded, False otherwise
         """
-        from lib.features import FEATURE_CATEGORIES, validate_feature_id, validate_category
+        from lib.features import FEATURE_CATEGORIES
 
         # Check direct feature exclusion
         if feature_id in self.exclude_features:
@@ -157,7 +157,7 @@ class MISPConfig:
         Returns:
             List of excluded feature IDs with warnings for invalid entries
         """
-        from lib.features import validate_feature_id, validate_category, get_category_features
+        from lib.features import get_category_features, validate_category, validate_feature_id
 
         excluded = []
         for entry in self.exclude_features:
