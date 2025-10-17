@@ -45,7 +45,7 @@ class SystemChecker:
             Tuple of (passed, message)
         """
         try:
-            with open('/proc/meminfo', 'r') as f:
+            with open('/proc/meminfo') as f:
                 for line in f:
                     if 'MemTotal' in line:
                         total_kb = int(line.split()[1])

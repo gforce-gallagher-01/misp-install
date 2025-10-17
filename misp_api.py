@@ -26,12 +26,13 @@ Usage:
 """
 
 import os
-import sys
 import subprocess
-import requests
-import urllib3
+import sys
 from pathlib import Path
 from typing import Optional, Tuple
+
+import requests
+import urllib3
 
 # Suppress SSL warnings for self-signed certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -66,7 +67,7 @@ def get_api_key(env_file: Optional[str] = None) -> Optional[str]:
     env_path = Path(env_file)
     if env_path.exists():
         try:
-            with open(env_path, 'r') as f:
+            with open(env_path) as f:
                 for line in f:
                     line = line.strip()
                     if line.startswith('MISP_API_KEY='):
@@ -83,7 +84,7 @@ def get_api_key(env_file: Optional[str] = None) -> Optional[str]:
     passwords_file = Path('/opt/misp/PASSWORDS.txt')
     if passwords_file.exists():
         try:
-            with open(passwords_file, 'r') as f:
+            with open(passwords_file) as f:
                 in_api_section = False
                 for line in f:
                     line = line.strip()
@@ -185,7 +186,7 @@ def get_misp_url(env_file: Optional[str] = None) -> str:
     env_path = Path(env_file)
     if env_path.exists():
         try:
-            with open(env_path, 'r') as f:
+            with open(env_path) as f:
                 for line in f:
                     line = line.strip()
                     if line.startswith('BASE_URL='):
@@ -340,7 +341,7 @@ if __name__ == '__main__':
     print("\n3. Testing client creation...")
     try:
         session = get_misp_client()
-        print(f"   ✓ Client created")
+        print("   ✓ Client created")
     except Exception as e:
         print(f"   ✗ Client creation failed: {e}")
         sys.exit(1)

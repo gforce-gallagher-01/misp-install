@@ -4,21 +4,22 @@ MISP Advanced Features Health Check
 Validates that all v5.6 advanced features are properly configured
 """
 
-import os
-import sys
-import subprocess
 import json
-from pathlib import Path
+import os
+import subprocess
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from lib.colors import Colors
-from lib.misp_api_helpers import get_api_key, mask_api_key
-from lib.docker_helpers import is_container_running
 from lib.cron_helpers import has_cron_job, list_cron_jobs
+from lib.docker_helpers import is_container_running
+from lib.misp_api_helpers import get_api_key, mask_api_key
+
 
 class AdvancedFeaturesHealthCheck:
     """Health check for all advanced features"""
@@ -143,7 +144,7 @@ class AdvancedFeaturesHealthCheck:
             try:
                 data = json.loads(stdout)
                 if isinstance(data, list):
-                    enabled_feeds = [f for f in data if f.get('Feed', {}).get('enabled') == True]
+                    enabled_feeds = [f for f in data if f.get('Feed', {}).get('enabled')]
                     self.pass_check(f"Total feeds: {len(data)}, Enabled: {len(enabled_feeds)}")
                 else:
                     self.warn_check("Unexpected API response format")

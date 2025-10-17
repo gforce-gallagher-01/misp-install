@@ -26,14 +26,14 @@ Version: 1.0
 Created: October 2025
 """
 
-import subprocess
-import sys
 import argparse
-from pathlib import Path
-from typing import List, Dict, Tuple
-from datetime import datetime
 import json
 import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import List, Tuple
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -285,7 +285,7 @@ class MISPDailyMaintenance:
             return True
         else:
             print(f"{self.YELLOW}⚠ Feed fetch completed with warnings{self.NC}")
-            print(f"  Some feeds may have failed (check logs)")
+            print("  Some feeds may have failed (check logs)")
             self.warnings.append("Some feeds may have failed to fetch")
             self.tasks_completed += 1  # Count as success with warnings
             return True

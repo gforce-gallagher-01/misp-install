@@ -5,9 +5,9 @@ Identifies common patterns that should be extracted to shared modules
 """
 
 import os
-import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+
 
 class DRYAnalyzer:
     """Analyze code for DRY violations"""
@@ -18,9 +18,9 @@ class DRYAnalyzer:
 
     def analyze_file(self, filepath):
         """Analyze single file for common patterns"""
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             content = f.read()
-            lines = content.split('\n')
+            content.split('\n')
 
         rel_path = filepath.relative_to(self.base_dir)
 
@@ -78,7 +78,7 @@ class DRYAnalyzer:
         """Analyze all Python files"""
         print("Analyzing Python files for DRY violations...\n")
 
-        for root, dirs, files in os.walk(self.base_dir):
+        for root, _dirs, files in os.walk(self.base_dir):
             # Skip certain directories
             if '__pycache__' in root or '.git' in root:
                 continue

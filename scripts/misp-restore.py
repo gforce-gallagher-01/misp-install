@@ -15,33 +15,28 @@ Features:
 - Fixed database health checks
 """
 
-import os
-import sys
-import subprocess
-import logging
-import json
-import shutil
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List, Optional, Tuple
 import argparse
+import json
+import logging
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Tuple
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("❌ Python 3.8 or higher required")
-    sys.exit(1)
 
 # Add parent directory to path for lib imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import centralized logger
-from misp_logger import get_logger
-
 # Import centralized Colors class
 from lib.colors import Colors
 
 # Import centralized database manager
 from lib.database_manager import DatabaseManager
+from misp_logger import get_logger
 
 # ==========================================
 # Logging Setup
@@ -53,7 +48,7 @@ def setup_logging() -> logging.Logger:
     misp_logger = get_logger('misp-restore', 'misp:restore')
     # Get the underlying Python logger for compatibility
     logger = misp_logger.logger
-    logger.info(f"📝 JSON Logs: /opt/misp/logs/misp-restore-{{timestamp}}.log")
+    logger.info("📝 JSON Logs: /opt/misp/logs/misp-restore-{timestamp}.log")
     return logger
 
 logger = setup_logging()
@@ -64,7 +59,7 @@ logger = setup_logging()
 
 class BackupInfo:
     """Information about a backup"""
-    
+
     def __init__(self, path: Path):
         self.path = path
         self.name = path.name
@@ -72,7 +67,7 @@ class BackupInfo:
         self.metadata = self._load_metadata()
         self.size = self._calculate_size()
         self.files = self._list_files()
-    
+
     def _parse_timestamp(self) -> datetime:
         """Parse timestamp from backup name"""
         try:
@@ -83,18 +78,18 @@ class BackupInfo:
         except Exception as e:
             logger.warning(f"Could not parse timestamp from {self.name}: {e}")
             return datetime.fromtimestamp(self.path.stat().st_mtime)
-    
+
     def _load_metadata(self) -> Dict:
         """Load backup metadata if available"""
         metadata_file = self.path / 'backup_metadata.json'
         if metadata_file.exists():
             try:
-                with open(metadata_file, 'r') as f:
+                with open(metadata_file) as f:
                     return json.load(f)
             except Exception as e:
                 logger.debug(f"Could not load metadata: {e}")
         return {}
-    
+
     def _calculate_size(self) -> int:
         """Calculate total backup size"""
         total = 0
@@ -102,7 +97,7 @@ class BackupInfo:
             if file.is_file():
                 total += file.stat().st_size
         return total
-    
+
     def _list_files(self) -> List[Tuple[str, int]]:
         """List files in backup with sizes"""
         files = []
@@ -111,7 +106,7 @@ class BackupInfo:
                 rel_path = file.relative_to(self.path)
                 files.append((str(rel_path), file.stat().st_size))
         return sorted(files)
-    
+
     def format_size(self, size: int) -> str:
         """Format size in human readable format"""
         for unit in ['B', 'KB', 'MB', 'GB']:
@@ -126,7 +121,7 @@ class BackupInfo:
 
 class RestoreManager:
     """Manages MISP restoration from backups"""
-    
+
     def __init__(self, misp_dir: Path, backup_dir: Path):
         self.misp_dir = Path(misp_dir).expanduser()
         self.backup_dir = Path(backup_dir).expanduser()
@@ -140,23 +135,23 @@ class RestoreManager:
 
         if not self.backup_dir.exists():
             raise ValueError(f"Backup directory not found: {self.backup_dir}")
-    
+
     def list_backups(self) -> List[BackupInfo]:
         """List all available backups"""
         backups = []
-        
+
         for item in self.backup_dir.iterdir():
-            if item.is_dir() and (item.name.startswith('misp-') or 
+            if item.is_dir() and (item.name.startswith('misp-') or
                                   item.name.startswith('pre-restore-')):
                 try:
                     backups.append(BackupInfo(item))
                 except Exception as e:
                     logger.warning(f"Could not process backup {item.name}: {e}")
-        
+
         # Sort by timestamp, newest first
         backups.sort(key=lambda x: x.timestamp, reverse=True)
         return backups
-    
+
     def show_backup_contents(self, backup: BackupInfo):
         """Display detailed backup information"""
         logger.info("=" * 50)
@@ -166,26 +161,26 @@ class RestoreManager:
         logger.info(f"Location: {backup.path}")
         logger.info(f"Created: {backup.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
         logger.info(f"Size: {backup.format_size(backup.size)}")
-        
+
         if backup.metadata:
             logger.info("\nBackup Metadata:")
             if 'component_versions' in backup.metadata:
                 logger.info("  Component Versions:")
                 for comp, ver in backup.metadata['component_versions'].items():
                     logger.info(f"    {comp}: {ver}")
-        
+
         logger.info("\nFiles in backup:")
         for file_path, size in backup.files:
             logger.info(f"  ✓ {file_path} ({backup.format_size(size)})")
         logger.info("")
-    
+
     def create_pre_restore_backup(self) -> Path:
         """Create backup of current state before restoring"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_name = f"pre-restore-{timestamp}"
         backup_path = self.backup_dir / backup_name
         backup_path.mkdir(parents=True)
-        
+
         # Backup critical files
         files_to_backup = [
             '.env',
@@ -193,23 +188,23 @@ class RestoreManager:
             'docker-compose.yml',
             'docker-compose.override.yml'
         ]
-        
+
         for file in files_to_backup:
             src = self.misp_dir / file
             if src.exists():
                 shutil.copy2(src, backup_path / file)
-        
+
         # Backup SSL if exists
         ssl_dir = self.misp_dir / 'ssl'
         if ssl_dir.exists():
             shutil.copytree(ssl_dir, backup_path / 'ssl')
-        
+
         # Database backup
         logger.debug("Backing up current database...")
         self._backup_database(backup_path / 'misp_database.sql')
-        
+
         return backup_path
-    
+
     def _backup_database(self, output_file: Path):
         """Backup database using DatabaseManager"""
         try:
@@ -217,56 +212,56 @@ class RestoreManager:
             self.db_manager.backup_database(output_file)
         except Exception as e:
             logger.warning(f"Database backup failed: {e}")
-    
+
     def restore_files(self, backup: BackupInfo):
         """Restore configuration files"""
         logger.info("=" * 50)
         logger.info("RESTORING CONFIGURATION FILES")
         logger.info("=" * 50)
         logger.info("")
-        
+
         files_to_restore = [
             '.env',
             'PASSWORDS.txt',
             'docker-compose.yml',
             'docker-compose.override.yml'
         ]
-        
+
         for file in files_to_restore:
             src = backup.path / file
             dst = self.misp_dir / file
-            
+
             if src.exists():
                 shutil.copy2(src, dst)
                 logger.info(Colors.success(f"Restored: {file}"))
             else:
                 logger.warning(Colors.warning(f"Not found in backup: {file}"))
-        
+
         logger.info("")
-    
+
     def restore_ssl(self, backup: BackupInfo):
         """Restore SSL certificates"""
         logger.info("=" * 50)
         logger.info("RESTORING SSL CERTIFICATES")
         logger.info("=" * 50)
         logger.info("")
-        
+
         src_ssl = backup.path / 'ssl'
         dst_ssl = self.misp_dir / 'ssl'
-        
+
         if src_ssl.exists():
             # Remove existing SSL directory
             if dst_ssl.exists():
                 shutil.rmtree(dst_ssl)
-            
+
             # Copy SSL directory
             shutil.copytree(src_ssl, dst_ssl)
             logger.info(Colors.success("SSL certificates restored"))
         else:
             logger.warning(Colors.warning("No SSL certificates in backup"))
-        
+
         logger.info("")
-    
+
     def restore_database(self, backup: BackupInfo):
         """Restore database from backup using DatabaseManager"""
         logger.info("=" * 50)
@@ -313,14 +308,14 @@ class RestoreManager:
         except Exception as e:
             logger.error(Colors.error(f"Database restore failed: {e}"))
             return False
-    
+
     def restart_services(self):
         """Restart all MISP services"""
         logger.info("=" * 50)
         logger.info("RESTARTING SERVICES")
         logger.info("=" * 50)
         logger.info("")
-        
+
         try:
             # Stop containers
             logger.info("Stopping containers...")
@@ -330,7 +325,7 @@ class RestoreManager:
                 check=True,
                 capture_output=True
             )
-            
+
             # Start containers
             logger.info("Starting containers...")
             subprocess.run(
@@ -339,12 +334,12 @@ class RestoreManager:
                 check=True,
                 capture_output=True
             )
-            
+
             # Wait for services
             logger.info("Waiting for services to start...")
             import time
             time.sleep(15)
-            
+
             # Show container status
             logger.info("\nContainer Status:")
             result = subprocess.run(
@@ -354,28 +349,28 @@ class RestoreManager:
                 text=True
             )
             logger.info(result.stdout)
-            
+
             logger.info(Colors.success("Services restarted"))
             logger.info("")
             return True
-        
+
         except Exception as e:
             logger.error(Colors.error(f"Service restart failed: {e}"))
             return False
-    
+
     def check_database(self) -> bool:
         """Check if database is accessible using DatabaseManager"""
         return self.db_manager.check_database()
-    
+
     def verify_restore(self) -> bool:
         """Verify that restore was successful"""
         logger.info("=" * 50)
         logger.info("VERIFYING RESTORE")
         logger.info("=" * 50)
         logger.info("")
-        
+
         all_ok = True
-        
+
         # Check containers
         logger.info("[1/4] Checking containers...")
         try:
@@ -394,9 +389,9 @@ class RestoreManager:
         except Exception as e:
             logger.error(Colors.error(f"  Could not check containers: {e}"))
             all_ok = False
-        
+
         logger.info("")
-        
+
         # Check database
         logger.info("[2/4] Checking database...")
         if self.check_database():
@@ -404,9 +399,9 @@ class RestoreManager:
         else:
             logger.warning(Colors.warning("  Database not accessible"))
             all_ok = False
-        
+
         logger.info("")
-        
+
         # Check MISP version
         logger.info("[3/4] Checking MISP version...")
         try:
@@ -428,56 +423,56 @@ class RestoreManager:
         except Exception as e:
             logger.warning(Colors.warning(f"  Version check failed: {e}"))
             all_ok = False
-        
+
         logger.info("")
-        
+
         # Check web interface
         logger.info("[4/4] Checking web interface...")
         try:
-            import urllib.request
             import ssl
-            
+            import urllib.request
+
             # Get base URL from .env
             env_file = self.misp_dir / '.env'
             base_url = 'https://localhost'
-            
-            with open(env_file, 'r') as f:
+
+            with open(env_file) as f:
                 for line in f:
                     if line.startswith('BASE_URL='):
                         base_url = line.split('=', 1)[1].strip()
                         break
-            
+
             # Create SSL context that doesn't verify certificates
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
-            
+
             # Try to connect
             req = urllib.request.Request(base_url)
             response = urllib.request.urlopen(req, context=ctx, timeout=10)
-            
+
             if response.status == 200:
                 logger.info(Colors.success("  Web interface responding"))
             else:
                 logger.warning(Colors.warning(f"  Web interface returned status {response.status}"))
                 all_ok = False
-        
+
         except Exception as e:
             logger.warning(Colors.warning(f"  Could not reach web interface: {e}"))
             all_ok = False
-        
+
         logger.info("")
-        
+
         return all_ok
-    
-    def perform_restore(self, backup: BackupInfo, restore_db: bool = True, 
+
+    def perform_restore(self, backup: BackupInfo, restore_db: bool = True,
                        skip_backup: bool = False) -> bool:
         """Perform complete restore operation"""
         logger.info("=" * 50)
         logger.info(f"RESTORING FROM: {backup.name}")
         logger.info("=" * 50)
         logger.info("")
-        
+
         try:
             # Create pre-restore backup unless skipped
             if not skip_backup:
@@ -485,27 +480,26 @@ class RestoreManager:
                 pre_backup = self.create_pre_restore_backup()
                 logger.info(Colors.success(f"Pre-restore backup created: {pre_backup}"))
                 logger.info("")
-            
+
             # Restore files
             self.restore_files(backup)
-            
+
             # Restore SSL
             self.restore_ssl(backup)
-            
+
             # Restore database if requested
-            if restore_db:
-                if not self.restore_database(backup):
-                    logger.error(Colors.error("Database restore failed"))
-                    return False
-            
+            if restore_db and not self.restore_database(backup):
+                logger.error(Colors.error("Database restore failed"))
+                return False
+
             # Restart services
             if not self.restart_services():
                 logger.error(Colors.error("Service restart failed"))
                 return False
-            
+
             # Verify restore
             all_ok = self.verify_restore()
-            
+
             if all_ok:
                 logger.info("=" * 50)
                 logger.info(Colors.success("✅ RESTORE COMPLETED SUCCESSFULLY"))
@@ -516,18 +510,18 @@ class RestoreManager:
                 logger.info(Colors.warning("⚠ RESTORE COMPLETED WITH WARNINGS"))
                 logger.info(Colors.warning("⚠") * 50)
                 logger.info("")
-            
+
             # Final message
             if all_ok:
                 logger.info(Colors.success("✅ Restore completed successfully"))
             else:
                 logger.info(Colors.error("❌ Restore completed with issues"))
-            
+
             logger.info("\nCheck logs for details:")
             logger.info("  /var/log/misp-install/")
-            
+
             return all_ok
-        
+
         except Exception as e:
             logger.error(Colors.error(f"Restore failed: {e}"))
             import traceback
@@ -556,7 +550,7 @@ def main():
         description='MISP Restore Tool - Restore MISP from backup',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    
+
     parser.add_argument(
         '--misp-dir',
         default='/opt/misp',
@@ -568,55 +562,55 @@ def main():
         default=str(Path.home() / 'misp-backups'),
         help='Backup directory (default: ~/misp-backups)'
     )
-    
+
     parser.add_argument(
         '--list',
         action='store_true',
         help='List available backups'
     )
-    
+
     parser.add_argument(
         '--show',
         metavar='BACKUP',
         help='Show contents of backup (use "latest" for most recent)'
     )
-    
+
     parser.add_argument(
         '--restore',
         metavar='BACKUP',
         help='Restore from backup (use "latest" for most recent)'
     )
-    
+
     parser.add_argument(
         '--skip-database',
         action='store_true',
         help='Skip database restore (config files only)'
     )
-    
+
     parser.add_argument(
         '--skip-backup',
         action='store_true',
         help='Skip creating pre-restore backup'
     )
-    
+
     args = parser.parse_args()
-    
+
     print_banner()
-    
+
     # Initialize restore manager
     try:
         restore_mgr = RestoreManager(args.misp_dir, args.backup_dir)
     except ValueError as e:
         logger.error(Colors.error(str(e)))
         sys.exit(1)
-    
+
     # Get available backups
     backups = restore_mgr.list_backups()
-    
+
     if not backups:
         logger.error(Colors.error(f"No backups found in {args.backup_dir}"))
         sys.exit(1)
-    
+
     # Handle --list
     if args.list:
         logger.info(f"\nAvailable backups in {args.backup_dir}:")
@@ -628,11 +622,11 @@ def main():
             logger.info(f"  Created: {backup.timestamp.strftime('%Y-%m-%d %H:%M:%S')} ({days_old} days ago)")
             logger.info(f"  Size: {backup.format_size(backup.size)}")
             logger.info(f"  Location: {backup.path}")
-        
+
         logger.info(f"\nTotal backups: {len(backups)}")
         logger.info(f"Location: {args.backup_dir}")
         sys.exit(0)
-    
+
     # Handle --show
     if args.show:
         if args.show.lower() == 'latest':
@@ -645,10 +639,10 @@ def main():
                 for b in backups[:5]:
                     logger.info(f"  - {b.name}")
                 sys.exit(1)
-        
+
         restore_mgr.show_backup_contents(backup)
         sys.exit(0)
-    
+
     # Handle --restore
     if args.restore:
         if args.restore.lower() == 'latest':
@@ -661,10 +655,10 @@ def main():
                 for b in backups[:5]:
                     logger.info(f"  - {b.name}")
                 sys.exit(1)
-        
+
         # Show what will be restored
         restore_mgr.show_backup_contents(backup)
-        
+
         # Confirm
         logger.info("\n" + Colors.warning("="*50))
         logger.info(Colors.warning("⚠  WARNING: This will restore MISP"))
@@ -674,24 +668,24 @@ def main():
         logger.info(f"MISP directory: {restore_mgr.misp_dir}")
         logger.info(f"Restore database: {not args.skip_database}")
         logger.info(f"Create pre-restore backup: {not args.skip_backup}")
-        
+
         confirm = input("\nProceed with restore? Type 'YES' to continue: ")
         if confirm != 'YES':
             logger.info("Restore cancelled.")
             sys.exit(0)
-        
+
         # Perform restore
         success = restore_mgr.perform_restore(
             backup,
             restore_db=not args.skip_database,
             skip_backup=args.skip_backup
         )
-        
+
         if success:
             sys.exit(0)
         else:
             sys.exit(1)
-    
+
     # No action specified
     logger.info("No action specified. Use --help for usage information.")
     logger.info("\nQuick commands:")

@@ -34,17 +34,17 @@ Requirements:
     - MySQL password in /opt/misp/.env
 """
 
+import argparse
+import json
 import subprocess
 import sys
-import json
 from pathlib import Path
-from typing import List, Dict
-import argparse
+from typing import Dict
 
 # Import centralized modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from misp_logger import get_logger
 from lib.database_manager import DatabaseManager
+from misp_logger import get_logger
 
 # NERC CIP-Related News Feeds
 NERC_CIP_NEWS_FEEDS = [
@@ -250,7 +250,7 @@ class NERCCIPNewsFeedManager:
             name = feed['name'].replace("'", "''")
             provider = feed['provider'].replace("'", "''")
             url = feed['url'].replace("'", "''")
-            description = feed.get('description', '').replace("'", "''")
+            feed.get('description', '').replace("'", "''")
 
             enabled = 1 if feed['enabled'] else 0
             caching_enabled = 1 if feed['caching_enabled'] else 0
@@ -292,7 +292,7 @@ class NERCCIPNewsFeedManager:
             """
 
             # Execute SQL
-            result = subprocess.run(
+            subprocess.run(
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
                  'mysql', '-umisp', f'-p{self.mysql_password}', 'misp', '-e',
                  sql],

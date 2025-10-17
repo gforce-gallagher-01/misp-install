@@ -12,28 +12,24 @@ Automates MISP configuration for "ready to run" deployment:
 - Enables background jobs
 """
 
-import os
-import sys
-import subprocess
-import time
 import json
+import subprocess
+import sys
+import time
 from pathlib import Path
-from typing import List, Dict
+from typing import List
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import centralized modules
-from misp_logger import get_logger
 from lib.colors import Colors
 from lib.database_manager import DatabaseManager
 from lib.setup_helper import MISPSetupHelper
 from misp_api import get_api_key_from_db
+from misp_logger import get_logger
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("❌ Python 3.8 or higher required")
-    sys.exit(1)
 
 # ==========================================
 # Configuration
@@ -247,9 +243,7 @@ class MISPReadyConfig:
         """Set a MISP setting"""
         value_str = json.dumps(value) if isinstance(value, (dict, list)) else str(value)
 
-        if self.run_cake_command(['Admin', 'setSetting', setting, value_str]):
-            return True
-        return False
+        return bool(self.run_cake_command(['Admin', 'setSetting', setting, value_str]))
 
     def configure_core_settings(self):
         """Configure core MISP settings"""
@@ -314,7 +308,7 @@ class MISPReadyConfig:
                                result="success")
                 return True
             else:
-                print(f"⚠️  Some feeds may have failed (continuing...)")
+                print("⚠️  Some feeds may have failed (continuing...)")
                 self.logger.warning(f"Feed enablement completed with warnings: {result.stderr[:200]}",
                                   event_type="configure",
                                   action="enable_feeds",
@@ -367,7 +361,7 @@ class MISPReadyConfig:
         print("Next Steps:")
         print()
         print("1. Access MISP Web Interface:")
-        print(f"   https://your-misp-domain")
+        print("   https://your-misp-domain")
         print()
         print("2. Change Default Admin Password:")
         print("   Login: admin@admin.test")

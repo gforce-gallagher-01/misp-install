@@ -15,16 +15,15 @@ Features:
 - Console output with color coding
 """
 
-import os
-import sys
+import getpass
 import json
 import logging
 import logging.handlers
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+import os
 import socket
-import getpass
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 # ==========================================
 # Configuration
@@ -254,7 +253,7 @@ class MISPLogger:
             except Exception as e:
                 # If sudo also fails, print warning and skip file logging
                 print(f"⚠️  Could not create log directory {log_dir}: {e}")
-                print(f"⚠️  File logging disabled - console only")
+                print("⚠️  File logging disabled - console only")
                 return
 
         # Set appropriate permissions (if needed - ACLs may already handle this)
@@ -288,7 +287,7 @@ class MISPLogger:
             self.logger.addHandler(file_handler)
         except Exception as e:
             print(f"⚠️  Could not create log file {log_file}: {e}")
-            print(f"⚠️  File logging disabled - console only")
+            print("⚠️  File logging disabled - console only")
 
     def _setup_console_handler(self):
         """Setup console handler with colored output"""
@@ -433,7 +432,7 @@ if __name__ == "__main__":
     if log_file.exists():
         print("Sample JSON log entries:")
         print("=" * 80)
-        with open(log_file, 'r') as f:
+        with open(log_file) as f:
             for line in f.readlines()[-3:]:
                 print(json.dumps(json.loads(line), indent=2))
                 print("-" * 80)

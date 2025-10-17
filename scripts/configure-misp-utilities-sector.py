@@ -54,13 +54,11 @@ SPDX-License-Identifier: MIT
 """
 
 import argparse
-import json
-import os
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -719,11 +717,11 @@ class MISPUtilitiesConfig:
 
         # Action items
         print(f"{self.BOLD}Recommended Actions:{self.NC}")
-        print(f"  1. Tag MISP events with threat actor names when identified")
-        print(f"  2. Use MITRE ATT&CK for ICS techniques for attribution")
-        print(f"  3. Monitor for TTPs (Tactics, Techniques, Procedures) listed above")
-        print(f"  4. Include in CIP-003 security awareness training")
-        print(f"  5. Document in CIP-008 incident response plans")
+        print("  1. Tag MISP events with threat actor names when identified")
+        print("  2. Use MITRE ATT&CK for ICS techniques for attribution")
+        print("  3. Monitor for TTPs (Tactics, Techniques, Procedures) listed above")
+        print("  4. Include in CIP-003 security awareness training")
+        print("  5. Document in CIP-008 incident response plans")
 
         self.logger.info("Module 3 complete: Displayed threat actor profiles",
                         event_type="module_complete",
@@ -766,17 +764,17 @@ class MISPUtilitiesConfig:
 
         # Instructions
         print(f"{self.BOLD}Manual Creation Steps:{self.NC}")
-        print(f"  1. Login to MISP web interface")
+        print("  1. Login to MISP web interface")
         print(f"  2. Navigate to: {self.CYAN}Administration > Object Templates > Add Object Template{self.NC}")
-        print(f"  3. Create templates using attribute lists shown above")
-        print(f"  4. Set Meta Category to 'network' or 'ics'")
-        print(f"  5. Save and enable template")
+        print("  3. Create templates using attribute lists shown above")
+        print("  4. Set Meta Category to 'network' or 'ics'")
+        print("  5. Save and enable template")
 
         print(f"\n{self.BOLD}Usage in MISP:{self.NC}")
-        print(f"  - When creating events, attach these objects to track ICS assets")
-        print(f"  - Use for asset inventory in combination with threat intelligence")
-        print(f"  - Tag with appropriate ICS taxonomy tags")
-        print(f"  - Link to related vulnerabilities (CVEs)")
+        print("  - When creating events, attach these objects to track ICS assets")
+        print("  - Use for asset inventory in combination with threat intelligence")
+        print("  - Tag with appropriate ICS taxonomy tags")
+        print("  - Link to related vulnerabilities (CVEs)")
 
         self.logger.info("Module 4 complete: Displayed custom object templates",
                         event_type="module_complete",
@@ -833,10 +831,10 @@ class MISPUtilitiesConfig:
         print(f"  {self.CYAN}4. Dragos WorldView{self.NC} - If budget allows ($$$ but high quality)")
 
         print(f"\n{self.BOLD}Next Steps:{self.NC}")
-        print(f"  1. Apply for E-ISAC membership (if electric utility)")
-        print(f"  2. Register for DHS AIS (critical infrastructure)")
-        print(f"  3. Create manual process for ICS-CERT advisory review")
-        print(f"  4. Consider commercial ICS intel if High-Impact BES Cyber System")
+        print("  1. Apply for E-ISAC membership (if electric utility)")
+        print("  2. Register for DHS AIS (critical infrastructure)")
+        print("  3. Create manual process for ICS-CERT advisory review")
+        print("  4. Consider commercial ICS intel if High-Impact BES Cyber System")
 
         self.logger.info("Module 5 complete: Displayed feeds and communities",
                         event_type="module_complete",
@@ -856,7 +854,7 @@ class MISPUtilitiesConfig:
         print(f"{self.CYAN}Correlation rules for ICS protocol monitoring...{self.NC}\n")
 
         print(f"{self.YELLOW}Note:{self.NC} These rules should be implemented in your SIEM (Splunk, ELK)")
-        print(f"       or ICS monitoring platform (Nozomi, Claroty, Dragos)\n")
+        print("       or ICS monitoring platform (Nozomi, Claroty, Dragos)\n")
 
         for rule in self.config.ICS_CORRELATION_RULES:
             name = rule['name']
@@ -883,22 +881,22 @@ class MISPUtilitiesConfig:
 
         # Implementation guidance
         print(f"{self.BOLD}Implementation in Splunk:{self.NC}")
-        print(f"  1. Install MISP App for Splunk")
-        print(f"  2. Create correlation searches matching rules above")
-        print(f"  3. Tag MISP events with ICS taxonomy when matches occur")
-        print(f"  4. Create Notable Events for CRITICAL/HIGH severity")
+        print("  1. Install MISP App for Splunk")
+        print("  2. Create correlation searches matching rules above")
+        print("  3. Tag MISP events with ICS taxonomy when matches occur")
+        print("  4. Create Notable Events for CRITICAL/HIGH severity")
 
         print(f"\n{self.BOLD}Implementation in Security Onion:{self.NC}")
-        print(f"  1. Feed MISP IOCs into Suricata")
-        print(f"  2. Create custom Suricata rules for ICS protocols")
-        print(f"  3. Use Zeek ICS protocol analyzers (Modbus, DNP3)")
-        print(f"  4. Send alerts back to MISP via TheHive")
+        print("  1. Feed MISP IOCs into Suricata")
+        print("  2. Create custom Suricata rules for ICS protocols")
+        print("  3. Use Zeek ICS protocol analyzers (Modbus, DNP3)")
+        print("  4. Send alerts back to MISP via TheHive")
 
         print(f"\n{self.BOLD}Implementation in Nozomi/Claroty/Dragos:{self.NC}")
-        print(f"  1. Export MISP IOCs via STIX/TAXII")
-        print(f"  2. Import into ICS monitoring platform")
-        print(f"  3. Enable bidirectional sync (platform discoveries → MISP)")
-        print(f"  4. Correlate ICS asset inventory with threat intelligence")
+        print("  1. Export MISP IOCs via STIX/TAXII")
+        print("  2. Import into ICS monitoring platform")
+        print("  3. Enable bidirectional sync (platform discoveries → MISP)")
+        print("  4. Correlate ICS asset inventory with threat intelligence")
 
         self.logger.info("Module 6 complete: Displayed correlation rules",
                         event_type="module_complete",
@@ -917,7 +915,7 @@ class MISPUtilitiesConfig:
 
         print(f"{self.CYAN}Integration guides for utilities sector security tools...{self.NC}\n")
 
-        for integration_key, integration in self.config.INTEGRATIONS.items():
+        for _integration_key, integration in self.config.INTEGRATIONS.items():
             name = integration['name']
             cost = integration['cost']
             setup = integration['setup']
@@ -948,10 +946,10 @@ class MISPUtilitiesConfig:
         print(f"  {self.CYAN}Phase 3:{self.NC} Dragos Platform (if High-Impact site)")
 
         print(f"\n{self.BOLD}Cost Comparison:{self.NC}")
-        print(f"  FREE: Security Onion")
-        print(f"  $25K-$100K/year: Nozomi Networks, Claroty")
-        print(f"  $50K-$150K/year: Splunk ES, Dragos WorldView")
-        print(f"  $150K-$500K/year: Dragos Platform (full suite)")
+        print("  FREE: Security Onion")
+        print("  $25K-$100K/year: Nozomi Networks, Claroty")
+        print("  $50K-$150K/year: Splunk ES, Dragos WorldView")
+        print("  $150K-$500K/year: Dragos Platform (full suite)")
 
         self.logger.info("Module 7 complete: Displayed integration guides",
                         event_type="module_complete",
@@ -992,30 +990,30 @@ class MISPUtilitiesConfig:
         self.print_header("CONFIGURATION COMPLETE", self.GREEN)
 
         print(f"{self.BOLD}Summary:{self.NC}")
-        print(f"  ✓ Module 1: ICS/OT Taxonomies enabled")
-        print(f"  ✓ Module 2: MITRE ATT&CK for ICS Galaxy updated")
-        print(f"  ✓ Module 3: Threat actor profiles displayed")
-        print(f"  ✓ Module 4: Custom object templates documented")
-        print(f"  ✓ Module 5: Feeds and communities documented")
-        print(f"  ✓ Module 6: Correlation rules documented")
-        print(f"  ✓ Module 7: Integration guides documented")
+        print("  ✓ Module 1: ICS/OT Taxonomies enabled")
+        print("  ✓ Module 2: MITRE ATT&CK for ICS Galaxy updated")
+        print("  ✓ Module 3: Threat actor profiles displayed")
+        print("  ✓ Module 4: Custom object templates documented")
+        print("  ✓ Module 5: Feeds and communities documented")
+        print("  ✓ Module 6: Correlation rules documented")
+        print("  ✓ Module 7: Integration guides documented")
         print(f"\n  Duration: {duration:.1f} seconds")
 
         print(f"\n{self.BOLD}Next Steps:{self.NC}")
-        print(f"  1. Create custom object templates via MISP web interface")
-        print(f"  2. Apply for E-ISAC membership (if electric utility)")
-        print(f"  3. Register for DHS AIS (critical infrastructure)")
-        print(f"  4. Implement SIEM correlation rules (Splunk/Security Onion)")
-        print(f"  5. Consider ICS monitoring platform integration")
-        print(f"  6. Train SOC team on ICS threat actor TTPs")
-        print(f"  7. Update CIP-003 security awareness training materials")
+        print("  1. Create custom object templates via MISP web interface")
+        print("  2. Apply for E-ISAC membership (if electric utility)")
+        print("  3. Register for DHS AIS (critical infrastructure)")
+        print("  4. Implement SIEM correlation rules (Splunk/Security Onion)")
+        print("  5. Consider ICS monitoring platform integration")
+        print("  6. Train SOC team on ICS threat actor TTPs")
+        print("  7. Update CIP-003 security awareness training materials")
 
         print(f"\n{self.BOLD}Documentation:{self.NC}")
-        print(f"  - NERC CIP Guide: docs/NERC_CIP_CONFIGURATION.md")
-        print(f"  - MISP Taxonomies: https://www.misp-project.org/taxonomies.html")
-        print(f"  - MITRE ATT&CK ICS: https://attack.mitre.org/matrices/ics/")
-        print(f"  - E-ISAC: https://www.eisac.com/")
-        print(f"  - ICS-CERT: https://www.cisa.gov/ics")
+        print("  - NERC CIP Guide: docs/NERC_CIP_CONFIGURATION.md")
+        print("  - MISP Taxonomies: https://www.misp-project.org/taxonomies.html")
+        print("  - MITRE ATT&CK ICS: https://attack.mitre.org/matrices/ics/")
+        print("  - E-ISAC: https://www.eisac.com/")
+        print("  - ICS-CERT: https://www.cisa.gov/ics")
 
         self.logger.info("Utilities sector configuration complete",
                         event_type="configuration_complete",

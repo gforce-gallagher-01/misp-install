@@ -52,28 +52,22 @@ Requirements:
     - Python packages: requests, pyyaml (optional)
 """
 
-import os
-import sys
 import argparse
-import time
-import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-from datetime import datetime
-import json
+from typing import List, Optional, Tuple
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import centralized modules
-from misp_logger import get_logger
-from misp_api import get_api_key, get_misp_client, test_connection
-
 # Import centralized Colors class
 from lib.colors import Colors
 
 # Import centralized setup helpers
-from lib.setup_helper import MISPSetupHelper, VerificationHelper, StatisticsTracker
+from lib.setup_helper import MISPSetupHelper, StatisticsTracker, VerificationHelper
+from misp_api import get_api_key, get_misp_client, test_connection
+from misp_logger import get_logger
 
 # Try to import YAML support
 try:

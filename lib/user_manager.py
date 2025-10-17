@@ -7,7 +7,6 @@ import pwd
 import subprocess
 from typing import Tuple
 
-
 MISP_USER = "misp-owner"
 MISP_HOME = "/home/misp-owner"
 
@@ -52,7 +51,7 @@ def ensure_misp_user_exists() -> bool:
 
     try:
         # Create system user with home directory
-        result = subprocess.run([
+        subprocess.run([
             'sudo', 'useradd',
             '--system',  # System user
             '--create-home',  # Create home directory

@@ -7,14 +7,13 @@ Version: 3.0 (Python with Centralized Logging)
 Completely removes MISP installation while preserving backups.
 """
 
-import os
-import sys
-import subprocess
-import shutil
 import argparse
+import os
+import shutil
+import subprocess
+import sys
 import time
 from pathlib import Path
-from typing import List
 
 # Add parent directory to path for imports
 script_dir = Path(__file__).resolve().parent
@@ -23,15 +22,11 @@ if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("❌ Python 3.8 or higher required")
-    sys.exit(1)
 
 # Import centralized logger
-from misp_logger import get_logger
-
 # Import centralized Colors class
 from lib.colors import Colors
+from misp_logger import get_logger
 
 # ==========================================
 # Configuration

@@ -2,10 +2,10 @@
 Password and input validation utilities
 """
 
-import re
-import string
-import secrets
 import getpass
+import re
+import secrets
+import string
 from typing import Tuple
 
 
@@ -107,7 +107,7 @@ class InputValidator:
         try:
             socket.inet_aton(ip)
             return True, "Valid IP address"
-        except socket.error:
+        except OSError:
             return False, "Invalid IP address format"
 
     @staticmethod

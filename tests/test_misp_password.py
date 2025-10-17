@@ -4,7 +4,6 @@ Unit tests for MISP password validation module.
 Tests the PasswordValidator class from lib/misp_password.py
 """
 
-import pytest
 import sys
 from pathlib import Path
 

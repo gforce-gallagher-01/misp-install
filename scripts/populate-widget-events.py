@@ -20,9 +20,9 @@ Version: 1.0
 
 import os
 import sys
-import json
-import requests
 from datetime import datetime, timedelta
+
+import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 # Suppress SSL warnings for self-signed certificates
@@ -40,7 +40,7 @@ def get_misp_config():
     if not api_key:
         # Try to get from .env file
         try:
-            with open('/opt/misp/.env', 'r') as f:
+            with open('/opt/misp/.env') as f:
                 for line in f:
                     if line.startswith('MISP_API_KEY='):
                         api_key = line.split('=', 1)[1].strip()
@@ -56,7 +56,7 @@ def get_misp_config():
     # Get MISP URL from .env or default
     misp_url = "https://misp-test.lan"
     try:
-        with open('/opt/misp/.env', 'r') as f:
+        with open('/opt/misp/.env') as f:
             for line in f:
                 if line.startswith('BASE_URL='):
                     base_url = line.split('=', 1)[1].strip()
