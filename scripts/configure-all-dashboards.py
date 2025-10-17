@@ -202,7 +202,7 @@ def create_complete_dashboard_config():
         {
             "widget": "APTGroupsUtilitiesWidget",
             "config": {
-                "timeframe": "1y",
+                "timeframe": "365d",
                 "limit": "15"
             },
             "position": {
@@ -230,7 +230,7 @@ def create_complete_dashboard_config():
         {
             "widget": "NationStateAttributionWidget",
             "config": {
-                "timeframe": "1y",
+                "timeframe": "365d",
                 "limit": "10"
             },
             "position": {
@@ -243,7 +243,7 @@ def create_complete_dashboard_config():
         {
             "widget": "TTPsUtilitiesWidget",
             "config": {
-                "timeframe": "1y",
+                "timeframe": "365d",
                 "limit": "15"
             },
             "position": {
