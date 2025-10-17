@@ -62,7 +62,7 @@ class HistoricalIncidentsWidget
 
         $filters = array(
             'published' => 1,
-            'tags' => array('ics:%', 'incident:'),
+            'tags' => array('ics:%'),
             'limit' => 2000,
             'includeEventTags' => 1,
             'metadata' => false

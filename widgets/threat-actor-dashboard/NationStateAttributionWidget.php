@@ -121,11 +121,25 @@ class NationStateAttributionWidget
                 if (strpos($tagName, 'china') !== false) return 'China';
                 if (strpos($tagName, 'iran') !== false) return 'Iran';
                 if (strpos($tagName, 'north korea') !== false || strpos($tagName, 'dprk') !== false) return 'North Korea';
+
+                // Russian APTs
                 if (strpos($tagName, 'apt28') !== false || strpos($tagName, 'apt29') !== false ||
-                    strpos($tagName, 'sandworm') !== false) return 'Russia';
-                if (strpos($tagName, 'apt33') !== false) return 'Iran';
-                if (strpos($tagName, 'apt41') !== false || strpos($tagName, 'apt10') !== false) return 'China';
+                    strpos($tagName, 'sandworm') !== false || strpos($tagName, 'dragonfly') !== false ||
+                    strpos($tagName, 'chernovite') !== false) return 'Russia';
+
+                // Iranian APTs
+                if (strpos($tagName, 'apt33') !== false || strpos($tagName, 'apt 33') !== false) return 'Iran';
+
+                // Chinese APTs
+                if (strpos($tagName, 'apt41') !== false || strpos($tagName, 'apt10') !== false ||
+                    strpos($tagName, 'volt typhoon') !== false) return 'China';
+
+                // North Korean APTs
                 if (strpos($tagName, 'lazarus') !== false) return 'North Korea';
+
+                // Non-nation state actors
+                if (strpos($tagName, 'lockbit') !== false || strpos($tagName, 'mercury') !== false ||
+                    strpos($tagName, 'xenotime') !== false) return 'Unknown';
             }
         }
 

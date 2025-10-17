@@ -61,7 +61,7 @@ class TTPsUtilitiesWidget
 
         $filters = array(
             'published' => 1,
-            'tags' => array('ics:%', 'utilities:'),
+            'tags' => array('ics:%'),
             'limit' => 5000,
             'includeEventTags' => 1
         );
