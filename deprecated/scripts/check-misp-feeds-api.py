@@ -34,13 +34,13 @@ Requirements:
     - Python packages: requests
 """
 
+import argparse
 import sys
-import json
-import requests
-import urllib3
 from pathlib import Path
 from typing import Dict, List
-import argparse
+
+import requests
+import urllib3
 
 # Suppress SSL warnings for self-signed certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
