@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from phases.base_phase import BasePhase
 from lib.colors import Colors
+from lib.misp_api_helpers import get_api_key
 
 
 class Phase11_8UtilitiesSector(BasePhase):
@@ -37,6 +38,9 @@ class Phase11_8UtilitiesSector(BasePhase):
 
             self._configure_utilities_sector(api_key)
 
+            # Populate ICS/OT threat intelligence events (31 events)
+            self._populate_utilities_events(api_key)
+
             self.save_state(11.8, "Utilities Sector Configured")
 
         except Exception as e:
@@ -46,13 +50,8 @@ class Phase11_8UtilitiesSector(BasePhase):
             self.logger.info("Continuing installation...")
 
     def _get_api_key(self) -> str:
-        """Get API key from .env file"""
-        try:
-            result = self.run_command(['sudo', 'grep', 'MISP_API_KEY=', str(self.misp_dir / ".env")])
-            api_key = result.stdout.strip().split('=')[1] if '=' in result.stdout else None
-            return api_key
-        except:
-            return None
+        """Get API key from .env file using centralized helper"""
+        return get_api_key(env_file=str(self.misp_dir / ".env"))
 
     def _configure_utilities_sector(self, api_key: str):
         """Configure utilities sector using configure-misp-utilities-sector.py script"""
@@ -72,6 +71,26 @@ class Phase11_8UtilitiesSector(BasePhase):
             self.logger.warning("⚠️  Some utilities sector features may not have been configured")
             self.logger.info("   Check: python3 scripts/configure-misp-utilities-sector.py")
 
+    def _populate_utilities_events(self, api_key: str):
+        """Populate 31 ICS/OT threat intelligence events for dashboard widgets"""
+        self.logger.info("[11.8.2] Populating ICS/OT threat intelligence events...")
+        self.logger.info("          Creating 31 demonstration events for Threat Actor Dashboard widgets")
+
+        script_path = Path(__file__).parent.parent / 'scripts' / 'populate-utilities-events.py'
+
+        # Set environment variable for API key
+        os.environ['MISP_API_KEY'] = api_key
+
+        result = self.run_command([
+            'python3', str(script_path)
+        ], timeout=180, check=False)
+
+        if result.returncode == 0:
+            self.logger.info(Colors.success("✓ 31 ICS/OT threat intelligence events created"))
+        else:
+            self.logger.warning("⚠️  Event population may have failed")
+            self.logger.info("   Can be run manually: python3 scripts/populate-utilities-events.py")
+
     def _display_sector_features(self):
         """Display list of configured features"""
         self.logger.info("  Configured Features:")
@@ -80,3 +99,4 @@ class Phase11_8UtilitiesSector(BasePhase):
         self.logger.info("    • DHS Critical Infrastructure Sectors")
         self.logger.info("    • Utilities Sector Threat Feeds")
         self.logger.info("    • ICS/SCADA Event Templates")
+        self.logger.info("    • 31 ICS/OT Threat Intelligence Events")

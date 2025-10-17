@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from phases.base_phase import BasePhase
 from lib.colors import Colors
+from lib.misp_api_helpers import get_api_key
 
 
 class Phase11_9AutomatedMaintenance(BasePhase):
@@ -47,28 +48,30 @@ class Phase11_9AutomatedMaintenance(BasePhase):
             self.logger.info("Continuing installation...")
 
     def _get_api_key(self) -> str:
-        """Get API key from .env file"""
-        try:
-            result = self.run_command(['sudo', 'grep', 'MISP_API_KEY=', str(self.misp_dir / ".env")])
-            api_key = result.stdout.strip().split('=')[1] if '=' in result.stdout else None
-            return api_key
-        except:
-            return None
+        """Get API key from .env file using centralized helper"""
+        return get_api_key(env_file=str(self.misp_dir / ".env"))
 
     def _setup_maintenance_cron(self, api_key: str):
         """Setup maintenance cron jobs using setup-misp-maintenance-cron.sh script"""
+        import subprocess
+
         script_path = Path(__file__).parent.parent / 'scripts' / 'setup-misp-maintenance-cron.sh'
 
         # Set environment variable for API key
         os.environ['MISP_API_KEY'] = api_key
 
         # Pipe 'y' to script to auto-confirm (non-interactive mode)
-        result = self.run_command(
-            f'echo "y" | bash {script_path}',
-            timeout=120,
-            check=False,
-            shell=True
-        )
+        try:
+            result = subprocess.run(
+                f'echo "y" | bash {script_path}',
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+        except Exception as e:
+            self.logger.error(f"Failed to run maintenance setup: {e}")
+            return
 
         if result.returncode == 0:
             self.logger.info(Colors.success("✓ Automated maintenance cron jobs configured"))

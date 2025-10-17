@@ -55,7 +55,7 @@ class MonthlyContributionTrendWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('utilities:', 'energy:', 'ics:'),
+            'tags' => array('utilities:', 'energy:', 'ics:%'),
             'limit' => 50000,
             'metadata' => ($metric === 'attributes') ? false : true
         );

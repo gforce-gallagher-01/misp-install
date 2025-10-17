@@ -16,6 +16,9 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from lib.colors import Colors
+from lib.misp_api_helpers import get_api_key, mask_api_key
+from lib.docker_helpers import is_container_running
+from lib.cron_helpers import has_cron_job, list_cron_jobs
 
 class AdvancedFeaturesHealthCheck:
     """Health check for all advanced features"""
@@ -83,10 +86,9 @@ class AdvancedFeaturesHealthCheck:
             return False
 
     def check_docker_container(self):
-        """Check if MISP container is running"""
+        """Check if MISP container is running using centralized helper"""
         self.check('docker', "MISP Docker container running")
-        success, stdout, stderr = self.run_command("sudo docker ps --format '{{.Names}}' | grep -q 'misp-misp-core-1'")
-        if success:
+        if is_container_running('misp-misp-core-1'):
             self.pass_check("Container: misp-misp-core-1")
             return True
         else:
@@ -101,16 +103,12 @@ class AdvancedFeaturesHealthCheck:
         """Check Phase 11.5: API Key Generation"""
         self.header("PHASE 11.5: API KEY GENERATION")
 
-        # Check .env file has API key
+        # Check .env file has API key using centralized helper
         self.check('api_key_env', "API key in .env file")
-        success, stdout, stderr = self.run_command("sudo grep -q 'MISP_API_KEY=' /opt/misp/.env")
-        if success:
-            # Extract key (masked)
-            _, key_line, _ = self.run_command("sudo grep 'MISP_API_KEY=' /opt/misp/.env")
-            if key_line:
-                key = key_line.split('=', 1)[1].strip()
-                masked_key = f"{key[:8]}...{key[-4:]}" if len(key) > 12 else "***"
-                self.pass_check(f"API Key: {masked_key}")
+        api_key = get_api_key(env_file='/opt/misp/.env')
+        if api_key:
+            masked = mask_api_key(api_key)
+            self.pass_check(f"API Key: {masked}")
         else:
             self.fail_check("MISP_API_KEY not found in .env")
 
@@ -130,13 +128,11 @@ class AdvancedFeaturesHealthCheck:
         """Check Phase 11.7: Threat Intelligence Feeds"""
         self.header("PHASE 11.7: COMPREHENSIVE THREAT INTELLIGENCE FEEDS")
 
-        # Get API key
-        success, stdout, stderr = self.run_command("sudo grep 'MISP_API_KEY=' /opt/misp/.env")
-        if not success:
+        # Get API key using centralized helper
+        api_key = get_api_key(env_file='/opt/misp/.env')
+        if not api_key:
             self.fail_check("Cannot get API key")
             return
-
-        api_key = stdout.split('=', 1)[1].strip()
 
         # Check feeds via API
         self.check('threat_feeds', "Threat intelligence feeds enabled")
@@ -169,12 +165,10 @@ class AdvancedFeaturesHealthCheck:
         self.check_file_exists(script_path, "Utilities sector configuration script exists")
 
         # Check for utilities-specific taxonomies via API
-        success, stdout, stderr = self.run_command("sudo grep 'MISP_API_KEY=' /opt/misp/.env")
-        if not success:
+        api_key = get_api_key(env_file='/opt/misp/.env')
+        if not api_key:
             self.fail_check("Cannot get API key")
             return
-
-        api_key = stdout.split('=', 1)[1].strip()
 
         # Check taxonomies
         self.check('utilities_taxonomies', "Utilities sector taxonomies enabled")
@@ -203,21 +197,25 @@ class AdvancedFeaturesHealthCheck:
         """Check Phase 11.9: Automated Maintenance Cron Jobs"""
         self.header("PHASE 11.9: AUTOMATED MAINTENANCE")
 
-        # Check daily maintenance cron
+        # Check daily maintenance cron using centralized helper
         self.check('daily_cron', "Daily maintenance cron job installed")
-        success, stdout, stderr = self.run_command("crontab -l 2>/dev/null | grep -q 'misp-daily-maintenance.py'")
-        if success:
-            _, cron_line, _ = self.run_command("crontab -l 2>/dev/null | grep 'misp-daily-maintenance.py'")
-            self.pass_check(f"Found: {cron_line.strip()}")
+        if has_cron_job("misp-daily-maintenance.py"):
+            jobs = list_cron_jobs(filter_pattern="misp-daily-maintenance.py")
+            if jobs:
+                self.pass_check(f"Found: {jobs[0][:60]}...")
+            else:
+                self.pass_check("Daily maintenance cron installed")
         else:
             self.fail_check("Daily maintenance cron not found")
 
-        # Check weekly optimization cron
+        # Check weekly optimization cron using centralized helper
         self.check('weekly_cron', "Weekly optimization cron job installed")
-        success, stdout, stderr = self.run_command("crontab -l 2>/dev/null | grep -q 'weekly'")
-        if success:
-            _, cron_line, _ = self.run_command("crontab -l 2>/dev/null | grep 'weekly'")
-            self.pass_check(f"Found: {cron_line.strip()}")
+        if has_cron_job("weekly"):
+            jobs = list_cron_jobs(filter_pattern="weekly")
+            if jobs:
+                self.pass_check(f"Found: {jobs[0][:60]}...")
+            else:
+                self.pass_check("Weekly maintenance cron installed")
         else:
             self.fail_check("Weekly optimization cron not found")
 
@@ -249,22 +247,22 @@ class AdvancedFeaturesHealthCheck:
             "News population script exists"
         )
 
-        # Check news cron job
+        # Check news cron job using centralized helper
         self.check('news_cron', "News population cron job installed")
-        success, stdout, stderr = self.run_command("crontab -l 2>/dev/null | grep -q 'populate-misp-news'")
-        if success:
-            _, cron_line, _ = self.run_command("crontab -l 2>/dev/null | grep 'populate-misp-news'")
-            self.pass_check(f"Found: {cron_line.strip()}")
+        if has_cron_job("populate-misp-news"):
+            jobs = list_cron_jobs(filter_pattern="populate-misp-news")
+            if jobs:
+                self.pass_check(f"Found: {jobs[0][:60]}...")
+            else:
+                self.pass_check("News cron installed")
         else:
             self.fail_check("News population cron not found")
 
         # Check if news has been populated via API
-        success, stdout, stderr = self.run_command("sudo grep 'MISP_API_KEY=' /opt/misp/.env")
-        if not success:
+        api_key = get_api_key(env_file='/opt/misp/.env')
+        if not api_key:
             self.fail_check("Cannot get API key")
             return
-
-        api_key = stdout.split('=', 1)[1].strip()
 
         self.check('news_events', "Security news events populated")
         cmd = f"curl -s -k -H 'Authorization: {api_key}' -H 'Accept: application/json' 'https://misp-test.lan/events/index'"
@@ -349,6 +347,106 @@ class AdvancedFeaturesHealthCheck:
         )
 
     # ========================================================================
+    # ========================================================================
+    # ICS THREAT INTELLIGENCE DATA
+    # ========================================================================
+
+    def check_ics_threat_intel(self):
+        """Check for ICS/OT threat intelligence events"""
+        self.header("ICS/OT THREAT INTELLIGENCE DATA")
+
+        # Check 1: ICS-tagged events
+        self.check("ics_events", "ICS-tagged events exist")
+        try:
+            import requests
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+            api_key = get_api_key()
+            misp_url = os.environ.get('MISP_URL', 'https://misp-test.lan')
+            headers = {
+                'Authorization': api_key,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+
+            search_data = {
+                "returnFormat": "json",
+                "tags": ["ics:malware", "ics:attack-target"],
+                "limit": 1000
+            }
+            response = requests.post(f"{misp_url}/events/restSearch", headers=headers,
+                                   json=search_data, verify=False, timeout=30)
+
+            if response.status_code == 200:
+                data = response.json()
+                count = len(data.get('response', []))
+                if count > 0:
+                    self.pass_check(f"Found {count} ICS-tagged events")
+                else:
+                    self.fail_check("No ICS-tagged events found")
+            else:
+                self.fail_check(f"HTTP {response.status_code}")
+        except Exception as e:
+            self.fail_check(f"Error: {e}")
+
+        # Check 2: Energy sector events
+        self.check("energy_events", "Energy sector events exist")
+        try:
+            search_data = {
+                "returnFormat": "json",
+                "tags": ["dhs-ciip-sectors:energy"],
+                "limit": 1000
+            }
+            response = requests.post(f"{misp_url}/events/restSearch", headers=headers,
+                                   json=search_data, verify=False, timeout=30)
+
+            if response.status_code == 200:
+                data = response.json()
+                count = len(data.get('response', []))
+                if count > 0:
+                    self.pass_check(f"Found {count} energy sector events")
+                else:
+                    self.fail_check("No energy sector events found")
+            else:
+                self.fail_check(f"HTTP {response.status_code}")
+        except Exception as e:
+            self.fail_check(f"Error: {e}")
+
+        # Check 3: Verify sample ICS events have attributes
+        self.check("ics_event_attributes", "ICS events contain threat intelligence attributes")
+        try:
+            # Get the ICS events we found earlier
+            search_data = {
+                "returnFormat": "json",
+                "tags": ["ics:malware"],
+                "limit": 10
+            }
+            response = requests.post(f"{misp_url}/events/restSearch", headers=headers,
+                                   json=search_data, verify=False, timeout=30)
+
+            if response.status_code == 200:
+                data = response.json()
+                events = data.get('response', [])
+                if len(events) > 0:
+                    # Check first event for attributes
+                    event = events[0].get('Event', {})
+                    attr_count = len(event.get('Attribute', []))
+                    obj_count = len(event.get('Object', []))
+                    tag_count = len(event.get('Tag', []))
+
+                    if attr_count > 0 or obj_count > 0:
+                        self.pass_check(f"Event {event.get('id')}: {attr_count} attributes, {obj_count} objects, {tag_count} tags")
+                    else:
+                        self.fail_check("ICS events found but no attributes/objects")
+                else:
+                    self.fail_check("No ICS malware events found")
+            else:
+                self.fail_check(f"HTTP {response.status_code}")
+        except Exception as e:
+            self.fail_check(f"Error: {e}")
+
+    # ========================================================================
     # MAIN EXECUTION
     # ========================================================================
 
@@ -373,6 +471,7 @@ class AdvancedFeaturesHealthCheck:
         self.check_automated_maintenance()
         self.check_security_news()
         self.check_utilities_dashboards()
+        self.check_ics_threat_intel()
 
         # Summary
         self.header("HEALTH CHECK SUMMARY")

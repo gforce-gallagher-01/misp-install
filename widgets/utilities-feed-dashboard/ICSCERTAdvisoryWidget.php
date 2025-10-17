@@ -46,7 +46,7 @@ class ICSCERTAdvisoryWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('ics-cert:', 'icsa-'),
+            'tags' => array('ics-cert:%', 'icsa-%'),
             'limit' => 500,
             'includeEventTags' => 1,
             'metadata' => false

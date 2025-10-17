@@ -23,25 +23,31 @@ echo ""
 
 # Validate PHP syntax
 echo "Validating PHP syntax..."
-php -l BaseUtilitiesWidget.php || exit 1
-php -l UtilitiesWidgetConstants.php || exit 1
-echo "  ✓ Base files have valid syntax"
+# Skip BaseUtilitiesWidget.php - it's an abstract class that should NOT be installed
+# Only validate UtilitiesWidgetConstants.php
+if [ -f "UtilitiesWidgetConstants.php" ]; then
+    php -l UtilitiesWidgetConstants.php || exit 1
+    echo "  ✓ UtilitiesWidgetConstants.php has valid syntax"
+else
+    echo "  ⚠ UtilitiesWidgetConstants.php not found, skipping"
+fi
 echo ""
 
 # Install base files
 echo "Installing base files..."
 
-# Copy BaseUtilitiesWidget.php
-sudo docker cp BaseUtilitiesWidget.php "${CONTAINER}:${WIDGET_DIR}/BaseUtilitiesWidget.php"
-sudo docker exec "${CONTAINER}" chown www-data:www-data "${WIDGET_DIR}/BaseUtilitiesWidget.php"
-sudo docker exec "${CONTAINER}" chmod 644 "${WIDGET_DIR}/BaseUtilitiesWidget.php"
-echo "  ✓ BaseUtilitiesWidget.php"
+# Skip BaseUtilitiesWidget.php - abstract classes should NOT be in Custom directory
+# This causes "Cannot instantiate abstract class" errors in MISP
 
-# Copy UtilitiesWidgetConstants.php
-sudo docker cp UtilitiesWidgetConstants.php "${CONTAINER}:${WIDGET_DIR}/UtilitiesWidgetConstants.php"
-sudo docker exec "${CONTAINER}" chown www-data:www-data "${WIDGET_DIR}/UtilitiesWidgetConstants.php"
-sudo docker exec "${CONTAINER}" chmod 644 "${WIDGET_DIR}/UtilitiesWidgetConstants.php"
-echo "  ✓ UtilitiesWidgetConstants.php"
+# Copy UtilitiesWidgetConstants.php (if exists)
+if [ -f "UtilitiesWidgetConstants.php" ]; then
+    sudo docker cp UtilitiesWidgetConstants.php "${CONTAINER}:${WIDGET_DIR}/UtilitiesWidgetConstants.php"
+    sudo docker exec "${CONTAINER}" chown www-data:www-data "${WIDGET_DIR}/UtilitiesWidgetConstants.php"
+    sudo docker exec "${CONTAINER}" chmod 644 "${WIDGET_DIR}/UtilitiesWidgetConstants.php"
+    echo "  ✓ UtilitiesWidgetConstants.php"
+else
+    echo "  ⚠ UtilitiesWidgetConstants.php not found, skipping"
+fi
 
 echo ""
 echo "Clearing MISP cache..."
@@ -54,10 +60,7 @@ echo "✓ Base Files Installed!"
 echo "======================================"
 echo ""
 echo "Installed:"
-echo "  ✓ BaseUtilitiesWidget.php (Abstract base class)"
 echo "  ✓ UtilitiesWidgetConstants.php (Shared constants)"
 echo ""
-echo "Next steps:"
-echo "  1. Refactor individual widgets to extend BaseUtilitiesWidget"
-echo "  2. Replace hardcoded constants with UtilitiesWidgetConstants methods"
-echo "  3. Reinstall refactored widgets"
+echo "Note: BaseUtilitiesWidget.php (abstract class) intentionally NOT installed"
+echo "      Abstract classes cannot be instantiated and break MISP's widget loader"

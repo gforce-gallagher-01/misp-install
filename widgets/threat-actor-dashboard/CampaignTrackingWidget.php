@@ -43,7 +43,7 @@ class CampaignTrackingWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('misp-galaxy:campaign', 'ics:'),
+            'tags' => array('misp-galaxy:campaign', 'ics:%'),
             'limit' => 1000,
             'includeEventTags' => 1,
             'metadata' => false

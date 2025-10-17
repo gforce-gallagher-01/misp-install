@@ -43,7 +43,7 @@ class RegionalCooperationHeatMapWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('utilities:', 'energy:', 'ics:'),
+            'tags' => array('utilities:', 'energy:', 'ics:%'),
             'limit' => 10000,
             'metadata' => true
         );

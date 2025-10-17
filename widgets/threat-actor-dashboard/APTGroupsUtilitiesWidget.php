@@ -20,7 +20,7 @@ class APTGroupsUtilitiesWidget
     public $width = 6;
     public $height = 5;
     public $params = array(
-        'timeframe' => 'Time window (7d, 30d, 90d, 1y, all)',
+        'timeframe' => 'Time window (7d, 30d, 90d, 365d, all)',
         'limit' => 'Max groups to display (default: 15)'
     );
     public $description = 'APT groups observed targeting utilities and energy infrastructure';
@@ -28,7 +28,7 @@ class APTGroupsUtilitiesWidget
     public $autoRefreshDelay = 300; // 5 minutes
     public $placeholder =
 '{
-    "timeframe": "1y",
+    "timeframe": "365d",
     "limit": "15"
 }';
 
@@ -36,8 +36,12 @@ class APTGroupsUtilitiesWidget
     private $utilityAPTGroups = array(
         'dragonfly' => array('name' => 'Dragonfly/DYMALLOY', 'color' => '#c0392b', 'aliases' => array('dragonfly', 'energetic bear', 'dymalloy', 'crouching yeti')),
         'xenotime' => array('name' => 'XENOTIME', 'color' => '#e74c3c', 'aliases' => array('xenotime', 'temp.veles')),
-        'apt33' => array('name' => 'APT33/Elfin', 'color' => '#8e44ad', 'aliases' => array('apt33', 'elfin', 'holmium')),
-        'sandworm' => array('name' => 'Sandworm/Voodoo Bear', 'color' => '#2980b9', 'aliases' => array('sandworm', 'voodoo bear', 'telebots', 'iridium')),
+        'apt33' => array('name' => 'APT33/Elfin', 'color' => '#8e44ad', 'aliases' => array('apt33', 'apt 33', 'elfin', 'holmium')),
+        'sandworm' => array('name' => 'Sandworm/Voodoo Bear', 'color' => '#2980b9', 'aliases' => array('sandworm', 'sandworm team', 'voodoo bear', 'telebots', 'iridium')),
+        'chernovite' => array('name' => 'CHERNOVITE', 'color' => '#e91e63', 'aliases' => array('chernovite', 'pipedream')),
+        'mercury' => array('name' => 'MERCURY', 'color' => '#00bcd4', 'aliases' => array('mercury')),
+        'volt-typhoon' => array('name' => 'Volt Typhoon', 'color' => '#ff9800', 'aliases' => array('volt typhoon', 'volttyphoon', 'bronze silhouette')),
+        'lockbit' => array('name' => 'LockBit', 'color' => '#f44336', 'aliases' => array('lockbit', 'lockbit 3.0')),
         'apt41' => array('name' => 'APT41/Winnti', 'color' => '#27ae60', 'aliases' => array('apt41', 'winnti', 'wicked panda', 'double dragon')),
         'lazarus' => array('name' => 'Lazarus Group', 'color' => '#d35400', 'aliases' => array('lazarus', 'hidden cobra', 'zinc')),
         'apt10' => array('name' => 'APT10/MenuPass', 'color' => '#16a085', 'aliases' => array('apt10', 'menupass', 'stone panda')),
@@ -50,7 +54,7 @@ class APTGroupsUtilitiesWidget
 
     public function handler($user, $options = array())
     {
-        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '1y';
+        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '365d';
         $limit = !empty($options['limit']) ? intval($options['limit']) : 15;
 
         /** @var Event $Event */
@@ -58,7 +62,7 @@ class APTGroupsUtilitiesWidget
 
         $filters = array(
             'published' => 1,
-            'tags' => array('misp-galaxy:threat-actor', 'ics:'),
+            'tags' => array('misp-galaxy:threat-actor=%'),
             'limit' => 5000,
             'includeEventTags' => 1
         );
@@ -98,11 +102,19 @@ class APTGroupsUtilitiesWidget
                 $searchText .= ' ' . strtolower($event['info']);
             }
 
-            if (!empty($event['EventTag'])) {
-                foreach ($event['EventTag'] as $tagData) {
-                    if (isset($tagData['Tag']['name'])) {
-                        $searchText .= ' ' . strtolower($tagData['Tag']['name']);
-                    }
+            // Check both Tag and EventTag structures
+            $tags = array();
+            if (!empty($event['Tag'])) {
+                $tags = $event['Tag'];
+            } elseif (!empty($event['EventTag'])) {
+                $tags = $event['EventTag'];
+            }
+
+            foreach ($tags as $tagData) {
+                // Handle both Tag array (direct) and EventTag array (wrapped)
+                $tagName = isset($tagData['name']) ? $tagData['name'] : (isset($tagData['Tag']['name']) ? $tagData['Tag']['name'] : '');
+                if (!empty($tagName)) {
+                    $searchText .= ' ' . strtolower($tagName);
                 }
             }
 

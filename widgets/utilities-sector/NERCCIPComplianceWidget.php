@@ -94,7 +94,7 @@ class NERCCIPComplianceWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('ics:'),
+            'tags' => array('ics:%'),
             'limit' => 1000,
             'includeEventTags' => 1,
             'metadata' => false // Get full event data

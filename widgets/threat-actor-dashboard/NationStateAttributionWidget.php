@@ -19,7 +19,7 @@ class NationStateAttributionWidget
     public $width = 6;
     public $height = 5;
     public $params = array(
-        'timeframe' => 'Time window (30d, 90d, 1y, all)',
+        'timeframe' => 'Time window (30d, 90d, 365d, all)',
         'limit' => 'Max countries to display (default: 10)'
     );
     public $description = 'Nation-state attribution for ICS/utilities targeting';
@@ -27,7 +27,7 @@ class NationStateAttributionWidget
     public $autoRefreshDelay = 300;
     public $placeholder =
 '{
-    "timeframe": "1y",
+    "timeframe": "365d",
     "limit": "10"
 }';
 
@@ -42,7 +42,7 @@ class NationStateAttributionWidget
 
     public function handler($user, $options = array())
     {
-        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '1y';
+        $timeframe = !empty($options['timeframe']) ? $options['timeframe'] : '365d';
         $limit = !empty($options['limit']) ? intval($options['limit']) : 10;
 
         /** @var Event $Event */
@@ -50,7 +50,7 @@ class NationStateAttributionWidget
 
         $filters = array(
             'published' => 1,
-            'tags' => array('misp-galaxy:threat-actor', 'ics:'),
+            'tags' => array('misp-galaxy:threat-actor=%'),
             'limit' => 5000,
             'includeEventTags' => 1
         );
@@ -107,25 +107,49 @@ class NationStateAttributionWidget
 
     private function extractNationState($event)
     {
-        if (empty($event['EventTag'])) {
+        // Get tags from either Tag or EventTag structure
+        $tags = array();
+        if (!empty($event['Tag'])) {
+            $tags = $event['Tag'];
+        } elseif (!empty($event['EventTag'])) {
+            $tags = $event['EventTag'];
+        }
+
+        if (empty($tags)) {
             return null;
         }
 
         // Look for country/nation-state indicators
-        foreach ($event['EventTag'] as $tagData) {
-            if (isset($tagData['Tag']['name'])) {
-                $tagName = strtolower($tagData['Tag']['name']);
+        foreach ($tags as $tagData) {
+            // Handle both Tag array (direct) and EventTag array (wrapped)
+            $tagName = isset($tagData['name']) ? $tagData['name'] : (isset($tagData['Tag']['name']) ? $tagData['Tag']['name'] : '');
+            if (!empty($tagName)) {
+                $tagName = strtolower($tagName);
 
                 // Check for country mentions
                 if (strpos($tagName, 'russia') !== false) return 'Russia';
                 if (strpos($tagName, 'china') !== false) return 'China';
                 if (strpos($tagName, 'iran') !== false) return 'Iran';
                 if (strpos($tagName, 'north korea') !== false || strpos($tagName, 'dprk') !== false) return 'North Korea';
+
+                // Russian APTs
                 if (strpos($tagName, 'apt28') !== false || strpos($tagName, 'apt29') !== false ||
-                    strpos($tagName, 'sandworm') !== false) return 'Russia';
-                if (strpos($tagName, 'apt33') !== false) return 'Iran';
-                if (strpos($tagName, 'apt41') !== false || strpos($tagName, 'apt10') !== false) return 'China';
+                    strpos($tagName, 'sandworm') !== false || strpos($tagName, 'dragonfly') !== false ||
+                    strpos($tagName, 'chernovite') !== false) return 'Russia';
+
+                // Iranian APTs
+                if (strpos($tagName, 'apt33') !== false || strpos($tagName, 'apt 33') !== false) return 'Iran';
+
+                // Chinese APTs
+                if (strpos($tagName, 'apt41') !== false || strpos($tagName, 'apt10') !== false ||
+                    strpos($tagName, 'volt typhoon') !== false) return 'China';
+
+                // North Korean APTs
                 if (strpos($tagName, 'lazarus') !== false) return 'North Korea';
+
+                // Non-nation state actors
+                if (strpos($tagName, 'lockbit') !== false || strpos($tagName, 'mercury') !== false ||
+                    strpos($tagName, 'xenotime') !== false) return 'Unknown';
             }
         }
 

@@ -52,7 +52,7 @@ class UtilitiesSectorStatsWidget
         if ($show24h) {
             $eventIds24h = $Event->fetchEventIds($user, array(
                 'last' => '1d',
-                'tags' => array('ics:'),
+                'tags' => array('ics:%'),
                 'published' => 1
             ));
 
@@ -69,7 +69,7 @@ class UtilitiesSectorStatsWidget
             // Critical vulnerabilities (24h)
             $criticalIds24h = $Event->fetchEventIds($user, array(
                 'last' => '1d',
-                'tags' => array('ics:', 'vulnerability'),
+                'tags' => array('ics:%', 'vulnerability'),
                 'published' => 1
             ));
 
@@ -88,7 +88,7 @@ class UtilitiesSectorStatsWidget
         if ($show7d) {
             $eventIds7d = $Event->fetchEventIds($user, array(
                 'last' => '7d',
-                'tags' => array('ics:'),
+                'tags' => array('ics:%'),
                 'published' => 1
             ));
 
@@ -105,7 +105,7 @@ class UtilitiesSectorStatsWidget
             // APT campaigns (7d)
             $aptIds7d = $Event->fetchEventIds($user, array(
                 'last' => '7d',
-                'tags' => array('ics:', 'misp-galaxy:threat-actor'),
+                'tags' => array('ics:%', 'misp-galaxy:threat-actor'),
                 'published' => 1
             ));
 
@@ -124,7 +124,7 @@ class UtilitiesSectorStatsWidget
         if ($show30d) {
             $eventIds30d = $Event->fetchEventIds($user, array(
                 'last' => '30d',
-                'tags' => array('ics:'),
+                'tags' => array('ics:%'),
                 'published' => 1
             ));
 
@@ -158,7 +158,7 @@ class UtilitiesSectorStatsWidget
 
         // Total ICS events
         $totalIcsIds = $Event->fetchEventIds($user, array(
-            'tags' => array('ics:'),
+            'tags' => array('ics:%'),
             'published' => 1
         ));
 

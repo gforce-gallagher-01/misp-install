@@ -46,7 +46,7 @@ class ICSZeroDayTrackerWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('cve:', 'ics:', 'zero-day', 'vulnerability:'),
+            'tags' => array('cve:', 'ics:%', 'zero-day', 'vulnerability:'),
             'limit' => 500,
             'includeEventTags' => 1,
             'metadata' => false

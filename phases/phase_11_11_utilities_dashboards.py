@@ -9,6 +9,8 @@ import os
 import subprocess
 from phases.base_phase import BasePhase
 from lib.colors import Colors
+from lib.misp_api_helpers import get_api_key, get_misp_url
+from lib.docker_helpers import is_container_running
 
 
 class Phase11_11UtilitiesDashboards(BasePhase):
@@ -44,6 +46,12 @@ class Phase11_11UtilitiesDashboards(BasePhase):
             # Step 2: Install all 25 widgets
             self._install_all_widgets()
 
+            # Step 2.5: Remove abstract base classes (prevent instantiation errors)
+            self._remove_abstract_classes()
+
+            # Step 2.6: Apply wildcard fixes to widget queries
+            self._apply_widget_fixes()
+
             # Step 3: Configure dashboards via API
             self._configure_dashboards(api_key)
 
@@ -56,43 +64,16 @@ class Phase11_11UtilitiesDashboards(BasePhase):
             raise
 
     def _check_misp_ready(self):
-        """Check if MISP container is running and accessible"""
+        """Check if MISP container is running and accessible using centralized helper"""
         try:
-            result = subprocess.run(
-                ['sudo', 'docker', 'ps', '--format', '{{.Names}}'],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            return 'misp-misp-core-1' in result.stdout
+            return is_container_running('misp-misp-core-1')
         except Exception as e:
             self.logger.error(f"Failed to check MISP status: {e}")
             return False
 
     def _get_api_key(self):
-        """Get MISP API key from environment or .env file"""
-        # Try environment variable first
-        api_key = os.environ.get('MISP_API_KEY')
-        if api_key:
-            return api_key
-
-        # Try reading from .env file
-        env_file = '/opt/misp/.env'
-        if os.path.exists(env_file):
-            try:
-                result = subprocess.run(
-                    ['sudo', 'grep', 'MISP_API_KEY=', env_file],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
-                if result.returncode == 0 and result.stdout:
-                    api_key = result.stdout.split('=', 1)[1].strip()
-                    return api_key
-            except Exception as e:
-                self.logger.warning(f"Could not read API key from .env: {e}")
-
-        return None
+        """Get MISP API key using centralized helper"""
+        return get_api_key(env_file='/opt/misp/.env')
 
     def _install_base_files(self):
         """Install DRY base widget files"""
@@ -166,6 +147,138 @@ class Phase11_11UtilitiesDashboards(BasePhase):
 
         self.logger.info("✓ All 25 widgets installed successfully")
 
+    def _remove_abstract_classes(self):
+        """
+        Remove abstract base classes from Custom widget directory.
+
+        CRITICAL FIX: MISP's dashboard loader scans all .php files in the Custom
+        directory and attempts to instantiate them. Abstract classes cannot be
+        instantiated in PHP, causing errors like:
+
+        "Error: Cannot instantiate abstract class BaseUtilitiesWidget"
+
+        This breaks the entire "Add Widget" functionality. Abstract base classes
+        should not be in the Custom directory - only concrete widget classes.
+
+        See: widgets/DASHBOARD_WIDGET_FIXES.md for full explanation.
+        """
+        self.logger.info("Removing abstract base classes from Custom directory...")
+
+        widget_dir = "/var/www/MISP/app/Lib/Dashboard/Custom"
+
+        # List of abstract base classes that should not be instantiated
+        abstract_classes = [
+            "BaseUtilitiesWidget.php",
+            "BaseWidget.php",
+            "AbstractWidget.php"
+        ]
+
+        removed_count = 0
+
+        for abstract_class in abstract_classes:
+            class_path = f"{widget_dir}/{abstract_class}"
+
+            try:
+                # Check if file exists
+                check_result = subprocess.run(
+                    ['sudo', 'docker', 'exec', 'misp-misp-core-1',
+                     'test', '-f', class_path],
+                    capture_output=True,
+                    timeout=5
+                )
+
+                if check_result.returncode == 0:  # File exists
+                    # Remove the abstract class
+                    result = subprocess.run(
+                        ['sudo', 'docker', 'exec', 'misp-misp-core-1',
+                         'rm', class_path],
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                    )
+
+                    if result.returncode == 0:
+                        removed_count += 1
+                        self.logger.info(f"✓ Removed abstract class: {abstract_class}")
+                    else:
+                        self.logger.warning(f"⚠ Could not remove {abstract_class}: {result.stderr}")
+
+            except Exception as e:
+                self.logger.warning(f"⚠ Error checking/removing {abstract_class}: {e}")
+
+        if removed_count > 0:
+            self.logger.info(f"✓ Removed {removed_count} abstract base class(es)")
+            self.logger.info("✓ Dashboard 'Add Widget' functionality preserved")
+        else:
+            self.logger.debug("No abstract classes found (already clean)")
+
+    def _apply_widget_fixes(self):
+        """
+        Apply critical fixes to widget query syntax.
+
+        Fix: Change 'ics:' to 'ics:%' wildcard for proper tag matching.
+        MISP requires explicit wildcard syntax - 'ics:' is treated as literal
+        tag name, not prefix match. See DASHBOARD_WIDGET_FIXES.md for details.
+        """
+        self.logger.info("Applying widget query fixes...")
+
+        widget_dir = "/var/www/MISP/app/Lib/Dashboard/Custom"
+
+        # List of all utilities sector widgets requiring wildcard fix
+        widgets_to_fix = [
+            "UtilitiesSectorStatsWidget.php",
+            "ISACContributionRankingsWidget.php",
+            "NationStateAttributionWidget.php",
+            "ICSVulnerabilityFeedWidget.php",
+            "RegionalCooperationHeatMapWidget.php",
+            "CriticalInfrastructureBreakdownWidget.php",
+            "IndustrialMalwareWidget.php",
+            "NERCCIPComplianceWidget.php",
+            "SCADAIOCMonitorWidget.php",
+            "TTPsUtilitiesWidget.php",
+            "AssetTargetingAnalysisWidget.php",
+            "SectorSharingMetricsWidget.php",
+            "VendorSecurityBulletinsWidget.php",
+            "HistoricalIncidentsWidget.php",
+            "CampaignTrackingWidget.php",
+            "ICSZeroDayTrackerWidget.php",
+            "MonthlyContributionTrendWidget.php",
+            "APTGroupsUtilitiesWidget.php"
+        ]
+
+        fixed_count = 0
+        failed_count = 0
+
+        for widget in widgets_to_fix:
+            widget_path = f"{widget_dir}/{widget}"
+
+            try:
+                # Fix 'ics:' to 'ics:%' wildcard
+                result = subprocess.run(
+                    ['sudo', 'docker', 'exec', 'misp-misp-core-1',
+                     'sed', '-i', "s/'ics:'/'ics:%'/g", widget_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+
+                if result.returncode == 0:
+                    fixed_count += 1
+                    self.logger.debug(f"✓ Fixed wildcard in {widget}")
+                else:
+                    failed_count += 1
+                    self.logger.warning(f"⚠ Could not fix {widget}: {result.stderr}")
+
+            except Exception as e:
+                failed_count += 1
+                self.logger.warning(f"⚠ Error fixing {widget}: {e}")
+
+        if fixed_count > 0:
+            self.logger.info(f"✓ Applied wildcard fixes to {fixed_count}/{len(widgets_to_fix)} widgets")
+
+        if failed_count > 0:
+            self.logger.warning(f"⚠ {failed_count} widgets could not be fixed (may already be correct)")
+
     def _configure_dashboards(self, api_key):
         """Configure all dashboards via MISP API"""
         self.logger.info("Configuring dashboards via MISP API...")
@@ -179,10 +292,8 @@ class Phase11_11UtilitiesDashboards(BasePhase):
         if not os.path.exists(script_path):
             raise FileNotFoundError(f"Dashboard configuration script not found: {script_path}")
 
-        # Get MISP URL from config or default
-        misp_url = self.config.get('misp_url', 'https://misp.local')
-        if not misp_url.startswith('http'):
-            misp_url = f'https://{misp_url}'
+        # Get MISP URL using centralized helper
+        misp_url = get_misp_url(config_domain=self.config.domain, env_file='/opt/misp/.env')
 
         # Run configuration script
         result = subprocess.run(
