@@ -46,7 +46,7 @@ class SCADAIOCMonitorWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('ics:', 'scada'),
+            'tags' => array('ics:%', 'scada'),
             'limit' => 1000,
             'includeEventTags' => 1,
             'metadata' => false

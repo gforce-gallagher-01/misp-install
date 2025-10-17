@@ -57,7 +57,7 @@ class AssetTargetingAnalysisWidget
         $filters = array(
             'last' => $timeframe,
             'published' => 1,
-            'tags' => array('ics:'),
+            'tags' => array('ics:%'),
             'limit' => 5000,
             'includeEventTags' => 1
         );

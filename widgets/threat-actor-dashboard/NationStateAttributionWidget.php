@@ -50,7 +50,7 @@ class NationStateAttributionWidget
 
         $filters = array(
             'published' => 1,
-            'tags' => array('misp-galaxy:threat-actor', 'ics:'),
+            'tags' => array('misp-galaxy:threat-actor', 'ics:%'),
             'limit' => 5000,
             'includeEventTags' => 1
         );
