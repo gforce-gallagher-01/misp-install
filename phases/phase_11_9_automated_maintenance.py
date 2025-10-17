@@ -53,18 +53,25 @@ class Phase11_9AutomatedMaintenance(BasePhase):
 
     def _setup_maintenance_cron(self, api_key: str):
         """Setup maintenance cron jobs using setup-misp-maintenance-cron.sh script"""
+        import subprocess
+
         script_path = Path(__file__).parent.parent / 'scripts' / 'setup-misp-maintenance-cron.sh'
 
         # Set environment variable for API key
         os.environ['MISP_API_KEY'] = api_key
 
         # Pipe 'y' to script to auto-confirm (non-interactive mode)
-        result = self.run_command(
-            f'echo "y" | bash {script_path}',
-            timeout=120,
-            check=False,
-            shell=True
-        )
+        try:
+            result = subprocess.run(
+                f'echo "y" | bash {script_path}',
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+        except Exception as e:
+            self.logger.error(f"Failed to run maintenance setup: {e}")
+            return
 
         if result.returncode == 0:
             self.logger.info(Colors.success("✓ Automated maintenance cron jobs configured"))
