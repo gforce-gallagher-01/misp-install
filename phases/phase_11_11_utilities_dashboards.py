@@ -7,10 +7,10 @@ sector threat intelligence monitoring across 5 specialized dashboards.
 
 import os
 import subprocess
-from phases.base_phase import BasePhase
-from lib.colors import Colors
-from lib.misp_api_helpers import get_api_key, get_misp_url
+
 from lib.docker_helpers import is_container_running
+from lib.misp_api_helpers import get_api_key, get_misp_url
+from phases.base_phase import BasePhase
 
 
 class Phase11_11UtilitiesDashboards(BasePhase):

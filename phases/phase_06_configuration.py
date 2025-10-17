@@ -3,10 +3,11 @@ Phase 6: Create configuration files
 """
 
 import os
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
 from lib.config import PerformanceTuning, get_system_hostname
 from lib.user_manager import MISP_USER
+from phases.base_phase import BasePhase
 
 
 class Phase06Configuration(BasePhase):
@@ -30,7 +31,7 @@ class Phase06Configuration(BasePhase):
 
         # Adjust based on RAM
         try:
-            with open('/proc/meminfo', 'r') as f:
+            with open('/proc/meminfo') as f:
                 for line in f:
                     if 'MemTotal' in line:
                         total_gb = int(line.split()[1]) // (1024**2)

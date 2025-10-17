@@ -4,9 +4,10 @@ Phase 11.9: Configure automated maintenance cron jobs
 
 import os
 from pathlib import Path
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
 from lib.misp_api_helpers import get_api_key
+from phases.base_phase import BasePhase
 
 
 class Phase11_9AutomatedMaintenance(BasePhase):

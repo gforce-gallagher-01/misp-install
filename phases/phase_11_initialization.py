@@ -4,8 +4,9 @@ Phase 11: Wait for MISP initialization
 
 import os
 import time
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
+from phases.base_phase import BasePhase
 
 
 class Phase11Initialization(BasePhase):

@@ -4,9 +4,10 @@ Phase 11.8: Configure utilities sector threat intelligence
 
 import os
 from pathlib import Path
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
 from lib.misp_api_helpers import get_api_key
+from phases.base_phase import BasePhase
 
 
 class Phase11_8UtilitiesSector(BasePhase):

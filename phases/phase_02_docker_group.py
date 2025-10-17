@@ -2,9 +2,9 @@
 Phase 2: Configure Docker group access
 """
 
-from phases.base_phase import BasePhase
 from lib.docker_manager import DockerGroupManager
 from lib.user_manager import MISP_USER
+from phases.base_phase import BasePhase
 
 
 class Phase02DockerGroup(BasePhase):

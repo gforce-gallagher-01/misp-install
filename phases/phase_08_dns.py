@@ -2,9 +2,9 @@
 Phase 8: Configure DNS
 """
 
-from phases.base_phase import BasePhase
 from lib.colors import Colors
 from lib.config import get_system_hostname
+from phases.base_phase import BasePhase
 
 
 class Phase08DNS(BasePhase):
@@ -31,7 +31,7 @@ class Phase08DNS(BasePhase):
         self.logger.info(f"Using detected hostname: {hostname}")
 
         # Read existing hosts file
-        with open('/etc/hosts', 'r') as f:
+        with open('/etc/hosts') as f:
             lines = f.readlines()
 
         # Remove any existing entries for this domain
