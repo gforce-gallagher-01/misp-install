@@ -154,10 +154,8 @@ class Phase11_11UtilitiesDashboards(BasePhase):
         if not os.path.exists(script_path):
             raise FileNotFoundError(f"Dashboard configuration script not found: {script_path}")
 
-        # Get MISP URL from config or default
-        misp_url = self.config.get('misp_url', 'https://misp.local')
-        if not misp_url.startswith('http'):
-            misp_url = f'https://{misp_url}'
+        # Get MISP URL using centralized helper
+        misp_url = get_misp_url(config_domain=self.config.domain, env_file='/opt/misp/.env')
 
         # Run configuration script
         result = subprocess.run(
