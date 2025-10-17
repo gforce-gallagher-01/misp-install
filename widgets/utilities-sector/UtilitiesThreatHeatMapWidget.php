@@ -101,21 +101,18 @@ class UtilitiesThreatHeatMapWidget
         }
 
         // Format for WorldMap widget
+        // WorldMap expects: array('data' => array('US' => count, 'CN' => count, ...))
         $mapData = array();
         foreach ($countries as $countryCode => $data) {
-            $mapData[] = array(
-                'country' => $countryCode,
-                'value' => $data['count'],
-                'title' => sprintf(
-                    '%s: %d events (%d ICS-related)',
-                    $countryCode,
-                    $data['count'],
-                    $data['ics_count']
-                )
-            );
+            $mapData[$countryCode] = $data['count'];
         }
 
-        return $mapData;
+        // Return format expected by MISP WorldMap widget
+        return array(
+            'data' => $mapData,
+            'scope' => 'ICS Threats',
+            'colour_scale' => '["#FFE5E5", "#FF0000"]'  // Light red to dark red
+        );
     }
 
     /**
