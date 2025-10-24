@@ -1,7 +1,7 @@
 # Known Issues
 
-**Version**: 5.4
-**Last Updated**: 2025-10-13
+**Version**: 5.6
+**Last Updated**: 2025-10-24
 **Status**: All critical issues resolved ✅
 
 ---
