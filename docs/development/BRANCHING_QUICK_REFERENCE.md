@@ -142,7 +142,7 @@ Closes #42
 
 ## Questions?
 
-See full documentation: **[docs/BRANCHING_STRATEGY.md](docs/BRANCHING_STRATEGY.md)**
+See full documentation: **[docs/BRANCHING_STRATEGY.md](../BRANCHING_STRATEGY.md)**
 
 ---
 

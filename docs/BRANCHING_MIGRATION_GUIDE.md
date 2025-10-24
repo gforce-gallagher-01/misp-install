@@ -412,9 +412,9 @@ This project uses **Modified GitHub Flow**:
 - `fix/*` - Bug fixes (temporary)
 - `hotfix/*` - Emergency fixes (temporary)
 
-See [docs/BRANCHING_STRATEGY.md](docs/BRANCHING_STRATEGY.md) for complete guide.
+See [BRANCHING_STRATEGY.md](BRANCHING_STRATEGY.md) for complete guide.
 
-Quick reference: [BRANCHING_QUICK_REFERENCE.md](BRANCHING_QUICK_REFERENCE.md)
+Quick reference: [BRANCHING_QUICK_REFERENCE.md](development/BRANCHING_QUICK_REFERENCE.md)
 ```
 
 #### 7.2 Update CONTRIBUTING.md (if exists)
@@ -435,7 +435,7 @@ Quick reference: [BRANCHING_QUICK_REFERENCE.md](BRANCHING_QUICK_REFERENCE.md)
 
 4. After review and CI pass, merge
 
-See [docs/BRANCHING_STRATEGY.md](docs/BRANCHING_STRATEGY.md) for details.
+See [BRANCHING_STRATEGY.md](BRANCHING_STRATEGY.md) for details.
 ```
 
 #### 7.3 Add branching documentation
@@ -733,10 +733,10 @@ Open an issue or submit a PR to improve it!
 
 ## Additional Resources
 
-- **Branching Strategy Guide**: [docs/BRANCHING_STRATEGY.md](BRANCHING_STRATEGY.md)
-- **Quick Reference**: [BRANCHING_QUICK_REFERENCE.md](../BRANCHING_QUICK_REFERENCE.md)
-- **Branch Protection Setup**: [docs/BRANCH_PROTECTION_SETUP.md](BRANCH_PROTECTION_SETUP.md)
-- **CI/CD Guide**: [docs/CI_CD_GUIDE.md](CI_CD_GUIDE.md)
+- **Branching Strategy Guide**: [BRANCHING_STRATEGY.md](BRANCHING_STRATEGY.md)
+- **Quick Reference**: [BRANCHING_QUICK_REFERENCE.md](development/BRANCHING_QUICK_REFERENCE.md)
+- **Branch Protection Setup**: [BRANCH_PROTECTION_SETUP.md](BRANCH_PROTECTION_SETUP.md)
+- **CI/CD Guide**: [CI_CD_GUIDE.md](CI_CD_GUIDE.md)
 - **GitHub Flow**: https://guides.github.com/introduction/flow/
 
 ---

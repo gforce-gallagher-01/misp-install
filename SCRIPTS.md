@@ -597,7 +597,7 @@ newgrp docker
 
 - **Main README**: `README.md`
 - **Security Architecture**: `docs/SECURITY_ARCHITECTURE.md`
-- **Logging Guide**: `README_LOGGING.md`
+- **Logging Guide**: `docs/README_LOGGING.md`
 - **Setup Guide**: `SETUP.md`
 - **Troubleshooting**: `docs/TROUBLESHOOTING.md`
 - **Changelog**: `docs/testing_and_updates/CHANGELOG.md`

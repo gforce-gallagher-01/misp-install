@@ -139,7 +139,7 @@ python3 misp-install.py --config config/my-config.json --non-interactive
 
 ## 📚 More Information
 
-- **Complete Design:** See `EXCLUSION_LIST_DESIGN.md`
+- **Complete Design:** See `../../docs/development/EXCLUSION_LIST_DESIGN.md`
 - **Installation Guide:** See `docs/INSTALLATION.md`
 - **Configuration Guide:** See `docs/CONFIGURATION-GUIDE.md`
 
@@ -198,4 +198,4 @@ python3 misp-install.py --config config/my-config.json --non-interactive
 
 ---
 
-**Need Help?** See the main README.md or EXCLUSION_LIST_DESIGN.md for complete documentation.
+**Need Help?** See the main README.md or ../../docs/development/EXCLUSION_LIST_DESIGN.md for complete documentation.

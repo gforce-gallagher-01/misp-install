@@ -263,7 +263,7 @@ sudo chmod 777 logs/
 - **Security Architecture**: `docs/SECURITY_ARCHITECTURE.md`
 - **Main README**: `README.md`
 - **Changelog**: `docs/testing_and_updates/CHANGELOG.md`
-- **Logging Guide**: `README_LOGGING.md`
+- **Logging Guide**: `docs/README_LOGGING.md`
 - **Development Guide**: `CLAUDE.md`
 
 ---
