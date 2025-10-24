@@ -1,73 +1,223 @@
-# Documentation Directory
+# MISP Installation Suite - Documentation
 
-**Version**: 5.4
-**Last Updated**: 2025-10-13
+Welcome to the comprehensive documentation for the MISP Installation Suite. This guide will help you find the information you need quickly.
+
+**Version**: 5.6 (Advanced Features Release)
+**Last Updated**: 2024-10-24
+**Total Documents**: 100+ organized files
 
 ---
 
-## Core Documentation (Current & Maintained)
+## 🚀 Quick Start (New Users)
 
-These documents are actively maintained and reflect the v5.4 implementation:
+**Never used MISP Installation Suite before?** Start here:
 
-### Installation & Setup
-- **QUICKSTART.md** - Quick installation guide for beginners
-- **INSTALLATION-CHECKLIST.md** - Step-by-step installation checklist
-- **SECURITY_ARCHITECTURE.md** - Security design and compliance
+1. **[Installation Guide](INSTALLATION.md)** - Step-by-step installation process
+2. **[Quick Start](QUICKSTART.md)** - Get up and running in 15 minutes
+3. **[Configuration Guide](CONFIGURATION-GUIDE.md)** - Configure your deployment
 
-### Operations & Maintenance
-- **MAINTENANCE.md** - Ongoing maintenance procedures
-- **TROUBLESHOOTING.md** - Problem-solving guide
-- **MISP-BACKUP-CRON.md** - Automated backup scheduling
-- **MISP-UPDATE.md** - Update procedures
+## 📚 Main Documentation Categories
+
+### For End Users
+
+#### Getting Started
+- [Installation Guide](INSTALLATION.md) - Complete installation walkthrough
+- [Installation Checklist](INSTALLATION-CHECKLIST.md) - Pre-installation verification
+- [Quick Start Guide](QUICKSTART.md) - Fast deployment guide
+- [Configuration Guide](CONFIGURATION-GUIDE.md) - Configuration options
+- [Configuration Best Practices](CONFIGURATION-BEST-PRACTICES.md) - Recommended settings
+
+#### User Guides
+- [API Usage Guide](API_USAGE.md) - MISP REST API integration
+- [GUI Installer](GUI_INSTALLER.md) - Graphical installation interface
+- [Maintenance Guide](MAINTENANCE.md) - Maintaining your MISP instance
+- [Maintenance Automation](MAINTENANCE_AUTOMATION.md) - Automated maintenance
+- [MISP Backup (Cron)](MISP-BACKUP-CRON.md) - Automated backup configuration
+- [MISP Update Guide](MISP-UPDATE.md) - Updating MISP
+- [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
+- [Logging System](README_LOGGING.md) - Centralized logging architecture
+
+#### Enterprise Features
+- [Azure Entra ID Setup](AZURE-ENTRA-ID-SETUP.md) - Enterprise authentication
+- [Advanced Features](ADVANCED-FEATURES.md) - v5.6+ advanced capabilities
+- [Systemd Service](SYSTEMD_SERVICE.md) - Running as system service
+
+### For Compliance & Security Teams
+
+#### NERC CIP Compliance
+**📁 [NERC CIP Documentation Hub](nerc-cip/README.md)**
+
+Quick links:
+- [NERC CIP Audit Report](nerc-cip/AUDIT_REPORT.md) - Current compliance status (35%)
+- [Production Readiness Tasks](nerc-cip/PRODUCTION_READINESS_TASKS.md) - 20-task checklist
+- [NERC CIP Configuration](nerc-cip/CONFIGURATION.md) - Low & Medium Impact setup
+
+**For Implementation Teams:**
+- [Person 1 Research](nerc-cip/research/person-1/AUTH-ACCESS-CONTROL.md) - Auth & Access Control (20-25 hours)
+- [Person 2 Research](nerc-cip/research/person-2/EVENTS-THREAT-INTEL.md) - Events & Threat Intel (25-30 hours)
+- [Person 3 Research Overview](nerc-cip/research/person-3/00-OVERVIEW.md) - Integrations & Automation (33-44 hours)
+
+**Architecture Documentation:**
+- [Architecture Overview](nerc-cip/architecture/00-OVERVIEW.md) - Start here
+- Full architecture split into 6 manageable documents
+
+### For Integrators
+
+#### Third-Party Integrations
+**📁 [Integrations Directory](integrations/)**
+- [MISP Communities Guide](integrations/MISP_COMMUNITIES_GUIDE.md) - Community integration
+- [ICS-CSIRT Membership](integrations/ICS-CSIRT_MEMBERSHIP_EMAIL.md) - ICS-CERT integration
+- [Feed Management](integrations/FEED_MANAGEMENT_COMPLETE.md) - Threat feed automation
+- [Third-Party Integrations](THIRD-PARTY-INTEGRATIONS.md) - General integration guide
+
+### For Developers
+
+#### System Architecture
+- [Architecture Overview](ARCHITECTURE.md) - System design and principles
+- [Security Architecture](SECURITY_ARCHITECTURE.md) - Security model
+- [Repository Structure](REPOSITORY-STRUCTURE.md) - Project organization
+
+#### Development Workflow
+**📁 [Development Directory](development/)**
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute
+- [Branching Strategy](BRANCHING_STRATEGY.md) - Git workflow
+- [Branching Migration Guide](BRANCHING_MIGRATION_GUIDE.md) - Migration from old workflow
+- [Branch Protection Setup](BRANCH_PROTECTION_SETUP.md) - GitHub branch protection
+- [Branching Quick Reference](development/BRANCHING_QUICK_REFERENCE.md) - Command reference
+- [CI/CD Guide](CI_CD_GUIDE.md) - Continuous integration
+- [Exclusion List Design](development/EXCLUSION_LIST_DESIGN.md) - Feature exclusion system
+
+---
+
+## 📦 Release Information
+
+**📁 [Releases Directory](releases/)**
+- [Changelog](CHANGELOG.md) - Complete change history
+- [Roadmap](ROADMAP.md) - Future plans
+- [v5.6 Release Notes](releases/V5.6_RELEASE_NOTES.md) - Latest release
+
+**Current Version**: 5.6 (Advanced Features Release)
+
+---
+
+## 📖 Reference Documentation
+
+### Essential References (Root Directory)
+Located in the project root for quick access:
+- [../README.md](../README.md) - Project overview
+- [../SETUP.md](../SETUP.md) - Quick setup guide
+- [../SCRIPTS.md](../SCRIPTS.md) - Script inventory and usage
+- [../TODO.md](../TODO.md) - Project roadmap and tasks
+- [../KNOWN-ISSUES.md](../KNOWN-ISSUES.md) - Known issues and workarounds
+- [../CLAUDE.md](../CLAUDE.md) - Project instructions for Claude Code
+
+### Testing & Updates
+**📁 [Testing Directory](testing_and_updates/)**
+- [Testing Report](testing_and_updates/TESTING_REPORT.md)
+- [Changelog](testing_and_updates/CHANGELOG.md)
+
+### Widgets
+**📁 [Widgets Directory](../widgets/)**
+- [Utilities Sector Dashboard](../widgets/utilities-sector/README.md)
+- [Threat Actor Dashboard](../widgets/threat-actor-dashboard/README.md)
+- [Organizational Dashboard](../widgets/organizational-dashboard/README.md)
+
+---
+
+## 🗃️ Historical Documentation
+
+**📁 [Historical Directory](historical/)**
+
+Archived documentation from completed work (organized by category):
+
+### Merges
+- [Merge Verification Report](historical/merges/MERGE_VERIFICATION_REPORT.md)
+
+### Bug Fixes (13 documents)
+- [Dashboard Complete](historical/fixes/DASHBOARD_COMPLETE.md)
+- [Widget Fixes Complete](historical/fixes/WIDGET_FIXES_COMPLETE.md)
+- [Event Population Fix](historical/fixes/EVENT_POPULATION_FIX.md)
+- ... and 10 more widget-related fixes
+
+### Implementations (8 documents)
+- [Branching Setup](historical/implementations/BRANCHING_SETUP_COMPLETE.md)
+- [CI/CD Implementation](historical/implementations/CI_CD_IMPLEMENTATION_SUMMARY.md)
+- [DRY Refactoring](historical/implementations/DRY_REFACTORING_SUMMARY.md)
+- [Documentation Improvement Plan](historical/implementations/DOCUMENTATION_IMPROVEMENT_PLAN.md)
+- ... and 4 more implementation summaries
 
 ### Configuration
-- **CONFIGURATION-GUIDE.md** - Complete configuration reference
-- **CONFIGURATION-BEST-PRACTICES.md** - Recommended settings
-- **AZURE-ENTRA-ID-SETUP.md** - Azure AD integration
-- **THIRD-PARTY-INTEGRATIONS.md** - External integrations
-
-### Reference
-- **REPOSITORY-STRUCTURE.md** - Project structure overview
-- **CHANGELOG.md** - Version history
-- **CONTRIBUTING.md** - Contribution guidelines
-- **ADVANCED-FEATURES.md** - Advanced configuration options
+- [MISP Configuration Status](historical/configuration/MISP_CONFIGURATION_STATUS.md)
 
 ---
 
-## Archive Directory
+## 🔍 Finding What You Need
 
-Outdated documentation has been moved to `archive/` subdirectory:
+### By Role
 
-- **archive/INDEX.md** - Package distribution index (references non-existent scripts)
-- **archive/COMPLETE-FILE-LAYOUT.md** - File structure for package distribution
-- **archive/READY-TO-RUN-SETUP.md** - Pre-configured setup guide
-- **archive/README.md** - Explanation of archived documents
+**System Administrator?**
+→ Start with [Installation Guide](INSTALLATION.md) and [Maintenance Guide](MAINTENANCE.md)
 
-**Note**: These files are kept for historical reference but do not reflect current v5.4 implementation.
+**Security Analyst?**
+→ Check [NERC CIP Hub](nerc-cip/README.md) and [Integrations](integrations/)
+
+**Developer?**
+→ See [Contributing Guide](CONTRIBUTING.md) and [Development Docs](development/)
+
+**Manager/Executive?**
+→ View [NERC CIP Audit](nerc-cip/AUDIT_REPORT.md) and [Roadmap](ROADMAP.md)
+
+### By Task
+
+**Installing MISP?**
+→ [Installation Guide](INSTALLATION.md) → [Configuration Guide](CONFIGURATION-GUIDE.md)
+
+**Troubleshooting Issue?**
+→ [Troubleshooting](TROUBLESHOOTING.md) → [Known Issues](../KNOWN-ISSUES.md)
+
+**Achieving Compliance?**
+→ [NERC CIP Hub](nerc-cip/README.md) → [Production Readiness](nerc-cip/PRODUCTION_READINESS_TASKS.md)
+
+**Integrating with Tools?**
+→ [Integrations Directory](integrations/) → [Third-Party Integrations](THIRD-PARTY-INTEGRATIONS.md)
+
+**Contributing Code?**
+→ [Contributing](CONTRIBUTING.md) → [Branching Strategy](BRANCHING_STRATEGY.md)
 
 ---
 
-## Primary Documentation Sources
+## 📞 Getting Help
 
-For current, accurate information, prioritize these files:
-
-1. **Root README.md** - Main project documentation
-2. **SCRIPTS.md** - Complete script inventory (v5.4)
-3. **SECURITY_ARCHITECTURE.md** - Security implementation details
-4. **SETUP.md** - Installation setup guide
-
----
-
-## Documentation Standards
-
-All maintained documentation follows these principles:
-
-- ✅ Version numbers match current release (v5.4)
-- ✅ Script references point to existing .py files
-- ✅ Permission values are correct (777 for logs)
-- ✅ No references to removed .sh scripts
-- ✅ Matches actual code implementation
+1. **Check documentation** - Use navigation above
+2. **Review known issues** - See [../KNOWN-ISSUES.md](../KNOWN-ISSUES.md)
+3. **Check logs** - See [README_LOGGING.md](README_LOGGING.md)
+4. **Search issues** - GitHub issue tracker
+5. **Community** - MISP Project (https://www.misp-project.org/)
 
 ---
 
-**For questions about documentation accuracy, see `/SCRIPTS.md` for the definitive script inventory.**
+## 📝 Documentation Standards
+
+This documentation follows these principles:
+- **Modular** - Each document covers one topic
+- **Navigable** - Clear table of contents and links
+- **Practical** - Real examples and commands
+- **Current** - Kept up to date with releases
+- **Accessible** - Easy to find and understand
+
+### Documentation Structure v2.0
+
+**Recent Improvements (2024-10-24):**
+- Split oversized files for readability (all under 750 lines)
+- Reorganized root directory (39 files → 6 essential files)
+- Created dedicated NERC CIP compliance area
+- Archived historical work for better organization
+- Added comprehensive navigation indexes
+
+---
+
+**Last Updated**: 2024-10-24
+**Documentation Structure**: v2.0 (Reorganized for clarity)
+**Total Documents**: 100+ markdown files organized into logical categories
+
+For the complete project overview, see [../README.md](../README.md)
