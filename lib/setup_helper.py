@@ -10,18 +10,18 @@ setup tasks including:
 - Statistics tracking
 """
 
+import logging
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Callable
-import logging
+from typing import Dict, List, Tuple
 
 # Add parent directory for imports
 _parent_dir = Path(__file__).parent.parent
 if str(_parent_dir) not in sys.path:
     sys.path.insert(0, str(_parent_dir))
 
-from lib.docker_manager import DockerCommandRunner
+from lib.docker_manager import DockerCommandRunner  # noqa: E402
 
 
 class MISPSetupHelper:

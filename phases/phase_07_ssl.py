@@ -3,10 +3,11 @@ Phase 7: Generate SSL certificate
 """
 
 import os
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
-from lib.user_manager import MISP_USER
 from lib.config import get_system_hostname
+from lib.user_manager import MISP_USER
+from phases.base_phase import BasePhase
 
 
 class Phase07SSL(BasePhase):

@@ -2,13 +2,14 @@
 Pre-flight system checks for MISP installation
 """
 
+import logging
 import os
 import shutil
 import socket
 import subprocess
-import logging
 from pathlib import Path
 from typing import Tuple
+
 from lib.colors import Colors
 from lib.config import SystemRequirements
 
@@ -44,7 +45,7 @@ class SystemChecker:
             Tuple of (passed, message)
         """
         try:
-            with open('/proc/meminfo', 'r') as f:
+            with open('/proc/meminfo') as f:
                 for line in f:
                     if 'MemTotal' in line:
                         total_kb = int(line.split()[1])

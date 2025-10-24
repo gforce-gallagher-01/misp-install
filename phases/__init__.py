@@ -13,13 +13,13 @@ from phases.phase_07_ssl import Phase07SSL
 from phases.phase_08_dns import Phase08DNS
 from phases.phase_09_passwords import Phase09Passwords
 from phases.phase_10_docker_build import Phase10DockerBuild
-from phases.phase_11_initialization import Phase11Initialization
 from phases.phase_11_5_api_key import Phase11_5APIKey
 from phases.phase_11_7_threat_feeds import Phase11_7ThreatFeeds
 from phases.phase_11_8_utilities_sector import Phase11_8UtilitiesSector
 from phases.phase_11_9_automated_maintenance import Phase11_9AutomatedMaintenance
 from phases.phase_11_10_security_news import Phase11_10SecurityNews
 from phases.phase_11_11_utilities_dashboards import Phase11_11UtilitiesDashboards
+from phases.phase_11_initialization import Phase11Initialization
 from phases.phase_12_post_install import Phase12PostInstall
 
 __all__ = [

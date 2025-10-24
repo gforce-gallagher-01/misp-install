@@ -15,32 +15,28 @@ Features:
 - Full logging
 """
 
-import os
-import sys
-import subprocess
-import logging
-import json
-import time
-import shutil
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass
 import argparse
+import json
+import logging
+import os
+import subprocess
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("❌ Python 3.8 or higher required")
-    sys.exit(1)
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Import centralized logger
-from misp_logger import get_logger
-
 # Import centralized Colors class
+import contextlib
+
 from lib.colors import Colors
+from misp_logger import get_logger
 
 # ==========================================
 # Constants
@@ -58,7 +54,7 @@ def setup_logging() -> logging.Logger:
     try:
         misp_logger = get_logger('misp-update', 'misp:update')
         logger = misp_logger.logger
-        print(Colors.info(f"📝 JSON Logs: /opt/misp/logs/misp-update-{{timestamp}}.log"))
+        print(Colors.info("📝 JSON Logs: /opt/misp/logs/misp-update-{timestamp}.log"))
         return logger
     except Exception as e:
         print(Colors.warning(f"Could not setup centralized logging: {e}"))
@@ -147,7 +143,7 @@ class MISPUpdateManager:
             logger.warning(f"Could not get version for {service}: {e}")
             return None
 
-    def get_latest_version(self, image: str) -> Optional[str]:
+    def get_latest_version(self, _image: str) -> Optional[str]:
         """Get latest available version from Docker Hub (simplified for 'latest' tag)"""
         # For docker images using 'latest' tag, we can't easily determine if updates are available
         # The update process will pull the latest image regardless
@@ -167,7 +163,7 @@ class MISPUpdateManager:
 
         versions = {}
 
-        for service, image in services.items():
+        for service, _image in services.items():
             logger.info(f"Checking {service}...")
             current = self.get_current_version(service)
 
@@ -179,7 +175,7 @@ class MISPUpdateManager:
                     update_available=True  # Assume update available for latest tag
                 )
             else:
-                logger.warning(f"  Could not determine current version")
+                logger.warning("  Could not determine current version")
                 versions[service] = VersionInfo(
                     current="unknown",
                     latest="latest",
@@ -288,10 +284,8 @@ class MISPUpdateManager:
                 containers = []
                 for line in result.stdout.strip().split('\n'):
                     if line:
-                        try:
+                        with contextlib.suppress(json.JSONDecodeError):
                             containers.append(json.loads(line))
-                        except json.JSONDecodeError:
-                            pass
 
                 # Check if all containers are running
                 all_running = all(c.get('State') == 'running' for c in containers)
@@ -383,7 +377,7 @@ class MISPUpdateManager:
         logger.info(Colors.info("╚" + "=" * 48 + "╝\n"))
 
         # Check for updates
-        versions = self.check_updates()
+        self.check_updates()
 
         if self.check_only:
             logger.info("\n" + "=" * 50)
@@ -400,7 +394,7 @@ class MISPUpdateManager:
         logger.info("  2. Pull latest Docker images")
         logger.info("  3. Restart services with new images")
         logger.info("  4. Verify services are healthy")
-        logger.info(f"\nDowntime: ~2-5 minutes")
+        logger.info("\nDowntime: ~2-5 minutes")
 
         if not self.force:
             response = input("\nProceed with update? (type 'UPDATE' to confirm): ")

@@ -35,10 +35,10 @@ Cron Schedules:
     Twice daily (6a,6p): 0 6,18 * * *
 """
 
-import sys
+import argparse
 import os
 import subprocess
-import argparse
+import sys
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -133,7 +133,7 @@ class CronSetup:
         try:
             # Write new crontab
             new_crontab = '\n'.join(new_lines)
-            result = subprocess.run(
+            subprocess.run(
                 ['crontab', '-'],
                 input=new_crontab,
                 text=True,
@@ -198,7 +198,7 @@ class CronSetup:
             new_crontab = current_crontab + cron_entry + '\n'
 
             # Install new crontab
-            result = subprocess.run(
+            subprocess.run(
                 ['crontab', '-'],
                 input=new_crontab,
                 text=True,
@@ -288,7 +288,7 @@ class CronSetup:
         print(f"  API key:      {self.api_key[:8]}...{self.api_key[-4:]}")
 
         # Explain schedule
-        print(f"\nSchedule explanation:")
+        print("\nSchedule explanation:")
         if self.schedule == "0 2 * * *":
             print("  Daily at 2:00 AM")
         elif self.schedule == "0 */6 * * *":
@@ -316,10 +316,9 @@ class CronSetup:
             return 1
 
         # Verify setup
-        if not self.dry_run:
-            if not self.verify_setup():
-                print("\n⚠️  Warning: Some verification checks failed")
-                return 1
+        if not self.dry_run and not self.verify_setup():
+            print("\n⚠️  Warning: Some verification checks failed")
+            return 1
 
         # Show next steps
         print("\n" + "="*80)
@@ -329,14 +328,14 @@ class CronSetup:
         if not self.dry_run:
             print("Cron job is now active and will run automatically.")
             print("\nUseful commands:")
-            print(f"  # View cron jobs")
-            print(f"  crontab -l")
-            print(f"\n  # View feed fetch logs")
+            print("  # View cron jobs")
+            print("  crontab -l")
+            print("\n  # View feed fetch logs")
             print(f"  tail -f {self.log_file}")
-            print(f"\n  # Test feed fetch manually")
+            print("\n  # Test feed fetch manually")
             print(f"  python3 {self.fetch_script} --api-key YOUR_KEY")
-            print(f"\n  # Remove cron job")
-            print(f"  python3 scripts/setup-feed-cron.py --remove")
+            print("\n  # Remove cron job")
+            print("  python3 scripts/setup-feed-cron.py --remove")
         else:
             print("[DRY-RUN] Run without --dry-run to install the cron job")
 

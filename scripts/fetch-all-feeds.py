@@ -41,11 +41,11 @@ Requirements:
     - Sufficient disk space for feed data
 """
 
-import sys
 import argparse
+import sys
 import time
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -87,7 +87,7 @@ class MISPFeedFetcher:
             'skipped': 0
         }
 
-    def log(self, message: str, level: str = "info"):
+    def log(self, message: str, _level: str = "info"):
         """Log message (respects quiet mode)"""
         if not self.quiet:
             print(message)

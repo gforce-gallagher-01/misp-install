@@ -3,9 +3,10 @@ Phase 12: Post-install tasks
 """
 
 from datetime import datetime
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
 from lib.user_manager import MISP_USER
+from phases.base_phase import BasePhase
 
 
 class Phase12PostInstall(BasePhase):

@@ -29,19 +29,19 @@ Requirements:
     - Database credentials from .env file
 """
 
+import argparse
 import subprocess
 import sys
-from pathlib import Path
-from typing import List, Dict, Optional
-import argparse
 import time
+from pathlib import Path
+from typing import Dict, List, Optional
 
 # Import centralized logger and modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from misp_logger import get_logger
 from lib.database_manager import DatabaseManager
-from lib.feed_constants import NERC_CIP_FEEDS, FEED_NAME_MAPPINGS
+from lib.feed_constants import FEED_NAME_MAPPINGS, NERC_CIP_FEEDS
 from lib.misp_config import MISPConfig
+from misp_logger import get_logger
 
 
 class MISPFeedEnabler:
@@ -160,7 +160,7 @@ class MISPFeedEnabler:
             return True
 
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
                  'mysql', '-umisp', f'-p{self.mysql_password}', 'misp', '-e',
                  f'UPDATE feeds SET enabled = 1 WHERE id = {feed_id};'],
@@ -291,7 +291,7 @@ class MISPFeedEnabler:
             return 1
 
         # Display feed info
-        print(f"Found feed:")
+        print("Found feed:")
         self.print_feed(feed)
 
         # Check if already enabled
@@ -300,21 +300,21 @@ class MISPFeedEnabler:
             return 0
 
         # Enable feed
-        print(f"Enabling feed...")
+        print("Enabling feed...")
         if self.enable_feed(feed_id):
-            print(f"✓ Feed enabled successfully")
+            print("✓ Feed enabled successfully")
 
             # Fetch feed data
             if not self.dry_run:
-                print(f"\nFetching feed data (this may take a few minutes)...")
+                print("\nFetching feed data (this may take a few minutes)...")
                 if self.fetch_feed(feed_id):
-                    print(f"✓ Feed data fetched successfully")
+                    print("✓ Feed data fetched successfully")
                 else:
-                    print(f"⚠️  Feed fetch may have failed (check logs)")
+                    print("⚠️  Feed fetch may have failed (check logs)")
 
             return 0
         else:
-            print(f"❌ Failed to enable feed")
+            print("❌ Failed to enable feed")
             return 1
 
     def run_enable_by_name(self, name: str) -> int:
@@ -345,18 +345,18 @@ class MISPFeedEnabler:
 
             print(f"Enabling feed '{feed['name']}' (ID {feed['id']})...")
             if self.enable_feed(int(feed['id'])):
-                print(f"✓ Enabled successfully")
+                print("✓ Enabled successfully")
                 enabled_count += 1
 
                 # Fetch feed data
                 if not self.dry_run:
-                    print(f"  Fetching feed data...")
+                    print("  Fetching feed data...")
                     if self.fetch_feed(int(feed['id'])):
-                        print(f"  ✓ Fetched successfully")
+                        print("  ✓ Fetched successfully")
                     else:
-                        print(f"  ⚠️  Fetch may have failed")
+                        print("  ⚠️  Fetch may have failed")
             else:
-                print(f"❌ Failed to enable")
+                print("❌ Failed to enable")
 
         print(f"\n{'='*80}")
         print(f"Summary: Enabled {enabled_count}/{len(feeds)} feeds")
@@ -408,19 +408,19 @@ class MISPFeedEnabler:
         for feed in disabled_feeds:
             print(f"Enabling: {feed['name']} (ID {feed['id']})...")
             if self.enable_feed(int(feed['id'])):
-                print(f"✓ Enabled successfully")
+                print("✓ Enabled successfully")
                 enabled_count += 1
 
                 # Fetch feed data
                 if not self.dry_run:
-                    print(f"  Fetching feed data...")
+                    print("  Fetching feed data...")
                     if self.fetch_feed(int(feed['id'])):
-                        print(f"  ✓ Fetched successfully")
+                        print("  ✓ Fetched successfully")
                     else:
-                        print(f"  ⚠️  Fetch may have failed (check logs)")
+                        print("  ⚠️  Fetch may have failed (check logs)")
                     time.sleep(2)  # Brief pause between fetches
             else:
-                print(f"❌ Failed to enable")
+                print("❌ Failed to enable")
 
         print(f"\n{'='*80}")
         print(f"Summary: Enabled {enabled_count}/{len(disabled_feeds)} NERC CIP feeds")

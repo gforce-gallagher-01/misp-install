@@ -7,18 +7,19 @@ for use with the Threat Actor Dashboard widgets.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from scripts.event_templates import EVENT_TEMPLATES, ENHANCED_TAGS_BY_EVENT
-from lib.misp_api_helpers import get_api_key, get_misp_url
-from lib.colors import Colors
 from datetime import datetime, timedelta
+
 import requests
 import urllib3
+
+from lib.colors import Colors
+from lib.misp_api_helpers import get_api_key, get_misp_url
+from scripts.event_templates import ENHANCED_TAGS_BY_EVENT, EVENT_TEMPLATES
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

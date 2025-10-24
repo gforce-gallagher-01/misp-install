@@ -27,13 +27,12 @@ Version: 1.0
 Created: October 2025
 """
 
+import argparse
 import subprocess
 import sys
-import argparse
-from pathlib import Path
-from typing import List, Dict, Tuple
 from datetime import datetime
-import json
+from pathlib import Path
+from typing import List, Tuple
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))

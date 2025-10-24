@@ -8,26 +8,20 @@ Simple, standalone backup script for MISP installations.
 """
 
 import os
-import sys
-import subprocess
 import shutil
+import subprocess
+import sys
 import tarfile
 import time
-from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Optional
+from pathlib import Path
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("❌ Python 3.8 or higher required")
-    sys.exit(1)
 
 # Add parent directory to path for lib imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import centralized logger
-from misp_logger import get_logger
-
 # Import centralized Colors class
 from lib.colors import Colors
 
@@ -36,6 +30,7 @@ from lib.database_manager import DatabaseManager
 
 # Import centralized Docker manager
 from lib.docker_manager import DockerCommandRunner
+from misp_logger import get_logger
 
 # ==========================================
 # Configuration
@@ -93,7 +88,7 @@ class MISPBackup:
     def create_backup_dir(self):
         """Create backup directory"""
         self.logger.info(
-            f"Creating backup directory",
+            "Creating backup directory",
             event_type="backup",
             action="create_dir",
             file_path=str(self.backup_dir)
@@ -241,7 +236,7 @@ class MISPBackup:
             result = self.docker.compose_ps(self.config.MISP_DIR)
             # Filter out warning messages (lines starting with "time=")
             container_status = '\n'.join(line for line in result.stdout.split('\n') if not line.startswith('time='))
-        except:
+        except Exception:
             container_status = "Could not get container status"
 
         # Get disk usage
@@ -253,7 +248,7 @@ class MISPBackup:
                 timeout=5
             )
             disk_usage = result.stdout.split('\n')[1] if result.returncode == 0 else "Unknown"
-        except:
+        except Exception:
             disk_usage = "Unknown"
 
         # Calculate backup size

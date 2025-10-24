@@ -4,12 +4,11 @@ Unit tests for MISP centralized logging module.
 Tests the logging functionality from misp_logger.py
 """
 
-import pytest
-import sys
 import json
 import logging
+import sys
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 # Add parent directory to path to import modules
 sys.path.insert(0, str(Path(__file__).parent.parent))

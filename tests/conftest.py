@@ -4,10 +4,10 @@ pytest configuration and shared fixtures for MISP installation tests.
 This file contains pytest fixtures that are available to all test files.
 """
 
-import pytest
 import tempfile
-import os
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture

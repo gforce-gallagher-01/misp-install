@@ -4,9 +4,8 @@ Unit tests for MISP configuration management.
 Tests the MISPConfig class from lib/misp_config.py
 """
 
-import pytest
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Add parent directory to path to import modules
@@ -50,7 +49,7 @@ class TestMISPConfig:
         # Should handle missing fields gracefully
         # (implementation may vary - either raise exception or use defaults)
         try:
-            config = MISPConfig(incomplete_config)
+            MISPConfig(incomplete_config)
             # If no exception, check for default value or None
             assert True
         except (KeyError, ValueError, AttributeError):
@@ -107,7 +106,6 @@ class TestMISPConfig:
     def test_config_immutability(self, mock_config):
         """Test that config values are not accidentally modified."""
         config = MISPConfig(mock_config)
-        original_ip = config.server_ip
 
         # Attempt to modify (behavior depends on implementation)
         try:

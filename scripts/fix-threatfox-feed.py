@@ -4,8 +4,9 @@ Fix ThreatFox Feed Caching
 Forces proper caching for feed ID 7 (abuse.ch ThreatFox)
 """
 
-import requests
 import time
+
+import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -98,7 +99,8 @@ except Exception as e:
 
 # Step 4: Verify cache file exists
 print("[4] Verifying cache file creation...")
-import subprocess
+import subprocess  # noqa: E402
+
 try:
     result = subprocess.run(
         ["sudo", "docker", "exec", "misp-misp-core-1", "ls", "-lh", "/var/www/MISP/app/tmp/cache/feeds/"],

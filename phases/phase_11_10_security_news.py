@@ -4,9 +4,10 @@ Phase 11.10: Configure security news feeds
 
 import os
 from pathlib import Path
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
 from lib.misp_api_helpers import get_api_key
+from phases.base_phase import BasePhase
 
 
 class Phase11_10SecurityNews(BasePhase):

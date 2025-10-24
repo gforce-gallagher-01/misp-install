@@ -30,7 +30,7 @@ try:
         pyperclip.copy(test_text)
         verify = pyperclip.paste()
         if verify == test_text:
-            print(f"✓ Clipboard write/read test passed")
+            print("✓ Clipboard write/read test passed")
         else:
             print(f"✗ Clipboard test failed: expected '{test_text}', got '{verify}'")
     except Exception as e:
@@ -67,12 +67,14 @@ print("  2. In the app, press Ctrl+V to paste")
 print("  3. Press q to quit")
 print("\nLaunching in 2 seconds...")
 
-import time
+import time  # noqa: E402
+
 time.sleep(2)
 
-from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Input, Static
-from textual.containers import Container
+from textual.app import App, ComposeResult  # noqa: E402
+from textual.containers import Container  # noqa: E402
+from textual.widgets import Footer, Header, Input, Static  # noqa: E402
+
 
 class ClipboardTestApp(App):
     """Test app for clipboard paste"""

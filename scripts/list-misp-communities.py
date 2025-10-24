@@ -35,11 +35,10 @@ Requirements:
     - No MISP instance required (informational only)
 """
 
-import sys
-import json
-from pathlib import Path
-from typing import List, Dict
 import argparse
+import sys
+from pathlib import Path
+from typing import Dict, List
 
 # Import centralized logger
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -225,12 +224,12 @@ class MISPCommunityLister:
         print(f"Focus:         {community['focus']}")
         print(f"Geographic:    {community['geographic']}")
         print(f"Cost:          {community['cost']}")
-        print(f"\nDescription:")
+        print("\nDescription:")
         print(f"  {community['description']}")
-        print(f"\nRequirements:")
+        print("\nRequirements:")
         for req in community['requirements']:
             print(f"  • {req}")
-        print(f"\nContact:")
+        print("\nContact:")
         print(f"  URL:     {community['url']}")
         print(f"  Email:   {community['contact']}")
         print()
@@ -271,7 +270,7 @@ class MISPCommunityLister:
         communities = self.filter_communities()
 
         if not communities:
-            print(f"⚠️  No communities found matching your criteria")
+            print("⚠️  No communities found matching your criteria")
             return 1
 
         # Summary

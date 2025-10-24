@@ -40,23 +40,21 @@ Requirements:
     - Python packages: feedparser (install with: pip3 install feedparser)
 """
 
-import subprocess
-import json
-import sys
-import time
-from pathlib import Path
-from typing import List, Dict, Tuple
 import argparse
-from datetime import datetime, timedelta
-import re
 import html
+import json
+import re
+import subprocess
+import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List
 
 # Import centralized logger
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from misp_logger import get_logger
-
 # Import centralized database manager
 from lib.database_manager import DatabaseManager
+from misp_logger import get_logger
 
 # Try to import feedparser
 try:
@@ -149,8 +147,7 @@ class MISPNewsPopulator:
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
                  'bash', '-c', 'mysql -umisp -p"$MYSQL_PASSWORD" misp -e "SELECT id FROM users WHERE role_id = 1 LIMIT 1;"'],
                 cwd=str(self.misp_dir),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
                 check=True
             )
@@ -264,11 +261,7 @@ class MISPNewsPopulator:
         text = (title + " " + summary).lower()
 
         # Check for any utilities keywords
-        for keyword in UTILITIES_KEYWORDS:
-            if keyword.lower() in text:
-                return True
-
-        return False
+        return any(keyword.lower() in text for keyword in UTILITIES_KEYWORDS)
 
     def is_duplicate(self, title: str, date_created: int) -> bool:
         """Check if news item already exists in database"""
@@ -282,8 +275,7 @@ class MISPNewsPopulator:
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
                  'bash', '-c', f'mysql -umisp -p"$MYSQL_PASSWORD" misp -e "{query}"'],
                 cwd=str(self.misp_dir),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
                 check=True
             )
@@ -411,20 +403,19 @@ class MISPNewsPopulator:
             """
 
             if self.dry_run:
-                print(f"\n[DRY RUN] Would insert:")
+                print("\n[DRY RUN] Would insert:")
                 print(f"  Title: {article['title'][:80]}...")
                 print(f"  Date: {datetime.fromtimestamp(article['date_created']).strftime('%Y-%m-%d %H:%M')}")
                 print(f"  Feed: {article['feed_name']}")
                 return True
 
             # Use bash -c with MYSQL_PASSWORD env var from container to avoid escaping issues
-            result = subprocess.run(
+            subprocess.run(
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'db',
                  'bash', '-c', 'mysql -umisp -p"$MYSQL_PASSWORD" misp'],
                 cwd=str(self.misp_dir),
                 input=sql,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
                 check=True
             )
@@ -499,7 +490,7 @@ class MISPNewsPopulator:
         # Calculate cutoff date
         cutoff_date = datetime.now() - timedelta(days=self.days)
         print(f"Fetching articles from last {self.days} days (since {cutoff_date.strftime('%Y-%m-%d')})")
-        print(f"Filtering for utilities/energy sector keywords\n")
+        print("Filtering for utilities/energy sector keywords\n")
 
         # Fetch and process articles from all feeds
         all_articles = []

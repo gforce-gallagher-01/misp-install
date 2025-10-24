@@ -2,14 +2,15 @@
 Phase 10: Build and start Docker containers
 """
 
-import os
-import time
 import json
+import os
 import subprocess
+import time
 from pathlib import Path
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
 from lib.user_manager import MISP_USER, get_current_username
+from phases.base_phase import BasePhase
 
 
 class Phase10DockerBuild(BasePhase):
@@ -263,7 +264,7 @@ class Phase10DockerBuild(BasePhase):
                     self.run_command(['sudo', 'setfacl', '-m', f'u:{current_user}:r', config_file], check=False)
 
             self.logger.info(Colors.success(f"✓ ACLs configured for shared log access (www-data, {current_user}, {MISP_USER})"))
-            self.logger.info(Colors.success(f"✓ ACL mask fixed for proper rwx permissions"))
+            self.logger.info(Colors.success("✓ ACL mask fixed for proper rwx permissions"))
             self.logger.info(Colors.success(f"✓ Config files readable by {current_user} for backup scripts"))
         except Exception as e:
             self.logger.warning(f"⚠ Could not configure ACLs: {e}")

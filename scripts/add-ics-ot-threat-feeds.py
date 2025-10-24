@@ -19,8 +19,8 @@ Feeds Added:
     - OpenPhish: Phishing URLs targeting organizations
 """
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -114,7 +114,7 @@ def main():
         print(f"\n{feed['name']}:")
         print(f"  Provider: {feed['provider']}")
         print(f"  URL: {feed['url']}")
-        
+
         if args.dry_run:
             print("  [DRY RUN] Would add feed")
             added += 1
@@ -139,7 +139,7 @@ def main():
             if 'Feed' in result:
                 feed_id = result['Feed'].get('id')
                 print(f"  ✓ Added successfully (ID: {feed_id})")
-                logger.info(f"Feed added: {feed['name']}", 
+                logger.info(f"Feed added: {feed['name']}",
                           event_type="feed_add",
                           action="add",
                           result="success",
@@ -147,7 +147,7 @@ def main():
                           feed_id=feed_id)
                 added += 1
             else:
-                print(f"  ⚠️  Already exists or duplicate")
+                print("  ⚠️  Already exists or duplicate")
                 skipped += 1
         else:
             print(f"  ✗ Failed: HTTP {response.status_code}")
