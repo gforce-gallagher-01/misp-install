@@ -221,7 +221,7 @@ Don't need certain features? Use the exclusion list to skip them:
 python3 misp-install.py --list-features
 ```
 
-For complete documentation, see: `EXCLUSION_LIST_DESIGN.md`
+For complete documentation, see: `docs/development/EXCLUSION_LIST_DESIGN.md`
 
 ## 📝 Usage Examples
 
@@ -561,7 +561,7 @@ python3 scripts/list-misp-communities.py --sector ics
 4. Complete membership application and agreements
 5. Configure MISP server connection (after approval)
 
-See `docs/NERC_CIP_CONFIGURATION.md` for E-ISAC integration guidance.
+See `docs/nerc-cip/CONFIGURATION.md` for E-ISAC integration guidance.
 
 ### NERC CIP Configuration (Energy Utilities)
 
@@ -578,7 +578,7 @@ python3 scripts/configure-misp-nerc-cip.py
 - ✅ Maps MISP features to 8 NERC CIP standards (CIP-003 through CIP-015)
 - ✅ Provides audit evidence guidance for compliance
 
-**Documentation:** See `docs/NERC_CIP_CONFIGURATION.md` for complete 50+ page guide including:
+**Documentation:** See `docs/nerc-cip/CONFIGURATION.md` for complete 50+ page guide including:
 - NERC CIP 2025 requirements
 - ICS/SCADA threat intelligence sources (CISA ICS-CERT, E-ISAC)
 - Solar/wind/battery-specific considerations

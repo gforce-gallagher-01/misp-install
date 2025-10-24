@@ -49,11 +49,11 @@ misp-install-gui
 
 - **[GUI_INSTALLER.md](docs/GUI_INSTALLER.md)** - GUI installer guide (Textual framework)
 - **[API_USAGE.md](docs/API_USAGE.md)** - MISP REST API usage and helper module
-- **[NERC_CIP_CONFIGURATION.md](docs/NERC_CIP_CONFIGURATION.md)** - Energy sector compliance guide
+- **[NERC_CIP_CONFIGURATION.md](docs/nerc-cip/CONFIGURATION.md)** - Energy sector compliance guide
 
 ### Technical References
 
-- **[README_LOGGING.md](README_LOGGING.md)** - Centralized logging system details
+- **[README_LOGGING.md](docs/README_LOGGING.md)** - Centralized logging system details
 - **[SCRIPTS.md](SCRIPTS.md)** - Complete script inventory and usage
 - **[KNOWN-ISSUES.md](KNOWN-ISSUES.md)** - Known issues and workarounds
 - **[TODO.md](TODO.md)** - Planned features and roadmap
@@ -206,7 +206,7 @@ class Phase11_8UtilitiesSector(BasePhase):
 5. Add feature to `FEATURE_CATEGORIES` and `FEATURE_DESCRIPTIONS` in `lib/features.py`
 6. Update phase sequence in `misp-install.py`
 7. Add example exclusion to `config/examples/`
-8. Update EXCLUSION_LIST_DESIGN.md
+8. Update docs/development/EXCLUSION_LIST_DESIGN.md
 
 ### Adding New Scripts
 
@@ -417,7 +417,7 @@ Supports JSON and YAML:
 - ✅ **Backwards Compatible** - Old configs work without changes (defaults to installing everything)
 - ✅ **Test Suite** - Comprehensive exclusion logic testing (`test_exclusions.py`)
 - ✅ **Example Configs** - 4 example configs in `config/examples/`
-- ✅ **Documentation** - EXCLUSION_LIST_DESIGN.md with complete implementation guide
+- ✅ **Documentation** - docs/development/EXCLUSION_LIST_DESIGN.md with complete implementation guide
 - ✅ **Phase 11.8**: Utilities Sector threat intelligence (ICS/SCADA/MITRE ATT&CK for ICS)
 - ✅ **Phase 11.9**: Automated maintenance cron jobs (daily/weekly)
 - ✅ **Phase 11.10**: Security news feeds (ICS-CERT, CISA, Industrial Cyber)
@@ -448,7 +448,7 @@ Supports JSON and YAML:
 - ⏳ GUI post-installation setup integration
 - ⏳ NERC CIP automated configuration (Phase 11.6)
 
-**See**: [TODO.md](TODO.md) for complete roadmap and [EXCLUSION_LIST_DESIGN.md](EXCLUSION_LIST_DESIGN.md) for feature system
+**See**: [TODO.md](TODO.md) for complete roadmap and [EXCLUSION_LIST_DESIGN.md](docs/development/EXCLUSION_LIST_DESIGN.md) for feature system
 
 ## Testing
 

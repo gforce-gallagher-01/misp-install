@@ -414,7 +414,7 @@ This project uses **Modified GitHub Flow**:
 
 See [docs/BRANCHING_STRATEGY.md](docs/BRANCHING_STRATEGY.md) for complete guide.
 
-Quick reference: [BRANCHING_QUICK_REFERENCE.md](BRANCHING_QUICK_REFERENCE.md)
+Quick reference: [BRANCHING_QUICK_REFERENCE.md](development/BRANCHING_QUICK_REFERENCE.md)
 ```
 
 #### 7.2 Update CONTRIBUTING.md (if exists)
@@ -734,7 +734,7 @@ Open an issue or submit a PR to improve it!
 ## Additional Resources
 
 - **Branching Strategy Guide**: [docs/BRANCHING_STRATEGY.md](BRANCHING_STRATEGY.md)
-- **Quick Reference**: [BRANCHING_QUICK_REFERENCE.md](../BRANCHING_QUICK_REFERENCE.md)
+- **Quick Reference**: [BRANCHING_QUICK_REFERENCE.md](development/BRANCHING_QUICK_REFERENCE.md)
 - **Branch Protection Setup**: [docs/BRANCH_PROTECTION_SETUP.md](BRANCH_PROTECTION_SETUP.md)
 - **CI/CD Guide**: [docs/CI_CD_GUIDE.md](CI_CD_GUIDE.md)
 - **GitHub Flow**: https://guides.github.com/introduction/flow/
