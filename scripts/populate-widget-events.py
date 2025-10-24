@@ -20,9 +20,9 @@ Version: 1.0
 
 import os
 import sys
-import json
-import requests
 from datetime import datetime, timedelta
+
+import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 # Suppress SSL warnings for self-signed certificates
@@ -31,7 +31,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from lib.colors import Colors
+from lib.colors import Colors  # noqa: E402
 
 
 def get_misp_config():
@@ -40,12 +40,12 @@ def get_misp_config():
     if not api_key:
         # Try to get from .env file
         try:
-            with open('/opt/misp/.env', 'r') as f:
+            with open('/opt/misp/.env') as f:
                 for line in f:
                     if line.startswith('MISP_API_KEY='):
                         api_key = line.split('=', 1)[1].strip()
                         break
-        except:
+        except Exception:
             pass
 
     if not api_key:
@@ -56,13 +56,13 @@ def get_misp_config():
     # Get MISP URL from .env or default
     misp_url = "https://misp-test.lan"
     try:
-        with open('/opt/misp/.env', 'r') as f:
+        with open('/opt/misp/.env') as f:
             for line in f:
                 if line.startswith('BASE_URL='):
                     base_url = line.split('=', 1)[1].strip()
                     misp_url = f"https://{base_url}"
                     break
-    except:
+    except Exception:
         pass
 
     return misp_url, api_key

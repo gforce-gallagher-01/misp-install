@@ -21,30 +21,35 @@ Usage:
     python3 misp-install-gui.py --save-only
 """
 
-import sys
-import json
 import argparse
+import builtins
+import contextlib
+import json
 import subprocess
-from pathlib import Path
+import sys
 from datetime import datetime
-import os
+from pathlib import Path
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("❌ Python 3.8 or higher required")
-    sys.exit(1)
 
 try:
-    from textual.app import App, ComposeResult
-    from textual.containers import Container, Vertical, Horizontal, ScrollableContainer
-    from textual.widgets import (
-        Header, Footer, Button, Static, Label, Input,
-        Select, RadioSet, RadioButton, Checkbox, ProgressBar
-    )
-    from textual.screen import Screen
     from textual import on
+    from textual.app import App, ComposeResult
+    from textual.containers import Container, Horizontal, ScrollableContainer
+    from textual.screen import Screen
     from textual.validation import ValidationResult, Validator
-    from textual.events import Paste
+    from textual.widgets import (
+        Button,
+        Checkbox,
+        Footer,
+        Header,
+        Input,
+        Label,
+        ProgressBar,
+        RadioButton,
+        RadioSet,
+        Static,
+    )
 except ImportError:
     print("❌ Textual framework not installed")
     print("📦 Install with: pip install textual textual-dev")
@@ -103,7 +108,7 @@ def check_misp_installed() -> bool:
             timeout=5
         )
         return result.returncode == 0 and len(result.stdout.strip()) > 0
-    except:
+    except Exception:
         return False
 
 
@@ -235,7 +240,7 @@ class DomainValidator(Validator):
         if ' ' in value:
             return self.failure("Domain cannot contain spaces")
 
-        if not '.' in value:
+        if '.' not in value:
             return self.failure("Must be a valid domain (e.g., misp.local)")
 
         return self.success()
@@ -1513,7 +1518,7 @@ class UpdateProgressScreen(Screen):
                     try:
                         btn = self.query_one("#btn-close", Button)
                         btn.disabled = False
-                    except:
+                    except Exception:
                         pass
                 self.call_from_thread(enable_button)
 
@@ -1523,10 +1528,8 @@ class UpdateProgressScreen(Screen):
 
     def update_status(self, message: str):
         """Update status text"""
-        try:
+        with contextlib.suppress(builtins.BaseException):
             self.query_one("#status-text", Static).update(message)
-        except:
-            pass
 
     def append_log(self, message: str):
         """Append message to log output"""
@@ -1534,7 +1537,7 @@ class UpdateProgressScreen(Screen):
             log_widget = self.query_one("#log-output", Static)
             current = str(log_widget.renderable)
             log_widget.update(current + "\n" + message if current else message)
-        except:
+        except Exception:
             pass
 
     @on(Button.Pressed, "#btn-close")
@@ -1683,7 +1686,7 @@ class UninstallProgressScreen(Screen):
                     try:
                         btn = self.query_one("#btn-close", Button)
                         btn.disabled = False
-                    except:
+                    except Exception:
                         pass
                 self.call_from_thread(enable_button)
 
@@ -1693,10 +1696,8 @@ class UninstallProgressScreen(Screen):
 
     def update_status(self, message: str):
         """Update status text"""
-        try:
+        with contextlib.suppress(builtins.BaseException):
             self.query_one("#status-text", Static).update(message)
-        except:
-            pass
 
     def append_log(self, message: str):
         """Append message to log output"""
@@ -1704,7 +1705,7 @@ class UninstallProgressScreen(Screen):
             log_widget = self.query_one("#log-output", Static)
             current = str(log_widget.renderable)
             log_widget.update(current + "\n" + message if current else message)
-        except:
+        except Exception:
             pass
 
     @on(Button.Pressed, "#btn-close")
@@ -1874,7 +1875,7 @@ class MISPInstallerApp(App):
     def load_config(self, config_file: str):
         """Load configuration from file"""
         try:
-            with open(config_file, 'r') as f:
+            with open(config_file) as f:
                 self.config = json.load(f)
             self.notify(f"✓ Loaded configuration from {config_file}", severity="information")
         except Exception as e:

@@ -2,11 +2,14 @@
 Base class for all installation phases
 """
 
-import subprocess
+import builtins
+import contextlib
 import logging
+import subprocess
 import time
 from pathlib import Path
-from typing import List, Optional, Callable
+from typing import Callable, List, Optional
+
 from lib.colors import Colors
 from lib.state_manager import StateManager
 
@@ -160,10 +163,8 @@ class BasePhase:
 
         finally:
             # Clean up temp file
-            try:
+            with contextlib.suppress(builtins.BaseException):
                 os.unlink(temp_file)
-            except:
-                pass
 
     def create_dir_as_misp_user(self, dir_path: Path, mode: str = '755',
                                misp_user: str = 'misp-owner'):

@@ -14,18 +14,16 @@ Author: tKQB Enterprises
 Version: 1.0
 """
 
-import os
-import sys
-import subprocess
 import argparse
-import json
+import os
+import subprocess
+import sys
 import time
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from lib.colors import Colors
-from lib.misp_api_helpers import get_api_key, get_misp_url
 from lib.docker_helpers import is_container_running
 
 
@@ -107,7 +105,7 @@ def remove_all_widgets(dry_run=False):
             failed_count += 1
             print(Colors.error(f"✗ Failed to remove {widget_name}: {result.stderr}"))
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  ✓ Removed: {removed_count}")
     print(f"  ✗ Failed: {failed_count}")
 
@@ -400,7 +398,7 @@ def verify_widgets():
     if widget_count < 25:
         print(Colors.warning(f"⚠ Expected 25 widgets, found {widget_count}"))
     else:
-        print(Colors.success(f"✓ All 25 widgets installed"))
+        print(Colors.success("✓ All 25 widgets installed"))
 
     # Check for threat actor widgets specifically
     threat_actor_widgets = [

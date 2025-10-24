@@ -10,7 +10,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from lib.config import MISPConfig
-from lib.features import print_feature_list, get_feature_list
+from lib.features import print_feature_list
+
 
 def test_no_exclusions():
     """Test: No features excluded (default)"""

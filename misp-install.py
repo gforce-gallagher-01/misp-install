@@ -21,14 +21,11 @@ Features:
 """
 
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("❌ Python 3.8 or higher required")
-    sys.exit(1)
 
 # Add project root to path for imports
 project_root = Path(__file__).parent
@@ -36,16 +33,16 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "scripts"))
 
 # Import library modules
-from lib.colors import Colors
-from lib.config import MISPConfig, Environment
-from lib.validators import PasswordValidator
-from lib.system_checker import SystemChecker
-from lib.state_manager import StateManager
-from lib.user_manager import ensure_misp_user_exists, get_current_username, MISP_USER
-from lib.logging_setup import setup_logging
+from lib.colors import Colors  # noqa: E402
+from lib.config import Environment, MISPConfig  # noqa: E402
+from lib.logging_setup import setup_logging  # noqa: E402
+from lib.state_manager import StateManager  # noqa: E402
+from lib.system_checker import SystemChecker  # noqa: E402
+from lib.user_manager import MISP_USER, ensure_misp_user_exists, get_current_username  # noqa: E402
+from lib.validators import PasswordValidator  # noqa: E402
 
 # Import phase modules
-from phases import (
+from phases import (  # noqa: E402
     Phase01Dependencies,
     Phase02DockerGroup,
     Phase03Backup,
@@ -56,19 +53,19 @@ from phases import (
     Phase08DNS,
     Phase09Passwords,
     Phase10DockerBuild,
-    Phase11Initialization,
     Phase11_5APIKey,
     Phase11_7ThreatFeeds,
     Phase11_8UtilitiesSector,
     Phase11_9AutomatedMaintenance,
     Phase11_10SecurityNews,
     Phase11_11UtilitiesDashboards,
+    Phase11Initialization,
     Phase12PostInstall,
 )
 
 # Try to import yaml for config file support
 try:
-    import yaml
+    import yaml  # noqa: F401
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -223,11 +220,11 @@ class MISPInstaller:
 """)
 
 
-def get_user_input_interactive(logger) -> MISPConfig:
+def get_user_input_interactive(_logger) -> MISPConfig:
     """Get configuration from user interactively
 
     Args:
-        logger: Logger instance
+        _logger: Logger instance (unused, kept for API compatibility)
 
     Returns:
         MISPConfig object
@@ -351,7 +348,7 @@ def main():
     print("   This follows security best practices (principle of least privilege).")
 
     if not ensure_misp_user_exists():
-        print(f"\n❌ Cannot proceed without dedicated user. Exiting.")
+        print("\n❌ Cannot proceed without dedicated user. Exiting.")
         sys.exit(1)
 
     print(f"✓ User '{MISP_USER}' ready")
@@ -365,7 +362,7 @@ def main():
                                   check=False, capture_output=True, text=True)
             if result.returncode != 0:
                 print(f"⚠️  Could not create /opt/misp/logs with sudo: {result.stderr}")
-                print(f"⚠️  Will use console-only logging")
+                print("⚠️  Will use console-only logging")
             else:
                 subprocess.run(['sudo', 'chown', '-R', f'{MISP_USER}:{MISP_USER}', '/opt/misp/logs'],
                              check=False, capture_output=True)
@@ -373,7 +370,7 @@ def main():
                              check=False, capture_output=True)
         except Exception as e:
             print(f"⚠️  Could not create /opt/misp/logs directory: {e}")
-            print(f"⚠️  Will use console-only logging")
+            print("⚠️  Will use console-only logging")
 
     # Setup logging
     logger = setup_logging()
@@ -460,7 +457,7 @@ def main():
             sys.exit(0)
         else:
             logger.error(Colors.error("\n❌ Installation failed"))
-            logger.info(f"Check logs: /opt/misp/logs/")
+            logger.info("Check logs: /opt/misp/logs/")
             logger.info("You can resume with: python3 misp-install.py --resume")
             sys.exit(1)
 

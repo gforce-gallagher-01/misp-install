@@ -4,9 +4,10 @@ Phase 5: Clone MISP repository
 
 import os
 from pathlib import Path
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
 from lib.user_manager import MISP_USER
+from phases.base_phase import BasePhase
 
 
 class Phase05Clone(BasePhase):
@@ -86,7 +87,7 @@ class Phase05Clone(BasePhase):
         """Configure logs directory with proper permissions"""
         # CRITICAL: Ensure logs directory exists with proper permissions BEFORE Docker starts
         # Docker will mount ./logs and if we don't set this up correctly, Docker will create it as www-data
-        self.logger.info(f"[5.5] Configuring logs directory permissions...")
+        self.logger.info("[5.5] Configuring logs directory permissions...")
         logs_dir = self.misp_dir / "logs"
 
         # Create logs directory if it doesn't exist

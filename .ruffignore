@@ -7,6 +7,9 @@ deprecated/
 # Phase modules directory
 phases/
 
+# Test directory (has different linting standards)
+tests/
+
 # Standard Python ignores
 __pycache__/
 *.pyc

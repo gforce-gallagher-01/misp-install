@@ -2,9 +2,9 @@
 Phase 3: Backup existing installation
 """
 
-from phases.base_phase import BasePhase
 from lib.backup_manager import BackupManager
 from lib.colors import Colors
+from phases.base_phase import BasePhase
 
 
 class Phase03Backup(BasePhase):

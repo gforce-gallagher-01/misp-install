@@ -33,10 +33,10 @@ Feed Categories:
         - abuse.ch Feodo Tracker (Full): Complete botnet tracker
 """
 
-import sys
 import argparse
+import sys
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -277,7 +277,7 @@ Examples:
                           profile=args.profile)
                 added += 1
             else:
-                print(f"  ⚠️  Already exists or duplicate")
+                print("  ⚠️  Already exists or duplicate")
                 skipped += 1
         else:
             print(f"  ✗ Failed: HTTP {response.status_code}")

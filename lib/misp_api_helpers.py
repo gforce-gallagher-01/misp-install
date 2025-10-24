@@ -5,7 +5,6 @@ Centralized functions for MISP API operations (DRY refactoring)
 
 import os
 import subprocess
-from pathlib import Path
 from typing import Optional, Tuple
 
 
@@ -167,7 +166,7 @@ def test_misp_connection(misp_url: str, api_key: str,
                 data = response.json()
                 version = data.get('version', 'unknown')
                 return True, f"Connected to MISP v{version}"
-            except:
+            except Exception:
                 return True, "Connected to MISP"
         elif response.status_code == 403:
             return False, "Authentication failed - check API key"

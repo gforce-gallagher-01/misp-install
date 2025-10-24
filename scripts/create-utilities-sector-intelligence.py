@@ -32,21 +32,20 @@ Version: 1.0.0
 """
 
 import sys
-import os
-import json
-import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Dict, Optional, Tuple
+
 import requests
 import urllib3
-from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from misp_logger import get_logger
+from event_templates import ENHANCED_TAGS_BY_EVENT, EVENT_TEMPLATES
+
 from lib.misp_api_helpers import get_api_key, get_misp_url, mask_api_key
-from event_templates import EVENT_TEMPLATES, ENHANCED_TAGS_BY_EVENT
+from misp_logger import get_logger
 
 # Disable SSL warnings for self-signed certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -158,7 +157,7 @@ class UtilitiesSectorIntelligence:
 
         if success:
             event_id = response.get('Event', {}).get('id')
-            logger.info(f"✓ Event created successfully", event_id=event_id,
+            logger.info("✓ Event created successfully", event_id=event_id,
                        event_info=event_data['Event']['info'])
             return True, event_id
         else:
@@ -598,9 +597,8 @@ class UtilitiesSectorIntelligence:
         }
 
         success, response = self._make_request('POST', 'events/restSearch', search_data)
-        if success:
-            if isinstance(response, dict) and 'response' in response:
-                return len(response['response'])
+        if success and isinstance(response, dict) and 'response' in response:
+            return len(response['response'])
         return 0
 
 
@@ -686,8 +684,8 @@ def main():
     print()
     print("Next Steps:")
     print("  1. Run health check to validate widget population")
-    print("  2. Check dashboard widgets at: {}/dashboards/index".format(misp_url))
-    print("  3. All events visible at: {}/events/index".format(misp_url))
+    print(f"  2. Check dashboard widgets at: {misp_url}/dashboards/index")
+    print(f"  3. All events visible at: {misp_url}/events/index")
     print()
     print("Created Events:")
     for num, event_id, name in created_events:

@@ -10,26 +10,22 @@ operating solar, wind, and battery energy storage systems.
 Focus: ICS/SCADA threat intelligence for Low & Medium Impact BES Cyber Systems
 """
 
-import os
-import sys
-import subprocess
-import time
 import json
+import subprocess
+import sys
+import time
 from pathlib import Path
-from typing import List, Dict
+from typing import List
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import centralized modules
-from misp_logger import get_logger
 from lib.colors import Colors
 from lib.setup_helper import MISPSetupHelper
+from misp_logger import get_logger
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("❌ Python 3.8 or higher required")
-    sys.exit(1)
 
 # ==========================================
 # NERC CIP Configuration

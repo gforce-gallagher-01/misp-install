@@ -3,8 +3,9 @@ Phase 1: Install system dependencies
 """
 
 import subprocess
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
+from phases.base_phase import BasePhase
 
 
 class Phase01Dependencies(BasePhase):

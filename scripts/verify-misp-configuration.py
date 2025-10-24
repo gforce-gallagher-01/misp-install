@@ -94,7 +94,7 @@ class MISPConfigVerifier:
                 if line.strip():
                     try:
                         containers.append(json.loads(line))
-                    except:
+                    except Exception:
                         continue
 
             critical_containers = ['misp-core', 'misp-modules', 'db', 'redis']
@@ -164,11 +164,6 @@ class MISPConfigVerifier:
         """Check 3: Verify MITRE ATT&CK for ICS galaxies"""
         self.section_header("Check 3: MITRE ATT&CK for ICS Galaxies")
 
-        galaxies_to_check = [
-            'mitre-ics',
-            'threat-actor',
-            'ransomware'
-        ]
 
         success, output = self.run_docker_command(
             ['/var/www/MISP/app/Console/cake', 'Admin', 'getSetting', 'MISP.enable_advanced_correlations'],
@@ -204,7 +199,7 @@ class MISPConfigVerifier:
             env_file = self.misp_dir / ".env"
             mysql_password = None
 
-            with open(env_file, 'r') as f:
+            with open(env_file) as f:
                 for line in f:
                     if line.startswith('MYSQL_PASSWORD='):
                         mysql_password = line.split('=', 1)[1].strip().strip('"')
@@ -293,7 +288,7 @@ class MISPConfigVerifier:
             env_file = self.misp_dir / ".env"
             mysql_password = None
 
-            with open(env_file, 'r') as f:
+            with open(env_file) as f:
                 for line in f:
                     if line.startswith('MYSQL_PASSWORD='):
                         mysql_password = line.split('=', 1)[1].strip().strip('"')
@@ -321,7 +316,7 @@ class MISPConfigVerifier:
 
                     if count > 0:
                         print(f"{self.GREEN}✓ {count} news articles in MISP{self.NC}")
-                        print(f"  (For NERC CIP-003 security awareness training)")
+                        print("  (For NERC CIP-003 security awareness training)")
                         self.checks_passed += 1
                         return True
                     else:
@@ -353,15 +348,15 @@ class MISPConfigVerifier:
 
         if status_code in ['200', '302', '303']:
             print(f"{self.GREEN}✓ Web interface accessible (HTTP {status_code}){self.NC}")
-            print(f"  URL: https://misp-test.lan")
-            print(f"  Default credentials:")
-            print(f"    Email: admin@admin.test")
-            print(f"    Password: (check /opt/misp/PASSWORDS.txt)")
+            print("  URL: https://misp-test.lan")
+            print("  Default credentials:")
+            print("    Email: admin@admin.test")
+            print("    Password: (check /opt/misp/PASSWORDS.txt)")
             self.checks_passed += 1
             return True
         else:
             print(f"{self.YELLOW}⚠ Web interface returned HTTP {status_code}{self.NC}")
-            print(f"  MISP may still be initializing (wait 5-10 minutes)")
+            print("  MISP may still be initializing (wait 5-10 minutes)")
             self.checks_warning += 1
             return False
 

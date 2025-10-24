@@ -2,8 +2,8 @@
 Phase 4: Nuclear cleanup
 """
 
-from phases.base_phase import BasePhase
 from lib.colors import Colors
+from phases.base_phase import BasePhase
 
 
 class Phase04Cleanup(BasePhase):
@@ -73,7 +73,7 @@ class Phase04Cleanup(BasePhase):
         self.logger.info("[4.6] Cleaning up /etc/hosts...")
         try:
             # Remove existing entries
-            with open('/etc/hosts', 'r') as f:
+            with open('/etc/hosts') as f:
                 lines = f.readlines()
 
             with open('/tmp/hosts', 'w') as f:

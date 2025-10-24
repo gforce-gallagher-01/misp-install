@@ -5,9 +5,9 @@ Enables, caches, and validates all feeds
 """
 
 import sys
-import json
-import requests
 import time
+
+import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 # Suppress SSL warnings for self-signed certs
@@ -153,9 +153,9 @@ def main():
             feed_name = feed.get('name', 'Unknown')
             print(f"  [{feed_id}] Enabling: {feed_name}...")
             if enable_feed(feed_id):
-                print(f"      ✓ Enabled")
+                print("      ✓ Enabled")
             else:
-                print(f"      ✗ Failed to enable")
+                print("      ✗ Failed to enable")
             time.sleep(0.5)  # Rate limiting
     else:
         print("✓ All feeds already enabled")
@@ -179,9 +179,9 @@ def main():
             feed_name = feed.get('name', 'Unknown')
             print(f"  [{feed_id}] Enabling caching: {feed_name}...")
             if enable_caching(feed_id):
-                print(f"      ✓ Caching enabled")
+                print("      ✓ Caching enabled")
             else:
-                print(f"      ✗ Failed to enable caching")
+                print("      ✗ Failed to enable caching")
             time.sleep(0.5)
     else:
         print("✓ All feeds already have caching enabled")
@@ -205,10 +205,10 @@ def main():
 
         print(f"[{i}/{len(feeds)}] Caching: {feed_name} ({feed_provider})...")
         if cache_feed(feed_id):
-            print(f"    ✓ Cached successfully")
+            print("    ✓ Cached successfully")
             success_count += 1
         else:
-            print(f"    ✗ Failed to cache")
+            print("    ✗ Failed to cache")
             failed_count += 1
 
         time.sleep(1)  # Rate limiting between feeds

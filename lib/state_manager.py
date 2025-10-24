@@ -3,8 +3,8 @@ Installation state management for resume capability
 """
 
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, Optional
 
 
@@ -50,7 +50,7 @@ class StateManager:
             State dictionary or None if no state exists
         """
         if self.state_file.exists():
-            with open(self.state_file, 'r') as f:
+            with open(self.state_file) as f:
                 return json.load(f)
         return None
 

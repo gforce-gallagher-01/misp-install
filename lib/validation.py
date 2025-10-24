@@ -8,10 +8,10 @@ Author: tKQB Enterprises
 Version: 1.0
 """
 
-import subprocess
 import json
+import subprocess
 from pathlib import Path
-from typing import Tuple, List, Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 class MISPValidator:
@@ -183,7 +183,7 @@ class MISPValidator:
                 return 0, 0
 
             mysql_password = None
-            with open(env_file, 'r') as f:
+            with open(env_file) as f:
                 for line in f:
                     if line.startswith('MYSQL_PASSWORD='):
                         mysql_password = line.split('=', 1)[1].strip().strip('"')
@@ -229,7 +229,7 @@ class MISPValidator:
                 return 0
 
             mysql_password = None
-            with open(env_file, 'r') as f:
+            with open(env_file) as f:
                 for line in f:
                     if line.startswith('MYSQL_PASSWORD='):
                         mysql_password = line.split('=', 1)[1].strip().strip('"')

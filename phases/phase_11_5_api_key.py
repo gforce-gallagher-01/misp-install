@@ -4,9 +4,10 @@ Phase 11.5: Generate automation API key
 
 import os
 from datetime import datetime
-from phases.base_phase import BasePhase
+
 from lib.colors import Colors
 from lib.user_manager import MISP_USER
+from phases.base_phase import BasePhase
 
 
 class Phase11_5APIKey(BasePhase):
@@ -169,12 +170,12 @@ class Phase11_5APIKey(BasePhase):
 
     def _display_summary(self, api_key: str):
         """Display API key summary"""
-        self.logger.info(Colors.success(f"\n✓ API Key Setup Complete"))
+        self.logger.info(Colors.success("\n✓ API Key Setup Complete"))
         self.logger.info(f"  Key: {api_key}")
         self.logger.info(f"  User: {self.config.admin_email}")
-        self.logger.info(f"  Stored in: /opt/misp/.env (MISP_API_KEY)")
-        self.logger.info(f"             /opt/misp/PASSWORDS.txt")
-        self.logger.info(f"\n  Use this key for automation scripts:")
-        self.logger.info(f"  - python3 scripts/add-threat-feeds.py")
-        self.logger.info(f"  - python3 scripts/populate-misp-news.py")
-        self.logger.info(f"  - python3 scripts/fetch-all-feeds.py")
+        self.logger.info("  Stored in: /opt/misp/.env (MISP_API_KEY)")
+        self.logger.info("             /opt/misp/PASSWORDS.txt")
+        self.logger.info("\n  Use this key for automation scripts:")
+        self.logger.info("  - python3 scripts/add-threat-feeds.py")
+        self.logger.info("  - python3 scripts/populate-misp-news.py")
+        self.logger.info("  - python3 scripts/fetch-all-feeds.py")

@@ -17,8 +17,7 @@ from typing import Tuple
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from lib.colors import Colors
-from misp_logger import get_logger
+from lib.colors import Colors  # noqa: E402
 
 
 class Phase13Validation:
@@ -145,7 +144,7 @@ class Phase13Validation:
         try:
             result = subprocess.run(
                 ['curl', '-k', '-s', '-o', '/dev/null', '-w', '%{http_code}',
-                 f'https://localhost/'],
+                 'https://localhost/'],
                 timeout=10,
                 capture_output=True,
                 text=True
@@ -291,7 +290,7 @@ class Phase13Validation:
                 f.write("1. Login to web interface:\n")
                 f.write(f"   {self.config.base_url}\n")
                 f.write(f"   Email: {self.config.admin_email}\n")
-                f.write(f"   Password: (check /opt/misp/PASSWORDS.txt)\n\n")
+                f.write("   Password: (check /opt/misp/PASSWORDS.txt)\n\n")
 
                 f.write("2. Review configuration status:\n")
                 f.write("   cat MISP_CONFIGURATION_STATUS.md\n\n")

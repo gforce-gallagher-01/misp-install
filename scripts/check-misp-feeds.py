@@ -23,19 +23,19 @@ Requirements:
     - /opt/misp directory must exist
 """
 
-import subprocess
+import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
-import argparse
+from typing import Dict, List
 
 # Import centralized modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from misp_logger import get_logger
 from lib.database_manager import DatabaseManager
 from lib.feed_constants import NERC_CIP_FEEDS
 from lib.misp_config import MISPConfig
+from misp_logger import get_logger
 
 
 class MISPFeedChecker:
@@ -85,7 +85,7 @@ class MISPFeedChecker:
         """Get list of all feeds from MISP"""
         try:
             # Use MISP CLI to get feeds list
-            result = subprocess.run(
+            subprocess.run(
                 ['sudo', 'docker', 'compose', 'exec', '-T', 'misp-core',
                  '/var/www/MISP/app/Console/cake', 'Admin', 'getSetting', 'MISP.feeds_list'],
                 cwd=str(self.misp_dir),
@@ -235,7 +235,7 @@ class MISPFeedChecker:
         print(f"Enabled:         {analysis['enabled']} ({analysis['enabled']/analysis['total']*100:.1f}%)")
         print(f"Disabled:        {analysis['disabled']} ({analysis['disabled']/analysis['total']*100:.1f}%)")
         print()
-        print(f"NERC CIP Recommended Feeds:")
+        print("NERC CIP Recommended Feeds:")
         print(f"  Enabled:       {len(analysis['nerc_enabled'])}/{len(NERC_CIP_FEEDS)}")
         print(f"  Disabled:      {len(analysis['nerc_disabled'])}/{len(NERC_CIP_FEEDS)}")
         print(f"  Not Found:     {len(NERC_CIP_FEEDS) - analysis['nerc_total']}")

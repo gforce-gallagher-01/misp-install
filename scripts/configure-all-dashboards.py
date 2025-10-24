@@ -11,16 +11,17 @@ Version: 1.0
 Date: 2025-10-16
 """
 
-import sys
-import json
 import argparse
+import json
+import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from misp_api import get_api_key, get_misp_url, test_connection
 import requests
 from urllib3.exceptions import InsecureRequestWarning
+
+from misp_api import get_api_key, get_misp_url, test_connection
 
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
@@ -201,7 +202,7 @@ def create_complete_dashboard_config():
         {
             "widget": "APTGroupsUtilitiesWidget",
             "config": {
-                "timeframe": "1y",
+                "timeframe": "365d",
                 "limit": "15"
             },
             "position": {
@@ -229,7 +230,7 @@ def create_complete_dashboard_config():
         {
             "widget": "NationStateAttributionWidget",
             "config": {
-                "timeframe": "1y",
+                "timeframe": "365d",
                 "limit": "10"
             },
             "position": {
@@ -242,7 +243,7 @@ def create_complete_dashboard_config():
         {
             "widget": "TTPsUtilitiesWidget",
             "config": {
-                "timeframe": "1y",
+                "timeframe": "365d",
                 "limit": "15"
             },
             "position": {
@@ -435,7 +436,7 @@ def import_dashboard(misp_url, api_key, dashboard_config):
     payload = json.dumps(dashboard_config)
 
     try:
-        print(f"Importing complete dashboard...")
+        print("Importing complete dashboard...")
         print(f"  Total widgets: {len(dashboard_config)}")
 
         response = requests.post(

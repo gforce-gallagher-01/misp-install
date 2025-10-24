@@ -11,17 +11,18 @@ Version: 1.0
 Date: 2025-10-16
 """
 
-import sys
-import json
 import argparse
+import json
+import sys
 from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from misp_api import get_api_key, get_misp_url, test_connection
 import requests
 from urllib3.exceptions import InsecureRequestWarning
+
+from misp_api import get_api_key, get_misp_url, test_connection
 
 # Disable SSL warnings for self-signed certificates
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
@@ -147,7 +148,7 @@ def import_dashboard(misp_url, api_key, dashboard_config):
     payload = json.dumps(dashboard_config)
 
     try:
-        print(f"Importing full dashboard configuration...")
+        print("Importing full dashboard configuration...")
         print(f"  Endpoint: {endpoint}")
         print(f"  Widgets: {len(dashboard_config)}")
 
@@ -163,7 +164,7 @@ def import_dashboard(misp_url, api_key, dashboard_config):
             print("✓ Dashboard imported successfully!")
             return True
         else:
-            print(f"✗ Failed to import dashboard")
+            print("✗ Failed to import dashboard")
             print(f"  Status: {response.status_code}")
             print(f"  Response: {response.text[:500]}")
             return False
