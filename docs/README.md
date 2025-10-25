@@ -3,8 +3,8 @@
 Welcome to the comprehensive documentation for the MISP Installation Suite. This guide will help you find the information you need quickly.
 
 **Version**: 5.6 (Advanced Features Release)
-**Last Updated**: 2024-10-24
-**Total Documents**: 100+ organized files
+**Last Updated**: 2025-10-25
+**Total Documents**: 110+ organized files
 
 ---
 
@@ -86,6 +86,33 @@ Quick links:
 - [Branching Quick Reference](development/BRANCHING_QUICK_REFERENCE.md) - Command reference
 - [CI/CD Guide](CI_CD_GUIDE.md) - Continuous integration
 - [Exclusion List Design](development/EXCLUSION_LIST_DESIGN.md) - Feature exclusion system
+
+#### Meta-Documentation & AI Context
+
+**🤖 For AI Assistants & New Developers** - Comprehensive meta-documentation for quick orientation:
+
+**Essential Meta-Docs** (Read these first):
+- [PROJECT_KNOWLEDGE.md](PROJECT_KNOWLEDGE.md) - **START HERE** - Complete project overview, patterns, and context
+- [ONBOARDING.md](ONBOARDING.md) - 30/60/90 day learning path for new developers
+- [PATTERNS.md](PATTERNS.md) - 9 design patterns with code examples and anti-patterns
+- [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md) - 10 ADRs documenting major architectural decisions
+
+**Implementation Guides**:
+- [TESTING_GUIDE.md](TESTING_GUIDE.md) - Comprehensive testing strategies and debugging techniques
+- [TROUBLESHOOTING_PLAYBOOK.md](TROUBLESHOOTING_PLAYBOOK.md) - 22 documented issues with solutions
+- [MISP_QUIRKS.md](MISP_QUIRKS.md) - 22 MISP platform quirks and workarounds
+- [PRODUCTION_STATE.md](PRODUCTION_STATE.md) - Current running instance state and metrics
+- [NERC_CIP_IMPLEMENTATION_GUIDE.md](NERC_CIP_IMPLEMENTATION_GUIDE.md) - 4-phase compliance roadmap (35% → 95%)
+
+**Research Management** (For NERC CIP Research Team):
+- [Research Tracker](nerc-cip/research/RESEARCH_TRACKER.md) - 19-task progress tracking (2-week sprint)
+- [Review Process](nerc-cip/research/REVIEW_PROCESS.md) - Formal deliverable review (7-step process)
+- [Validation Criteria](nerc-cip/research/VALIDATION_CRITERIA.md) - Specific criteria for each task
+
+**Branch Management**:
+- [../BRANCHES.md](../BRANCHES.md) - Branch inventory for research, learning, and troubleshooting
+
+**Total Meta-Documentation**: ~10,000 lines across 13 comprehensive documents
 
 ---
 
@@ -205,9 +232,24 @@ This documentation follows these principles:
 - **Current** - Kept up to date with releases
 - **Accessible** - Easy to find and understand
 
-### Documentation Structure v2.0
+### Documentation Structure v2.1
 
-**Recent Improvements (2024-10-24):**
+**Recent Improvements (2025-10-25):**
+- **Meta-Documentation Suite** - Added 13 comprehensive meta-docs (~10,000 lines)
+  - PROJECT_KNOWLEDGE.md - AI context and quick orientation
+  - PATTERNS.md - 9 design patterns with examples
+  - ARCHITECTURE_DECISIONS.md - 10 ADRs
+  - ONBOARDING.md - 30/60/90 day learning path
+  - TESTING_GUIDE.md - Testing strategies
+  - TROUBLESHOOTING_PLAYBOOK.md - 22 issues documented
+  - MISP_QUIRKS.md - 22 platform quirks
+  - PRODUCTION_STATE.md - Live instance state
+  - NERC_CIP_IMPLEMENTATION_GUIDE.md - 4-phase roadmap
+  - Research tracking framework (tracker, review, validation)
+- **Production Instance Documentation** - Automated inspection and state tracking
+- **Research Management Framework** - 2-week sprint tracking for 3-person team
+
+**Previous Improvements (2024-10-24):**
 - Split oversized files for readability (all under 750 lines)
 - Reorganized root directory (39 files → 6 essential files)
 - Created dedicated NERC CIP compliance area
@@ -216,8 +258,8 @@ This documentation follows these principles:
 
 ---
 
-**Last Updated**: 2024-10-24
-**Documentation Structure**: v2.0 (Reorganized for clarity)
-**Total Documents**: 100+ markdown files organized into logical categories
+**Last Updated**: 2025-10-25
+**Documentation Structure**: v2.1 (Meta-documentation and AI context added)
+**Total Documents**: 110+ markdown files organized into logical categories
 
 For the complete project overview, see [../README.md](../README.md)
